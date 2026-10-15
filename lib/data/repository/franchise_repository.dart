@@ -43,11 +43,14 @@ class FranchiseRepository {
   };
 
   /// روابطی که به‌عنوان محتوای مرتبط به فرنچایز اضافه می‌شوند.
+  /// نکته: CHARACTER عمداً اینجا نیست — در AniList برای محتوای جانبیِ
+  /// شخصیت‌محور به کار می‌رود و باعث قاطی شدن فرنچایزهای نامرتبط می‌شد
+  /// (مثلاً Dragon Ball Z با رابطه CHARACTER از طریق MONSTERS وارد
+  /// فرنچایز One Piece شده و چون قدیمی‌تر بود ریشه را های‌جک کرده بود).
   static const Set<String> _relatedRelations = {
     'SIDE_STORY',
     'SPIN_OFF',
     'SUMMARY',
-    'CHARACTER',
     'OTHER',
     'COMPILATION',
     'CONTAINS',
@@ -353,7 +356,8 @@ class FranchiseRepository {
       case 'summary':
         return 'SUMMARY';
       case 'character':
-        return 'CHARACTER';
+        // مثل CHARACTER در گراف اصلی: سست است و فرنچایزها را قاطی می‌کند.
+        return null;
       case 'other':
         return 'OTHER';
       case 'alternativesetting':
@@ -364,7 +368,10 @@ class FranchiseRepository {
       case 'novel':
         return null;
       default:
-        return 'OTHER';
+        // رابطه ناشناخته از منبع خارجی: حدس نزن و ادغام نکن.
+        // قبلاً 'OTHER' برمی‌گرداند که باعث قاطی شدن فرنچایزهای
+        // نامرتبط می‌شد.
+        return null;
     }
   }
 
