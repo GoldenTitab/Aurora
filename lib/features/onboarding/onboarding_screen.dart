@@ -86,7 +86,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
       if (!mounted) return;
     }
-    context.go('/');
+    context.go('/discover');
   }
 
   void _next() {
