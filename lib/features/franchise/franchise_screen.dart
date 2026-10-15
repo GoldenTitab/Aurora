@@ -19,6 +19,7 @@ import '../../data/services/franchise_pdf.dart';
 import 'widgets/entry_tile.dart';
 import 'widgets/franchise_rating.dart';
 import 'widgets/franchise_tree_view.dart';
+import 'widgets/manual_add_sheet.dart';
 import 'widgets/note_editor.dart';
 import 'widgets/watch_order_view.dart';
 
@@ -37,7 +38,7 @@ class FranchiseScreen extends ConsumerWidget {
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go('/');
+      context.go('/discover');
     }
   }
 
@@ -115,6 +116,37 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
   String _view = 'list';
   bool _exporting = false;
 
+  /// بازخوانی سبک بعد از افزودن/حذف دستی (بدون force تا ورودی‌های
+  /// دستیِ ذخیره‌شده در meta ادغام شوند).
+  Future<void> _reloadAfterManual() async {
+    final malId = widget.malId;
+    try {
+      final repo = ref.read(franchiseRepositoryProvider);
+      if (malId != null) {
+        await repo.getFranchiseByMal(malId);
+        ref.invalidate(franchiseByMalProvider(malId));
+      } else {
+        await repo.getFranchise(widget.requestedId);
+        ref.invalidate(franchiseProvider(widget.requestedId));
+      }
+    } catch (_) {}
+  }
+
+  void _openManualAdd() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceOf(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => ManualAddSheet(
+        franchise: widget.franchise,
+        onAdded: _reloadAfterManual,
+      ),
+    );
+  }
+
   Future<void> _refresh(BuildContext context, WidgetRef ref) async {
     final malId = widget.malId;
     try {
@@ -173,7 +205,11 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
       for (final e in list)
         Padding(
           padding: const EdgeInsets.only(bottom: 10),
-          child: EntryTile(entry: e),
+          child: EntryTile(
+            entry: e,
+            franchiseId: widget.franchise.id,
+            onManualRemoved: _reloadAfterManual,
+          ),
         ),
       const SizedBox(height: 12),
     ];
@@ -221,6 +257,11 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
               onPressed: widget.onBack,
             ),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.add_rounded),
+                tooltip: 'افزودن دستی انیمه',
+                onPressed: () => _openManualAdd(),
+              ),
               if (_exporting)
                 const Padding(
                   padding: EdgeInsets.all(14),
@@ -516,7 +557,11 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
                   delegate: SliverChildBuilderDelegate(
                     (context, i) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
-                      child: EntryTile(entry: main[i]),
+                      child: EntryTile(
+                        entry: main[i],
+                        franchiseId: widget.franchise.id,
+                        onManualRemoved: _reloadAfterManual,
+                      ),
                     ),
                     childCount: main.length,
                   ),
@@ -539,7 +584,11 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
                   delegate: SliverChildBuilderDelegate(
                     (context, i) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
-                      child: EntryTile(entry: related[i]),
+                      child: EntryTile(
+                        entry: related[i],
+                        franchiseId: widget.franchise.id,
+                        onManualRemoved: _reloadAfterManual,
+                      ),
                     ),
                     childCount: related.length,
                   ),
