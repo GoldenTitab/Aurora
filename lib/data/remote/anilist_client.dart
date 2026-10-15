@@ -196,7 +196,7 @@ query ($id: Int, $perPage: Int) {
     characters(perPage: $perPage, sort: [ROLE, FAVOURITES_DESC]) {
       edges {
         role
-        node { id name { full } image { large } }
+        node { id name { full } image { large } favourites gender }
       }
     }
   }
@@ -220,7 +220,51 @@ query ($id: Int, $perPage: Int) {
         'name': ((node['name'] as Map?)?['full'] as String?) ?? '—',
         'image': ((node['image'] as Map?)?['large'] as String?),
         'role': m['role'],
+        'favourites': (node['favourites'] as num?)?.toInt() ?? 0,
+        'gender': (node['gender'] as String?) ?? '',
       });
+    }
+    return out;
+  }
+
+  /// برنامه پخش بعدی چند مدیا (برای تقویم هفتگی) — کش کوتاه ۶ ساعته.
+  ///
+  /// فقط مدیاهایی که قسمت بعدیِ اعلام‌شده دارند در خروجی هستند.
+  Future<Map<int, ({int episode, int airingAt})>> fetchAiringSchedule(
+    List<int> ids,
+  ) async {
+    final out = <int, ({int episode, int airingAt})>{};
+    if (ids.isEmpty) return out;
+    const q = r'''
+query ($ids: [Int]) {
+  Page(perPage: 50) {
+    media(id_in: $ids, type: ANIME) {
+      id
+      nextAiringEpisode { episode airingAt }
+    }
+  }
+}
+''';
+    for (var i = 0; i < ids.length; i += 50) {
+      final chunk = ids.sublist(i, (i + 50).clamp(0, ids.length));
+      try {
+        final data = await _query(
+          q,
+          {'ids': chunk},
+          cacheTtl: const Duration(hours: 6),
+        );
+        final list = (data['Page']?['media'] as List?) ?? const [];
+        for (final m in list) {
+          final mm = (m as Map).cast<String, dynamic>();
+          final id = (mm['id'] as num?)?.toInt();
+          final next = mm['nextAiringEpisode'] as Map?;
+          if (id == null || next == null) continue;
+          final ep = (next['episode'] as num?)?.toInt();
+          final at = (next['airingAt'] as num?)?.toInt();
+          if (ep == null || at == null) continue;
+          out[id] = (episode: ep, airingAt: at);
+        }
+      } catch (_) {}
     }
     return out;
   }
