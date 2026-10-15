@@ -23,15 +23,13 @@ class WatchPlanService {
     var remaining = budget;
     final items = <WatchPlanItem>[];
 
-    // اولویت: watching → planToWatch → بقیه
-    final prioritized = [...franchises];
-    prioritized.sort((a, b) {
-      final sa = _priority(a);
-      final sb = _priority(b);
-      return sb.compareTo(sa);
-    });
+    // فقط انیمه‌هایی که «در حال تماشا» یا «متوقف‌شده» هستند؛
+    // چیزی که اصلاً شروع نشده (بدون وضعیت / plan-to-watch) انتخاب نمی‌شود.
+    final eligible = franchises.where(_isEligible).toList();
+    // اولویت: watching → onHold
+    eligible.sort((a, b) => _priority(b).compareTo(_priority(a)));
 
-    for (final f in prioritized) {
+    for (final f in eligible) {
       if (remaining.inMinutes < 10) break;
 
       final order = _order.compute(f);
@@ -39,8 +37,8 @@ class WatchPlanService {
         if (!wo.isEssential) continue; // فقط داستان اصلی
         final e = wo.entry;
         final st = statuses[e.id];
-        if (st == WatchStatus.completed) continue;
-        if (st == WatchStatus.dropped) continue;
+        // فقط ورودیِ در حال تماشا یا متوقف‌شده.
+        if (st != WatchStatus.watching && st != WatchStatus.onHold) continue;
 
         final totalEps = e.episodes > 0 ? e.episodes : 1;
         final watched = episodes[e.id] ?? <int>{};
@@ -82,15 +80,22 @@ class WatchPlanService {
     return WatchPlan(requested: budget, total: total, items: items);
   }
 
+  /// فرنچایز واجد شرایط است اگر حداقل یک ورودی‌اش
+  /// «در حال تماشا» یا «متوقف‌شده» باشد.
+  bool _isEligible(Franchise f) {
+    return f.entries.any((e) {
+      final st = statuses[e.id];
+      return st == WatchStatus.watching || st == WatchStatus.onHold;
+    });
+  }
+
   int _priority(Franchise f) {
     final list = f.entries
         .map((e) => statuses[e.id])
         .whereType<WatchStatus>()
         .toList();
     if (list.contains(WatchStatus.watching)) return 100;
-    if (list.contains(WatchStatus.planToWatch)) return 80;
-    if (list.contains(WatchStatus.onHold)) return 40;
-    if (list.isEmpty) return 10;
+    if (list.contains(WatchStatus.onHold)) return 50;
     return 0;
   }
 }
