@@ -121,6 +121,8 @@ List<AchievementDef> buildAchievements() {
     ('rare', 'فوق کمیاب'),
     ('epic', 'حماسی'),
     ('legendary', 'افسانه‌ای'),
+    ('waifu', 'وایفو'),
+    ('husbando', 'هازبندو'),
   ];
   for (final r in rarities) {
     for (final n in [1, 5, 10]) {
@@ -185,6 +187,10 @@ List<AchievementDef> buildAchievements() {
   // ── ویژه ───────────────────────────────────────────────────────
   add('sp_legendary', 'افسانه به دست شد', 'یه کارت افسانه‌ای گرفتی', 'ویژه',
       100, 100, (c) => (c.cardsPerRarity['legendary'] ?? 0) >= 1);
+  add('sp_waifu', 'وایفو!', 'یه کارت وایفو گرفتی', 'ویژه', 150, 150,
+      (c) => (c.cardsPerRarity['waifu'] ?? 0) >= 1);
+  add('sp_husbando', 'هازبندو!', 'یه کارت هازبندو گرفتی', 'ویژه', 150, 150,
+      (c) => (c.cardsPerRarity['husbando'] ?? 0) >= 1);
   add('sp_3rarity', 'سه‌گانه', 'از ۳ کمیابی مختلف کارت داری', 'ویژه', 60, 60,
       (c) => c.cardsPerRarity.keys.length >= 3);
   add('sp_alldaily', 'روز کامل', '۳ مأموریت رو کامل کردی',
