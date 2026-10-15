@@ -12,11 +12,10 @@ import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/rewards/pack_opening_screen.dart';
 import '../../features/rewards/rewards_screen.dart';
 import '../../features/stats/stats_screen.dart';
-import '../../data/providers.dart' show DiscoverSection, HomeSection;
+import '../../data/providers.dart' show DiscoverSection;
 import '../../data/storage/migrations.dart';
-import '../../features/home/home_screen.dart';
-import '../../features/home/section_list_screen.dart';
 import '../../features/my_list/my_list_screen.dart';
+import '../../features/profile/profile_screen.dart';
 import '../../features/search/search_screen.dart';
 import '../../features/settings/privacy_screen.dart';
 import '../../features/settings/settings_screen.dart';
@@ -31,7 +30,7 @@ final GlobalKey<NavigatorState> _rootKey = GlobalKey<NavigatorState>(
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootKey,
-  initialLocation: '/',
+  initialLocation: '/discover',
   // باکس‌ها در main قبل از runApp باز می‌شوند، پس خواندن همگام امن است.
   redirect: (context, state) {
     final done =
@@ -41,7 +40,7 @@ final GoRouter appRouter = GoRouter(
     // حین آنبوردینگ فقط خود آنبوردینگ و ایمپورت (دکمه‌ی داخل آنبوردینگ)
     // مجازند؛ بقیه مسیرها به آنبوردینگ برمی‌گردند.
     // بعد از اتمام آنبوردینگ، نمایش مجدد آن (دکمه‌ی «پخش مجدد آموزش» در
-    // تنظیمات) مجاز است و _finish با go('/') خارج می‌شود.
+    // تنظیمات) مجاز است و _finish با go('/discover') خارج می‌شود.
     if (!done && !onOnboarding && loc != '/import') return '/onboarding';
     return null;
   },
@@ -66,11 +65,6 @@ final GoRouter appRouter = GoRouter(
       branches: [
         StatefulShellBranch(
           routes: [
-            GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
-          ],
-        ),
-        StatefulShellBranch(
-          routes: [
             GoRoute(
               path: '/discover',
               builder: (context, state) => const DiscoverScreen(),
@@ -93,25 +87,23 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/settings',
+              builder: (context, state) => const SettingsScreen(),
+            ),
+          ],
+        ),
       ],
-    ),
-
-    GoRoute(
-      path: '/settings',
-      parentNavigatorKey: _rootKey,
-      builder: (context, state) => const SettingsScreen(),
-    ),
-    GoRoute(
-      path: '/section/:key',
-      parentNavigatorKey: _rootKey,
-      builder: (context, state) {
-        final key = state.pathParameters['key'];
-        final section = HomeSection.values.firstWhere(
-          (s) => s.name == key,
-          orElse: () => HomeSection.airing,
-        );
-        return SectionListScreen(section: section);
-      },
     ),
 
     GoRoute(
