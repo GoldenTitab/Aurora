@@ -1,0 +1,72 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
+import 'data/providers.dart';
+import 'features/settings/whats_new_screen.dart';
+
+class AuroraApp extends ConsumerWidget {
+  const AuroraApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mode = ref.watch(themeModeProvider);
+    final seed = ref.watch(seedColorProvider);
+
+    return MaterialApp.router(
+      title: 'Aurora',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.build(brightness: Brightness.light, seed: seed),
+      darkTheme: AppTheme.build(brightness: Brightness.dark, seed: seed),
+      themeMode: mode,
+      routerConfig: appRouter,
+      builder: (context, child) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: _WhatsNewGate(child: child!),
+      ),
+    );
+  }
+}
+
+/// بعد از این‌که آنبوردینگ تمام شده باشد، در اولین فریم «تازه‌های نسخه»
+/// را یک بار به‌ازای هر نسخه نشان می‌دهد (قابل بستن).
+///
+/// برای کاربر تازه‌ای که همین حالا آنبوردینگ را تمام کرده، خود صفحه‌ی
+/// آنبوردینگ این کار را می‌کند؛ این گیت برای کاربری است که نسخه را
+/// به‌روزرسانی کرده و آنبوردینگش از قبل تمام شده.
+class _WhatsNewGate extends StatefulWidget {
+  const _WhatsNewGate({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_WhatsNewGate> createState() => _WhatsNewGateState();
+}
+
+class _WhatsNewGateState extends State<_WhatsNewGate> {
+  static bool _checked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_checked) return;
+    _checked = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShow());
+  }
+
+  Future<void> _maybeShow() async {
+    if (!mounted) return;
+    final show = await WhatsNew.consume();
+    if (!show || !mounted) return;
+    final navContext =
+        appRouter.routerDelegate.navigatorKey.currentContext;
+    if (navContext == null || !navContext.mounted) return;
+    await showDialog<void>(
+      context: navContext,
+      builder: (_) => const WhatsNewDialog(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}

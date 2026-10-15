@@ -1,0 +1,34 @@
+# Flutter generated files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Generated iOS files
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
+
+# Local Android files
+android/local.properties
+android/.gradle/
+
+# Backup files
+*.bak
+*.backup
+*.backup2
+
+# Secrets
+.env
+.env.*
+!.env.example
+secrets.json
+credentials.json
+*.pem
+*.key
+# IDE files
+.idea/
+*.iml

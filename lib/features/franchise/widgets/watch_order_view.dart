@@ -1,0 +1,268 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/persian_numbers.dart';
+import '../../../core/utils/relation_labels.dart';
+import '../../../core/utils/text_utils.dart';
+import '../../../data/models/franchise.dart';
+import '../../../data/providers.dart';
+import '../../../data/services/watch_order_service.dart';
+
+class WatchOrderView extends ConsumerStatefulWidget {
+  const WatchOrderView({super.key, required this.franchise});
+  final Franchise franchise;
+
+  @override
+  ConsumerState<WatchOrderView> createState() => _WatchOrderViewState();
+}
+
+class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
+  bool _showOptional = true;
+  List<WatchOrderItem>? _localOrder;
+  bool _isCustom = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  void _load() {
+    final storage = ref.read(watchOrderStorageProvider);
+    final custom = storage.customOrderOf(widget.franchise.id);
+    final service = const WatchOrderService();
+    final items = service.compute(widget.franchise, customOrder: custom);
+    setState(() {
+      _localOrder = items;
+      _isCustom = custom != null && custom.isNotEmpty;
+    });
+  }
+
+  Future<void> _persistOrder(List<WatchOrderItem> merged) async {
+    setState(() {
+      _localOrder = merged;
+      _isCustom = true;
+    });
+    final ids = merged.map((e) => e.entry.id).toList();
+    await ref
+        .read(watchOrderStorageProvider)
+        .saveCustomOrder(widget.franchise.id, ids);
+  }
+
+  /// جابه‌جایی داخل لیست نمایشی؛ آیتم‌های مخفی (فیلتر «فقط ضروری‌ها»)
+  /// سر جای خودشان می‌مانند و ترتیب جدید ذخیره می‌شود.
+  Future<void> _onReorderVisible(
+    List<WatchOrderItem> full,
+    List<WatchOrderItem> visible,
+    int oldIndex,
+    int newIndex,
+  ) async {
+    final vis = visible.toList();
+    // onReorderItem قبلاً newIndex را برای آیتم حذف‌شده تنظیم کرده است.
+    final moved = vis.removeAt(oldIndex);
+    vis.insert(newIndex, moved);
+    final visIds = vis.map((e) => e.entry.id).toSet();
+    final it = vis.iterator;
+    final merged = <WatchOrderItem>[];
+    for (final e in full) {
+      if (visIds.contains(e.entry.id)) {
+        it.moveNext();
+        merged.add(it.current);
+      } else {
+        merged.add(e);
+      }
+    }
+    await _persistOrder(merged);
+  }
+
+  Future<void> _reset() async {
+    await ref
+        .read(watchOrderStorageProvider)
+        .clearCustomOrder(widget.franchise.id);
+    _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = _localOrder;
+    if (items == null) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: CircularProgressIndicator(
+            color: AppColors.primary,
+            strokeWidth: 3,
+          ),
+        ),
+      );
+    }
+
+    final visible = _showOptional
+        ? items
+        : items.where((i) => i.isEssential).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Row(
+            children: [
+              Text(
+                _isCustom ? 'ترتیب شخصی شما' : 'ترتیب پیشنهادی',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+              const Spacer(),
+              if (_isCustom)
+                TextButton.icon(
+                  onPressed: _reset,
+                  icon: const Icon(Icons.restore_rounded, size: 18),
+                  label: const Text('بازگشت به پیشنهادی'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primaryTextOf(context),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'برای تغییر ترتیب، دستگیرهٔ سمت چپ هر ردیف را بکش.',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondaryOf(context).withValues(alpha: 0.9),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            spacing: 8,
+            children: [
+              ChoiceChip(
+                label: const Text('همه'),
+                selected: _showOptional,
+                onSelected: (_) => setState(() => _showOptional = true),
+              ),
+              ChoiceChip(
+                label: Text(
+                  'فقط ضروری‌ها (${toFa(items.where((i) => i.isEssential).length)})',
+                ),
+                selected: !_showOptional,
+                onSelected: (_) => setState(() => _showOptional = false),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: ReorderableListView.builder(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+            itemCount: visible.length,
+            onReorderItem: (oldI, newI) =>
+                _onReorderVisible(items, visible, oldI, newI),
+            itemBuilder: (context, index) {
+              final item = visible[index];
+              final e = item.entry;
+              return Card(
+                key: ValueKey(e.id),
+                margin: const EdgeInsets.only(bottom: 8),
+                color: AppColors.surfaceOf(context),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: AppColors.borderOf(context)),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  leading: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                    child: Text(
+                      toFa(index + 1),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                        color: AppColors.primaryTextOf(context),
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    e.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textDirection: dirFor(e.title),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        _chip(
+                          item.isEssential ? 'ضروری' : 'اختیاری',
+                          item.isEssential
+                              ? const Color(0xFF22C55E)
+                              : const Color(0xFFF59E0B),
+                        ),
+                        if (item.relationNote != null &&
+                            item.relationNote!.isNotEmpty)
+                          _chip(
+                            relationLabelFa(item.relationNote),
+                            AppColors.primaryTextOf(context),
+                          ),
+                        if (e.episodes > 0)
+                          _chip(
+                            '${toFa(e.episodes)} قسمت',
+                            AppColors.textSecondaryOf(context),
+                          ),
+                      ],
+                    ),
+                  ),
+                  trailing: ReorderableDragStartListener(
+                    index: index,
+                    child: Icon(
+                      Icons.drag_handle_rounded,
+                      color: AppColors.textSecondaryOf(context),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _chip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+}

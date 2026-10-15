@@ -1,0 +1,254 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/theme/app_colors.dart';
+import '../../core/utils/persian_numbers.dart';
+import '../../core/utils/route_utils.dart';
+import '../../core/utils/text_utils.dart';
+import '../../core/utils/time_format.dart';
+import '../../core/widgets/cover_image.dart';
+import '../../data/models/watch_plan.dart';
+import '../../data/providers.dart';
+
+class WatchPlanScreen extends ConsumerStatefulWidget {
+  const WatchPlanScreen({super.key});
+
+  @override
+  ConsumerState<WatchPlanScreen> createState() => _WatchPlanScreenState();
+}
+
+class _WatchPlanScreenState extends ConsumerState<WatchPlanScreen> {
+  int _minutes = 60;
+  WatchPlan? _plan;
+
+  static const _presets = [30, 60, 120, 180, 240];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('برنامه‌ریزی تماشا')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Text(
+            'چقدر وقت داری؟',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final m in _presets)
+                ChoiceChip(
+                  label: Text(_label(m)),
+                  selected: _minutes == m,
+                  onSelected: (_) => setState(() => _minutes = m),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: _build,
+            icon: const Icon(Icons.auto_awesome_rounded),
+            label: const Text('بساز'),
+          ),
+          const SizedBox(height: 20),
+          if (_plan != null) _PlanCard(plan: _plan!),
+        ],
+      ),
+    );
+  }
+
+  String _label(int m) {
+    if (m < 60) return '${toFa(m)} دقیقه';
+    final h = m ~/ 60;
+    final rem = m % 60;
+    if (rem == 0) return '${toFa(h)} ساعت';
+    return '${toFa(h)} ساعت و ${toFa(rem)} دقیقه';
+  }
+
+  void _build() {
+    final plan = ref
+        .read(watchPlanServiceProvider)
+        .buildPlan(minutesAvailable: _minutes);
+    setState(() => _plan = plan);
+  }
+}
+
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({required this.plan});
+  final WatchPlan plan;
+
+  @override
+  Widget build(BuildContext context) {
+    if (plan.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceOf(context),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Text(
+          'برنامه‌ای ساخته نشد. باید فرنچایز نیمه‌کاره یا plan-to-watch در کتابخانه داشته باشی.',
+          style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.7),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceOf(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderOf(context)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.schedule_rounded,
+                    color: AppColors.primaryTextOf(context),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'برنامهٔ پیشنهادی',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    formatDurationFa(plan.total),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primaryTextOf(context),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'از ${formatDurationFa(plan.requested)} زمانی که داری، '
+                '${formatDurationFa(plan.total)} برنامه چیده شد.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondaryOf(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        for (var i = 0; i < plan.items.length; i++)
+          _PlanItemCard(index: i + 1, item: plan.items[i]),
+      ],
+    );
+  }
+}
+
+class _PlanItemCard extends StatelessWidget {
+  const _PlanItemCard({required this.index, required this.item});
+  final int index;
+  final WatchPlanItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: AppColors.surfaceOf(context),
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.push(
+            franchiseRouteFor(
+              item.franchise.anilistId,
+              item.franchise.id,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    toFa(index),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                      color: AppColors.primaryTextOf(context),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    width: 40,
+                    height: 56,
+                    child: CoverImage(
+                      url: item.entry.cover ?? item.franchise.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.franchise.titleFa,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item.entry.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textDirection: dirFor(item.entry.title),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondaryOf(context),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'قسمت‌های ${toFa(item.startEpisode)} تا ${toFa(item.endEpisode)} '
+                        '· ${formatDurationFa(item.estimatedDuration)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.primaryTextOf(context),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -1,0 +1,216 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../models/watch_status.dart';
+import '../providers.dart';
+
+/// نتیجه ایمپورت لیست.
+class LibraryImportResult {
+  final bool ok;
+  final String message;
+  final int imported;
+  final int skipped;
+
+  const LibraryImportResult({
+    required this.ok,
+    required this.message,
+    this.imported = 0,
+    this.skipped = 0,
+  });
+}
+
+WatchStatus? _anilistStatus(String? s) {
+  switch (s) {
+    case 'CURRENT':
+      return WatchStatus.watching;
+    case 'COMPLETED':
+      return WatchStatus.completed;
+    case 'PAUSED':
+      return WatchStatus.onHold;
+    case 'DROPPED':
+      return WatchStatus.dropped;
+    case 'PLANNING':
+      return WatchStatus.planToWatch;
+    default:
+      return null;
+  }
+}
+
+WatchStatus? _jikanStatus(String? s) {
+  switch (s) {
+    case 'watching':
+      return WatchStatus.watching;
+    case 'completed':
+      return WatchStatus.completed;
+    case 'on_hold':
+      return WatchStatus.onHold;
+    case 'dropped':
+      return WatchStatus.dropped;
+    case 'plan_to_watch':
+      return WatchStatus.planToWatch;
+    default:
+      return null;
+  }
+}
+
+/// ایمپورت لیست عمومی AniList با یوزرنیم.
+Future<LibraryImportResult> importFromAniList(
+  Ref ref,
+  String username,
+  void Function(String) onProgress,
+) async {
+  final client = ref.read(anilistClientProvider);
+  final repo = ref.read(franchiseRepositoryProvider);
+
+  onProgress('در حال دریافت لیست...');
+  final entries = await client.fetchUserAnimeList(username.trim());
+  if (entries == null) {
+    return const LibraryImportResult(
+      ok: false,
+      message: 'کاربر پیدا نشد یا لیستش خصوصی است.',
+    );
+  }
+  if (entries.isEmpty) {
+    return const LibraryImportResult(
+      ok: false,
+      message: 'لیست این کاربر خالی است.',
+    );
+  }
+
+  const cap = 60;
+  var imported = 0;
+  var skipped = 0;
+  final total = entries.length > cap ? cap : entries.length;
+
+  for (var i = 0; i < total; i++) {
+    final e = entries[i];
+    onProgress('در حال وارد کردن ${i + 1} از $total...');
+    final media = (e['media'] as Map?)?.cast<String, dynamic>();
+    final anilistId = media?['id'] as int?;
+    final status = _anilistStatus(e['listStatus'] as String?);
+    if (anilistId == null || status == null) {
+      skipped++;
+      continue;
+    }
+    try {
+      final f = await repo.getFranchise(anilistId);
+      final entry = f.entries.firstWhere(
+        (x) => x.anilistId == anilistId,
+        orElse: () => f.entries.first,
+      );
+      await ref
+          .read(watchStatusProvider.notifier)
+          .setStatus(entry.id, status);
+      final progress = (e['progress'] as num?)?.toInt() ?? 0;
+      if (progress > 0 && entry.episodes > 0) {
+        await ref
+            .read(episodeProgressProvider.notifier)
+            .markUpTo(entry.id, progress.clamp(1, entry.episodes).toInt(), entry.episodes);
+      }
+      imported++;
+    } catch (_) {
+      skipped++;
+    }
+  }
+
+  await ref.read(economyProvider.notifier).markImported();
+  return LibraryImportResult(
+    ok: true,
+    message: '$imported اثر وارد شد${skipped > 0 ? ' ($skipped مورد رد شد)' : ''}.',
+    imported: imported,
+    skipped: skipped,
+  );
+}
+
+/// ایمپورت لیست MAL با یوزرنیم (از طریق Jikan، بدون احراز هویت).
+Future<LibraryImportResult> importFromMal(
+  Ref ref,
+  String username,
+  void Function(String) onProgress,
+) async {
+  final jikan = ref.read(jikanClientProvider);
+  final ani = ref.read(anilistClientProvider);
+  final repo = ref.read(franchiseRepositoryProvider);
+
+  onProgress('در حال دریافت لیست MAL...');
+  final all = <Map<String, dynamic>>[];
+  for (final s in [
+    'watching',
+    'completed',
+    'on_hold',
+    'dropped',
+    'plan_to_watch',
+  ]) {
+    var page = 1;
+    while (true) {
+      final batch = await jikan.fetchUserList(username.trim(), s, page);
+      if (batch == null) {
+        return const LibraryImportResult(
+          ok: false,
+          message: 'کاربر پیدا نشد یا لیستش خصوصی است.',
+        );
+      }
+      if (batch.isEmpty) break;
+      all.addAll(batch.map((e) => {...e, 'jikanStatus': s}));
+      if (batch.length < 100) break;
+      page++;
+      if (page > 10) break;
+      await Future.delayed(const Duration(milliseconds: 400));
+    }
+  }
+  if (all.isEmpty) {
+    return const LibraryImportResult(
+      ok: false,
+      message: 'لیست این کاربر خالی است.',
+    );
+  }
+
+  const cap = 40;
+  var imported = 0;
+  var skipped = 0;
+  final total = all.length > cap ? cap : all.length;
+
+  for (var i = 0; i < total; i++) {
+    final e = all[i];
+    onProgress('در حال وارد کردن ${i + 1} از $total...');
+    final malId = (e['mal_id'] as num?)?.toInt();
+    final status = _jikanStatus(e['jikanStatus'] as String?);
+    if (malId == null || status == null) {
+      skipped++;
+      continue;
+    }
+    try {
+      final media = await ani.fetchMediaByMal(malId);
+      final anilistId = media?['id'] as int?;
+      if (anilistId == null) {
+        skipped++;
+        continue;
+      }
+      final f = await repo.getFranchise(anilistId);
+      final entry = f.entries.firstWhere(
+        (x) => x.anilistId == anilistId,
+        orElse: () => f.entries.first,
+      );
+      await ref
+          .read(watchStatusProvider.notifier)
+          .setStatus(entry.id, status);
+      final watched = (e['episodes_watched'] as num?)?.toInt() ?? 0;
+      if (watched > 0 && entry.episodes > 0) {
+        await ref
+            .read(episodeProgressProvider.notifier)
+            .markUpTo(entry.id, watched.clamp(1, entry.episodes).toInt(), entry.episodes);
+      }
+      imported++;
+      await Future.delayed(const Duration(milliseconds: 300));
+    } catch (_) {
+      skipped++;
+    }
+  }
+
+  await ref.read(economyProvider.notifier).markImported();
+  return LibraryImportResult(
+    ok: true,
+    message: '$imported اثر وارد شد${skipped > 0 ? ' ($skipped مورد رد شد)' : ''}.',
+    imported: imported,
+    skipped: skipped,
+  );
+}
