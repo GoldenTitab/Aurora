@@ -11,6 +11,7 @@ import '../remote/anilist_client.dart';
 import '../remote/api_exception.dart';
 import '../remote/jikan_client.dart';
 import '../remote/mal_client.dart';
+import '../storage/migrations.dart';
 
 class _Item {
   final Map<String, dynamic> media;
@@ -70,14 +71,14 @@ class FranchiseRepository {
     final rootKey = _box.get('a:al-$anyId') ?? 'al-$anyId';
     final cached = _readCache(rootKey);
     if (cached != null && cached.fresh && !forceRefresh) {
-      return cached.franchise;
+      return _withManual(cached.franchise);
     }
     try {
       final franchise = await _buildSerial(anyId);
       await _save(franchise, 'a:al-$anyId');
-      return franchise;
+      return _withManual(franchise);
     } catch (e) {
-      if (cached != null) return cached.franchise;
+      if (cached != null) return _withManual(cached.franchise);
       rethrow;
     }
   }
@@ -93,7 +94,7 @@ class FranchiseRepository {
     final rootKey = _box.get(aliasKey);
     if (rootKey != null && !forceRefresh) {
       final cached = _readCache(rootKey);
-      if (cached != null && cached.fresh) return cached.franchise;
+      if (cached != null && cached.fresh) return _withManual(cached.franchise);
     }
 
     // ۱) آیا قبلاً در کش فرنچایزی با همین malId داریم؟
@@ -142,7 +143,7 @@ class FranchiseRepository {
       entries: [entry],
     );
     await _save(f, aliasKey);
-    return f;
+    return _withManual(f);
   }
 
   Future<void> _buildTail = Future.value();
@@ -472,12 +473,127 @@ class FranchiseRepository {
       final k = key.toString();
       if (!k.startsWith('f:')) continue;
       final c = _decode(_box.get(k));
-      if (c != null) result.add(c.franchise);
+      if (c != null) result.add(_withManual(c.franchise));
     }
     return result;
   }
 
+  /// به‌روزرسانی سبک اطلاعات پخش (قسمت/زمان بعدی) در فرنچایزهای کش‌شده.
+  ///
+  /// ts دست نمی‌خورد تا منطق تازگی کش عوض نشود؛ فقط فیلدهای پخش
+  /// ورودی‌ها تازه می‌شوند (برای تقویم هفتگی و بنر قسمت‌های جدید).
+  Future<void> updateAiringInfo(
+    Map<int, ({int episode, int airingAt})> fresh,
+  ) async {
+    if (fresh.isEmpty) return;
+    for (final key in _box.keys.toList()) {
+      final k = key.toString();
+      if (!k.startsWith('f:')) continue;
+      final raw = _box.get(k);
+      final c = _decode(raw);
+      if (c == null) continue;
+      var changed = false;
+      final entries = <Entry>[];
+      for (final e in c.franchise.entries) {
+        final f2 = fresh[e.anilistId];
+        if (f2 != null &&
+            (e.nextEpisode != f2.episode || e.nextAiringAt != f2.airingAt)) {
+          changed = true;
+          entries.add(
+            e.copyWith(nextEpisode: f2.episode, nextAiringAt: f2.airingAt),
+          );
+        } else {
+          entries.add(e);
+        }
+      }
+      if (!changed) continue;
+      try {
+        final m = (jsonDecode(raw!) as Map).cast<String, dynamic>();
+        m['data'] = c.franchise.copyWith(entries: entries).toJson();
+        await _box.put(k, jsonEncode(m));
+      } catch (_) {}
+    }
+  }
+
   String? aliasOf(int anilistId) => _box.get('a:al-$anilistId');
+
+  // ── ورودی‌های دستی کاربر ──────────────────────────────────────────
+  //
+  // وقتی API یک انیمه را در فرنچایز جا می‌اندازد، کاربر می‌تواند آن را
+  // دستی اضافه کند. این ورودی‌ها در باکس meta (نه کش فرنچایز) ذخیره
+  // می‌شوند تا با پاک شدن کش از بین نروند، و در هر بار خواندن فرنچایز
+  // (تازه یا از کش) با [_withManual] ادغام می‌شوند.
+
+  List<Entry> _readManualList(String franchiseId) {
+    try {
+      final raw = Hive.box<String>(
+        Boxes.meta,
+      ).get('manual_entries:$franchiseId');
+      if (raw == null) return [];
+      final items =
+          ((jsonDecode(raw) as Map).cast<String, dynamic>()['items'] as List?) ??
+          const [];
+      return items
+          .map((e) => Entry.fromJson((e as Map).cast<String, dynamic>()))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// همه ورودی‌های دستی یک فرنچایز.
+  List<Entry> manualEntries(String franchiseId) => _readManualList(franchiseId);
+
+  /// افزودن دستی یک انیمه به فرنچایز.
+  Future<void> addManualEntry(String franchiseId, Entry entry) async {
+    final list = _readManualList(franchiseId);
+    if (list.any((e) => e.id == entry.id)) return;
+    list.add(entry.copyWith(manual: true, isMainStory: true));
+    await Hive.box<String>(Boxes.meta).put(
+      'manual_entries:$franchiseId',
+      jsonEncode({'items': list.map((e) => e.toJson()).toList()}),
+    );
+  }
+
+  /// حذف یک ورودی دستی از فرنچایز.
+  Future<void> removeManualEntry(String franchiseId, String entryId) async {
+    final list = _readManualList(franchiseId);
+    list.removeWhere((e) => e.id == entryId);
+    await Hive.box<String>(Boxes.meta).put(
+      'manual_entries:$franchiseId',
+      jsonEncode({'items': list.map((e) => e.toJson()).toList()}),
+    );
+  }
+
+  /// ادغام ورودی‌های دستی کاربر به فرنچایز (بعد از ساخت یا خواندن از کش).
+  Franchise _withManual(Franchise f) {
+    final manual = _readManualList(f.id);
+    if (manual.isEmpty) return f;
+    final ids = f.entries.map((e) => e.id).toSet();
+    final extra = manual.where((e) => !ids.contains(e.id)).toList();
+    if (extra.isEmpty) return f;
+    return f.copyWith(entries: [...f.entries, ...extra]);
+  }
+
+  /// ساخت Entry کامل از یک نتیجه جست‌وجو (برای افزودن دستی).
+  /// null یعنی دیتای کامل پیدا نشد.
+  Future<Entry?> resolveManualEntry(AnimeCardData d) async {
+    try {
+      if (d.anilistId > 0) {
+        final media = await _ani.fetchMedia(d.anilistId);
+        return Entry.fromAniList(media, isMainStory: true);
+      }
+      if (d.malId > 0) {
+        final media = await _ani.fetchMediaByMal(d.malId);
+        if (media != null) {
+          return Entry.fromAniList(media, isMainStory: true);
+        }
+        final detail = await _jikan.fetchAnime(d.malId);
+        if (detail != null) return Entry.fromJikanSearch(detail);
+      }
+    } catch (_) {}
+    return null;
+  }
 
   List<Franchise> localSearch(String query) {
     final q = normalizeQuery(query);
