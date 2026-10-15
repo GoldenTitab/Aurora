@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- اعلان قسمت‌های جدید (اندروید ۱۳+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- زمان‌بندی مجدد کار پس‌زمینه بعد از ری‌استارت گوشی -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
         android:label="Aurora"
         android:name="${applicationName}"
@@ -25,6 +29,18 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- هوم‌ویجت Aurora (ادامه تماشا + پخش امروز) -->
+        <receiver
+            android:name=".AuroraWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/aurora_widget_info" />
+        </receiver>
     </application>
     <queries>
         <intent>
