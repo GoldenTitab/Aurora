@@ -1,7 +1,20 @@
 import 'package:flutter/material.dart';
 
 /// کمیابی کارت‌ها با وزن شانس و جایزه تکراری.
-enum CardRarity { common, uncommon, rare, epic, legendary }
+///
+/// درجه هر کارت از روی محبوبیت شخصیت (تعداد علاقه‌مندی‌های AniList)
+/// تعیین می‌شود، نه شانسی: شخصیت ناشناخته هیچ‌وقت افسانه‌ای نمی‌شود.
+/// وایفو/هازبندو دو درجه ویژه‌اند برای محبوب‌ترین شخصیت‌ها
+/// (به‌ترتیب زن و مرد) با شانسی کمتر از افسانه‌ای.
+enum CardRarity {
+  common,
+  uncommon,
+  rare,
+  epic,
+  legendary,
+  waifu,
+  husbando,
+}
 
 extension CardRarityX on CardRarity {
   String get labelFa {
@@ -16,22 +29,33 @@ extension CardRarityX on CardRarity {
         return 'حماسی';
       case CardRarity.legendary:
         return 'افسانه‌ای';
+      case CardRarity.waifu:
+        return 'وایفو';
+      case CardRarity.husbando:
+        return 'هازبندو';
     }
   }
 
-  /// وزن شانس (مجموع ۱۰۰).
+  /// وزن شانس (مجموع ۱۰۰۰ — برای دقت نیم‌درصدی درجه‌های ویژه).
+  ///
+  /// عادی ۴۸٪، کمیاب ۲۶٪، فوق‌کمیاب ۱۵٪، حماسی ۷٪،
+  /// افسانه‌ای ۳٪، وایفو ۰٫۵٪، هازبندو ۰٫۵٪.
   int get weight {
     switch (this) {
       case CardRarity.common:
-        return 50;
+        return 480;
       case CardRarity.uncommon:
-        return 26;
+        return 260;
       case CardRarity.rare:
-        return 14;
+        return 150;
       case CardRarity.epic:
-        return 7;
+        return 70;
       case CardRarity.legendary:
-        return 3;
+        return 30;
+      case CardRarity.waifu:
+        return 5;
+      case CardRarity.husbando:
+        return 5;
     }
   }
 
@@ -48,6 +72,10 @@ extension CardRarityX on CardRarity {
         return 40;
       case CardRarity.legendary:
         return 80;
+      case CardRarity.waifu:
+        return 150;
+      case CardRarity.husbando:
+        return 150;
     }
   }
 
@@ -63,6 +91,10 @@ extension CardRarityX on CardRarity {
         return const Color(0xFFF59E0B);
       case CardRarity.legendary:
         return const Color(0xFFF43F5E);
+      case CardRarity.waifu:
+        return const Color(0xFFF472B6);
+      case CardRarity.husbando:
+        return const Color(0xFF60A5FA);
     }
   }
 

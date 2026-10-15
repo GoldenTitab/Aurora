@@ -78,6 +78,9 @@ class Entry {
   /// شناسه entry والد داخل همین فرنچایز (مثلاً al-12345)
   final String? parentEntryId;
 
+  /// true یعنی کاربر دستی به فرنچایز اضافه‌اش کرده (نه از API).
+  final bool manual;
+
   const Entry({
     required this.id,
     required this.anilistId,
@@ -96,6 +99,7 @@ class Entry {
     this.durationMin = 24,
     this.relationType,
     this.parentEntryId,
+    this.manual = false,
   });
 
   factory Entry.fromAniList(
@@ -285,6 +289,7 @@ class Entry {
     int? durationMin,
     String? relationType,
     String? parentEntryId,
+    bool? manual,
   }) {
     return Entry(
       id: id ?? this.id,
@@ -304,6 +309,7 @@ class Entry {
       durationMin: durationMin ?? this.durationMin,
       relationType: relationType ?? this.relationType,
       parentEntryId: parentEntryId ?? this.parentEntryId,
+      manual: manual ?? this.manual,
     );
   }
 
@@ -325,6 +331,7 @@ class Entry {
     'durationMin': durationMin,
     'relationType': relationType,
     'parentEntryId': parentEntryId,
+    'manual': manual,
   };
 
   factory Entry.fromJson(Map<String, dynamic> j) => Entry(
@@ -348,6 +355,7 @@ class Entry {
     durationMin: (j['durationMin'] as num?)?.toInt() ?? 24,
     relationType: j['relationType'] as String?,
     parentEntryId: j['parentEntryId'] as String?,
+    manual: (j['manual'] as bool?) ?? false,
   );
 
   ReleaseState get releaseState {
