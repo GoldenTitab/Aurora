@@ -6,9 +6,12 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/persian_numbers.dart';
 import '../../core/widgets/anime_card.dart';
 import '../../core/widgets/section_title.dart';
+import '../../data/homewidget/home_widget_service.dart';
 import '../../data/models/anime_card_data.dart';
 import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
+import 'widgets/continue_watching.dart';
+import 'widgets/new_episodes_banner.dart';
 
 /// صفحه «کشف»: رتبه‌بندی‌ها، پیشنهادها و چارت فصلی.
 class DiscoverScreen extends ConsumerWidget {
@@ -35,6 +38,9 @@ class DiscoverScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
+          const _HomeWidgetSync(),
+          const ContinueWatching(),
+          const NewEpisodesBanner(),
           const _RecommendationsRow(),
           for (final s in DiscoverSection.values) _DiscoverBlock(section: s),
         ],
@@ -232,5 +238,31 @@ class _Row extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+/// هوک نامرئی: هوم‌ویجت اندروید/iOS را با «ادامه تماشا» و پخش امروز
+/// به‌روز نگه می‌دارد (اولین ساخت + هر تغییر در دو provider).
+class _HomeWidgetSync extends ConsumerStatefulWidget {
+  const _HomeWidgetSync();
+
+  @override
+  ConsumerState<_HomeWidgetSync> createState() => _HomeWidgetSyncState();
+}
+
+class _HomeWidgetSyncState extends ConsumerState<_HomeWidgetSync> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) refreshHomeWidget(ref);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(continueWatchingProvider, (_, _) => refreshHomeWidget(ref));
+    ref.listen(weeklyAiringProvider, (_, _) => refreshHomeWidget(ref));
+    return const SizedBox.shrink();
   }
 }
