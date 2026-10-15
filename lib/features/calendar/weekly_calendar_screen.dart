@@ -7,8 +7,10 @@ import '../../core/utils/persian_numbers.dart';
 import '../../core/utils/route_utils.dart';
 import '../../core/utils/text_utils.dart';
 import '../../core/widgets/cover_image.dart';
+import '../../core/widgets/state_views.dart';
 import '../../data/models/home_items.dart';
 import '../../data/providers.dart';
+import '../../data/remote/api_exception.dart';
 
 /// صفحه تقویم پخش هفتگی.
 class WeeklyCalendarScreen extends ConsumerWidget {
@@ -16,22 +18,48 @@ class WeeklyCalendarScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final days = ref.watch(weeklyAiringProvider);
+    final async = ref.watch(weeklyAiringProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('تقویم پخش هفتگی')),
-      body: days.isEmpty
-          ? Center(
-              child: Text(
-                'قسمت جدیدی برای نمایش نیست...',
-                style: TextStyle(color: AppColors.textSecondaryOf(context)),
+      appBar: AppBar(
+        title: const Text('تقویم پخش هفتگی'),
+        actions: [
+          IconButton(
+            tooltip: 'به‌روزرسانی',
+            onPressed: () => ref.invalidate(weeklyAiringProvider),
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
+      body: async.when(
+        loading: () => const LoadingView(
+          message: 'در حال دریافت برنامه پخش...',
+        ),
+        error: (e, _) => ErrorView(
+          message: friendlyError(e),
+          onRetry: () => ref.invalidate(weeklyAiringProvider),
+        ),
+        data: (days) => days.isEmpty
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    'قسمت جدیدی برای نمایش نیست.\n'
+                    'انیمه‌های در حال پخش را باز کن تا به تقویم اضافه شوند.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppColors.textSecondaryOf(context),
+                      height: 1.8,
+                    ),
+                  ),
+                ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                itemCount: days.length,
+                itemBuilder: (context, i) => _DaySection(day: days[i]),
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              itemCount: days.length,
-              itemBuilder: (context, i) => _DaySection(day: days[i]),
-            ),
+      ),
     );
   }
 }
