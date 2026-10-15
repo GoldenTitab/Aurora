@@ -503,25 +503,55 @@ class SuggestionService {
   SuggestionService(this._ref);
   final Ref _ref;
 
+  /// پیشنهاد از بیرون «لیست من»: از بخش‌های کشف (ترند، برترین‌ها، فصلی)
+  /// انتخاب می‌کند و هیچ‌وقت انیمه‌ای که در لیست کاربر یا کتابخانه‌اش
+  /// هست را پیشنهاد نمی‌دهد.
   Future<Suggestion?> pick() async {
     final repo = _ref.read(franchiseRepositoryProvider);
-    final franchises = repo.allCachedFranchises();
     final statuses = _ref.read(watchStatusProvider);
     final storage = _ref.read(watchOrderStorageProvider);
     final recent = storage.recentSuggestions().toSet();
-    final genreCounts = storage.recentGenreCounts();
+
+    // شناسه همه ورودی‌هایی که کاربر می‌شناسد: لیست من + کتابخانه.
+    final excluded = <String>{...statuses.keys};
+    for (final f in repo.allCachedFranchises()) {
+      for (final e in f.entries) {
+        excluded.add(e.id);
+      }
+    }
+
+    // جمع‌کردن نامزدها از بخش‌های کشف.
+    const sectionWeight = {
+      DiscoverSection.trending: 'ترند',
+      DiscoverSection.weeklyTop: 'هفته',
+      DiscoverSection.seasonal: 'فصل',
+      DiscoverSection.topSeries: 'برترین‌ها',
+      DiscoverSection.topMovies: 'برترین‌ها',
+      DiscoverSection.underrated: 'آندرریتد',
+    };
+    final candidates = <({AnimeCardData data, String sourceFa})>[];
+    for (final entry in sectionWeight.entries) {
+      try {
+        final data = await _ref.read(
+          discoverSectionProvider(entry.key).future,
+        );
+        for (final d in data.items) {
+          candidates.add((data: d, sourceFa: entry.value));
+        }
+      } catch (_) {}
+    }
+    if (candidates.isEmpty) return null;
 
     final engine = SuggestionEngine();
-    final result = engine.pick(
-      franchises: franchises,
-      statuses: statuses,
-      recentFranchiseIds: recent,
-      recentGenreCounts: genreCounts,
+    final result = engine.pickExternal(
+      candidates: candidates,
+      excludedEntryIds: excluded,
+      recentIds: recent,
     );
     if (result != null) {
       await storage.pushSuggestion(
-        franchiseId: result.franchise.id,
-        genres: result.franchise.genres,
+        franchiseId: result.historyId,
+        genres: const [],
       );
     }
     return result;
@@ -659,9 +689,31 @@ final newEpisodesProvider = Provider<List<NewEpisodeItem>>((ref) {
 // ─── Step 13: تقویم پخش هفتگی ─────────────────────────────────────────────
 
 /// گروه‌بندی آثار در حال پخش بر اساس روز هفته (شروع هفته: شنبه).
-final weeklyAiringProvider = Provider<List<AiringDay>>((ref) {
+///
+/// دیتای پخش (nextAiringAt) در کش فرنچایزها زود قدیمی می‌شود و همان باعث
+/// خالی ماندن تقویم بود؛ این provider برای ورودی‌هایی که دیتایشان قدیمی
+/// یا نامشخص است، برنامه پخش را مستقیم از AniList می‌گیرد (کش ۶ ساعته)
+/// و کش فرنچایزها را هم به‌روز می‌کند تا بقیه بخش‌ها هم دقیق باشند.
+final weeklyAiringProvider = FutureProvider<List<AiringDay>>((ref) async {
   final repo = ref.read(franchiseRepositoryProvider);
+  final ani = ref.read(anilistClientProvider);
   final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+  // شناسه‌هایی که دیتای پخششان قدیمی یا نامشخص است.
+  final staleIds = <int>{};
+  for (final f in repo.allCachedFranchises()) {
+    for (final e in f.entries) {
+      if (e.anilistId <= 0) continue;
+      final at = e.nextAiringAt;
+      if (at == null || at < nowSec - 86400) staleIds.add(e.anilistId);
+    }
+  }
+  if (staleIds.isNotEmpty) {
+    try {
+      final fresh = await ani.fetchAiringSchedule(staleIds.toList());
+      await repo.updateAiringInfo(fresh);
+    } catch (_) {}
+  }
 
   final buckets = <int, List<AiringEntry>>{};
   for (final f in repo.allCachedFranchises()) {
