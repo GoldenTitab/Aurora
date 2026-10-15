@@ -22,7 +22,7 @@ class _WatchPlanScreenState extends ConsumerState<WatchPlanScreen> {
   int _minutes = 60;
   WatchPlan? _plan;
 
-  static const _presets = [30, 60, 120, 180, 240];
+  static const _presets = [30, 60, 120, 180, 240, 300, 360];
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +91,7 @@ class _PlanCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
         ),
         child: Text(
-          'برنامه‌ای ساخته نشد. باید فرنچایز نیمه‌کاره یا plan-to-watch در کتابخانه داشته باشی.',
+          'برنامه‌ای ساخته نشد. باید حداقل یک انیمه با وضعیت «در حال تماشا» یا «متوقف‌شده» داشته باشی.',
           style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.7),
         ),
       );
