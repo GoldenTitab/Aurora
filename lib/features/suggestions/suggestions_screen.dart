@@ -85,8 +85,8 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
         child: Padding(
           padding: EdgeInsets.all(24),
           child: Text(
-            'برای پیشنهاد، حداقل یک فرنچایز در کتابخانه لازم است. '
-            'چند فرنچایز را باز کن و وضعیتشان را ثبت کن.',
+            'پیشنهادی پیدا نشد. برای پیشنهاد باید به اینترنت وصل باشی '
+            'و انیمه‌ای بیرون از لیستت در بخش کشف پیدا شود.',
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.8),
           ),
@@ -110,12 +110,12 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
                       child: SizedBox(
                         width: 200,
                         height: 290,
-                        child: CoverImage(url: s.franchise.cover),
+                        child: CoverImage(url: s.data.cover),
                       ),
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      s.franchise.titleFa,
+                      s.data.titleFa,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 20,
@@ -125,7 +125,7 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      s.franchise.titleEn,
+                      s.data.titleEn,
                       textAlign: TextAlign.center,
                       textDirection: TextDirection.ltr,
                       style: TextStyle(
@@ -172,10 +172,7 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
               Expanded(
                 child: FilledButton.icon(
                   onPressed: () => context.push(
-                    franchiseRouteFor(
-                      s.franchise.anilistId,
-                      s.franchise.id,
-                    ),
+                    franchiseRouteFor(s.data.anilistId, s.historyId),
                   ),
                   icon: const Icon(Icons.arrow_forward_rounded),
                   label: const Text('برو به صفحه'),
