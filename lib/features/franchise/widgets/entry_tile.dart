@@ -14,8 +14,19 @@ import 'status_dropdown.dart';
 import 'user_score_picker.dart';
 
 class EntryTile extends ConsumerStatefulWidget {
-  const EntryTile({super.key, required this.entry});
+  const EntryTile({
+    super.key,
+    required this.entry,
+    this.franchiseId,
+    this.onManualRemoved,
+  });
   final Entry entry;
+
+  /// شناسه فرنچایز (برای حذف ورودی دستی)؛ null یعنی حذف پشتیبانی نمی‌شود.
+  final String? franchiseId;
+
+  /// بعد از حذف ورودی دستی صدا زده می‌شود (بازخوانی صفحه).
+  final VoidCallback? onManualRemoved;
 
   @override
   ConsumerState<EntryTile> createState() => _EntryTileState();
@@ -23,6 +34,36 @@ class EntryTile extends ConsumerStatefulWidget {
 
 class _EntryTileState extends ConsumerState<EntryTile> {
   bool _open = false;
+
+  Future<void> _confirmDeleteManual() async {
+    final fid = widget.franchiseId;
+    if (fid == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف ورودی دستی'),
+        content: Text(
+          '«${widget.entry.title}» از این فرنچایز حذف شود؟',
+          textDirection: dirFor(widget.entry.title),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('انصراف'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await ref
+        .read(franchiseRepositoryProvider)
+        .removeManualEntry(fid, widget.entry.id);
+    widget.onManualRemoved?.call();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +133,7 @@ class _EntryTileState extends ConsumerState<EntryTile> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         _TypePill(entry.type.labelFa),
+                        if (entry.manual) const _ManualPill(),
                         _Meta(
                           icon: Icons.tv_rounded,
                           text: entry.episodes == 0
@@ -115,6 +157,17 @@ class _EntryTileState extends ConsumerState<EntryTile> {
                   ],
                 ),
               ),
+              if (entry.manual && widget.franchiseId != null)
+                IconButton(
+                  tooltip: 'حذف ورودی دستی',
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(
+                    Icons.delete_outline_rounded,
+                    size: 20,
+                    color: AppColors.textSecondaryOf(context),
+                  ),
+                  onPressed: _confirmDeleteManual,
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -448,6 +501,30 @@ class _TypePill extends StatelessWidget {
       ),
       child: Text(
         text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppColors.primaryTextOf(context),
+        ),
+      ),
+    );
+  }
+}
+
+/// بج «دستی» برای ورودی‌هایی که کاربر خودش به فرنچایز اضافه کرده.
+class _ManualPill extends StatelessWidget {
+  const _ManualPill();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0x3322C55E),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        'دستی',
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
