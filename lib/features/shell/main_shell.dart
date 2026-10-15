@@ -26,11 +26,6 @@ class MainShell extends StatelessWidget {
         indicatorColor: AppColors.primary.withValues(alpha: 0.2),
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'خانه',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.explore_outlined),
             selectedIcon: Icon(Icons.explore_rounded),
             label: 'کشف',
@@ -44,6 +39,16 @@ class MainShell extends StatelessWidget {
             icon: Icon(Icons.bookmark_border_rounded),
             selectedIcon: Icon(Icons.bookmark_rounded),
             label: 'لیست من',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'پروفایل',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'تنظیمات',
           ),
         ],
       ),
