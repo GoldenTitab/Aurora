@@ -20,11 +20,7 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('پروفایل')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        children: const [
-          _ProfileHeader(),
-          SizedBox(height: 16),
-          _MenuList(),
-        ],
+        children: const [_ProfileHeader(), SizedBox(height: 16), _MenuList()],
       ),
     );
   }
@@ -191,9 +187,9 @@ class _MenuList extends StatelessWidget {
         children: [
           for (var i = 0; i < items.length; i++) ...[
             _MenuTile(
-              icon: (items[i] as (IconData, String, String)).$1,
-              label: (items[i] as (IconData, String, String)).$2,
-              route: (items[i] as (IconData, String, String)).$3,
+              icon: items[i].$1,
+              label: items[i].$2,
+              route: items[i].$3,
             ),
             if (i != items.length - 1)
               Divider(

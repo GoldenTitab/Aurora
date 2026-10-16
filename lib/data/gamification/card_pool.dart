@@ -116,9 +116,7 @@ class CardPool {
           items.isEmpty) {
         return const [];
       }
-      return items
-          .map((e) => (e as Map).cast<String, dynamic>())
-          .toList();
+      return items.map((e) => (e as Map).cast<String, dynamic>()).toList();
     } catch (_) {
       return const [];
     }
@@ -172,7 +170,7 @@ class CardPool {
   /// (این، درجه‌های قدیمیِ شانسی را هم اصلاح می‌کند)؛ وگرنه مقدار ذخیره‌شده.
   CardRarity _effectiveRarity(
     int charId,
-    Map<String, Map<String, dynamic>> poolIndex,
+    Map<int, Map<String, dynamic>> poolIndex,
   ) {
     final p = poolIndex[charId];
     if (p != null) return CardRarityX.fromKey(p['rarity'] as String? ?? '');
@@ -209,8 +207,7 @@ class CardPool {
       if (p == null) continue;
       final id = p['id'] as int;
       pickedIds.add(id);
-      final rarity =
-          CardRarityX.fromKey(p['rarity'] as String? ?? tier.name);
+      final rarity = CardRarityX.fromKey(p['rarity'] as String? ?? tier.name);
       final owned = _ownedCount(id);
       if (owned > 0) {
         dups.add(true);
