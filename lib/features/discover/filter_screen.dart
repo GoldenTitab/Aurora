@@ -36,7 +36,6 @@ const List<String> anilistGenres = [
   'Suspense',
 ];
 
-/// گزینه‌های فرمت (کلید → برچسب نمایشی به زبان فعلی).
 Map<String, String> get formatOptions => {
   '': tr('all'),
   'TV': tr('tv_series'),
@@ -46,7 +45,6 @@ Map<String, String> get formatOptions => {
   'SPECIAL': tr('special'),
 };
 
-/// فیلتر ترکیبی پیشرفته: ژانر + امتیاز + سال + قسمت + فرمت + استودیو.
 class FilterScreen extends ConsumerStatefulWidget {
   const FilterScreen({super.key});
 
@@ -110,25 +108,28 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
       _error = null;
     });
     try {
-      final r = await ref.read(anilistClientProvider).advancedBrowse(
+      final r = await ref
+          .read(anilistClientProvider)
+          .advancedBrowse(
             page: _page + 1,
             genres: _genres.isEmpty ? null : _genres.toList(),
             scoreMin: _score.start.round() <= 0
                 ? null
                 : _score.start.round() * 10,
-            scoreMax: _score.end.round() >= 10
-                ? null
-                : _score.end.round() * 10,
+            scoreMax: _score.end.round() >= 10 ? null : _score.end.round() * 10,
             yearMin: _year.start.round(),
-            yearMax: _year.end.round() >= DateTime.now().year ? null : _year.end.round(),
-            epMin: _episodes.start.round() <= 1 ? null : _episodes.start.round(),
+            yearMax: _year.end.round() >= DateTime.now().year
+                ? null
+                : _year.end.round(),
+            epMin: _episodes.start.round() <= 1
+                ? null
+                : _episodes.start.round(),
             epMax: _episodes.end.round() >= 50 ? null : _episodes.end.round(),
             format: _format.isEmpty ? null : _format,
           );
       if (!mounted) return;
       final studio = _studioCtrl.text.trim().toLowerCase();
       final rawCards = cardsFromRaw(r.items);
-      // فیلتر استودیو سمت کاربر (از روی فیلد studios پاسخ API)
       final filtered = <AnimeCardData>[];
       for (var i = 0; i < rawCards.length; i++) {
         final raw = r.items[i];
@@ -159,7 +160,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title:  Text(tr('advanced_filters'))),
+      appBar: AppBar(title: Text(tr('advanced_filters'))),
       body: CustomScrollView(
         controller: _scroll,
         slivers: [
@@ -201,8 +202,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                   final d = _items[i];
                   return AnimeCard(
                     data: d,
-                    onTap: () =>
-                        context.push('/franchise/${d.anilistId}'),
+                    onTap: () => context.push('/franchise/${d.anilistId}'),
                   );
                 }, childCount: _items.length),
               ),
@@ -231,7 +231,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           SectionTitle(tr('genres')),
+          SectionTitle(tr('genres')),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -253,7 +253,11 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
           ),
           const SizedBox(height: 16),
           SectionTitle(
-              tr('score_to', [toFa(_score.start.round()), toFa(_score.end.round())])),
+            tr('score_to', [
+              toFa(_score.start.round()),
+              toFa(_score.end.round()),
+            ]),
+          ),
           RangeSlider(
             values: _score,
             min: 0,
@@ -266,7 +270,11 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             onChanged: (v) => setState(() => _score = v),
           ),
           SectionTitle(
-              tr('release_year_to', [toFa(_year.start.round()), toFa(_year.end.round())])),
+            tr('release_year_to', [
+              toFa(_year.start.round()),
+              toFa(_year.end.round()),
+            ]),
+          ),
           RangeSlider(
             values: _year,
             min: 1970,
@@ -279,7 +287,11 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             onChanged: (v) => setState(() => _year = v),
           ),
           SectionTitle(
-              tr('episodes_to', [toFa(_episodes.start.round()), toFa(_episodes.end.round())])),
+            tr('episodes_to', [
+              toFa(_episodes.start.round()),
+              toFa(_episodes.end.round()),
+            ]),
+          ),
           RangeSlider(
             values: _episodes,
             min: 1,
@@ -292,7 +304,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             onChanged: (v) => setState(() => _episodes = v),
           ),
           const SizedBox(height: 8),
-           SectionTitle(tr('title_type')),
+          SectionTitle(tr('title_type')),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -307,7 +319,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             ],
           ),
           const SizedBox(height: 16),
-           SectionTitle(tr('studio_optional')),
+          SectionTitle(tr('studio_optional')),
           const SizedBox(height: 10),
           TextField(
             controller: _studioCtrl,
@@ -337,7 +349,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             child: FilledButton.icon(
               onPressed: _search,
               icon: const Icon(Icons.search_rounded),
-              label:  Text(tr('search_with_these_filters')),
+              label: Text(tr('search_with_these_filters')),
             ),
           ),
           const SizedBox(height: 8),

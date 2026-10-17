@@ -10,9 +10,6 @@ import '../../../data/notifications/notification_service.dart';
 import '../../../data/storage/migrations.dart';
 import '../../../core/i18n/lang.dart';
 
-/// بخش «اعلان‌ها» در تنظیمات:
-/// سوییچ «اعلان قسمت‌های جدید»، انتخاب ساعت بررسی روزانه (۰ تا ۲۳)
-/// و دکمه «ارسال اعلان آزمایشی».
 class NotificationSettings extends ConsumerStatefulWidget {
   const NotificationSettings({super.key});
 
@@ -65,7 +62,6 @@ class _NotificationSettingsState extends ConsumerState<NotificationSettings> {
   Future<void> _setHour(int hour) async {
     await NotificationPrefs.setHour(_meta, hour);
     if (_enabled) {
-      // بازثبت با initialDelay جدید تا نزدیک ساعت انتخابی اجرا شود.
       await scheduleDailyAiringCheck(hour);
     }
     if (mounted) setState(() => _hour = hour);
@@ -76,7 +72,7 @@ class _NotificationSettingsState extends ConsumerState<NotificationSettings> {
     setState(() => _busy = true);
     try {
       await NotificationService().requestPermissions();
-      await NotificationService().showNewEpisodes( [
+      await NotificationService().showNewEpisodes([
         NewEpisodeNotifItem(
           entryId: 'demo-1',
           titleFa: tr('sample_anime'),
@@ -102,8 +98,8 @@ class _NotificationSettingsState extends ConsumerState<NotificationSettings> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SwitchListTile(
-          title:  Text(tr('new_episode_notifications')),
-          subtitle:  Text(
+          title: Text(tr('new_episode_notifications')),
+          subtitle: Text(
             tr('daily_check_for_newly_aired_episodes_of_your_ani'),
           ),
           value: _enabled,
@@ -114,16 +110,13 @@ class _NotificationSettingsState extends ConsumerState<NotificationSettings> {
           DropdownButtonFormField<int>(
             key: ValueKey(_hour),
             initialValue: _hour,
-            decoration:  InputDecoration(
+            decoration: InputDecoration(
               labelText: tr('daily_check_time'),
               border: OutlineInputBorder(),
             ),
             items: [
               for (var h = 0; h < 24; h++)
-                DropdownMenuItem(
-                  value: h,
-                  child: Text(tr('00', [toFa(h)])),
-                ),
+                DropdownMenuItem(value: h, child: Text(tr('00', [toFa(h)]))),
             ],
             onChanged: (h) {
               if (h != null) _setHour(h);
@@ -134,12 +127,12 @@ class _NotificationSettingsState extends ConsumerState<NotificationSettings> {
         OutlinedButton.icon(
           onPressed: _busy ? null : _sendTest,
           icon: const Icon(Icons.notifications_active_outlined),
-          label:  Text(tr('send_test_notification')),
+          label: Text(tr('send_test_notification')),
         ),
         const SizedBox(height: 8),
         Text(
           tr('the_daily_check_schedule_is_approximate_and_the_') +
-          tr('by_a_few_hours_on_ios_timing_is_entirely_up_to_t'),
+              tr('by_a_few_hours_on_ios_timing_is_entirely_up_to_t'),
           style: TextStyle(
             color: AppColors.textSecondaryOf(context),
             fontSize: 12,

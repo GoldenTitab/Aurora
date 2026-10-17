@@ -6,14 +6,6 @@ import '../models/home_items.dart';
 import '../providers.dart';
 import '../../core/i18n/lang.dart';
 
-/// به‌روزرسانی هوم‌ویجت اندروید/iOS با «ادامه تماشا» و تعداد پخش امروز.
-///
-/// از DiscoverScreen با ref.listen روی [continueWatchingProvider] و
-/// [weeklyAiringProvider] صدا زده می‌شود (هوک در discover_screen.dart).
-/// کلیدهای ذخیره‌شده باید با کلیدهایی که سمت نیتیو (Kotlin/Swift)
-/// خوانده می‌شوند یکی باشند:
-/// - `cw_title` / `cw_sub`: عنوان و زیرعنوان «ادامه تماشا»
-/// - `airing_today`: تعداد آیتم‌های پخش امروز (int)
 Future<void> refreshHomeWidget(WidgetRef ref) async {
   try {
     final cw = ref.read(continueWatchingProvider);

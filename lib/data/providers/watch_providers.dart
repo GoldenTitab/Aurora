@@ -33,7 +33,6 @@ class WatchStatusNotifier extends Notifier<Map<String, WatchStatus>> {
     } else {
       await storage.set(entryId, status);
     }
-    // ثبت آخرین فعالیت برای «ادامه تماشا»
     await ref.read(userExtrasProvider).touchSeen(entryId);
   }
 }
@@ -47,7 +46,6 @@ final franchiseProvider = FutureProvider.family<Franchise, int>((ref, id) {
   return ref.watch(franchiseRepositoryProvider).getFranchise(id);
 });
 
-/// فرنچایز از روی شناسه MAL (برای نتایج جست‌وجوی MAL/Jikan).
 final franchiseByMalProvider = FutureProvider.family<Franchise, int>((
   ref,
   malId,
@@ -70,7 +68,6 @@ FranchiseProgress progressOf(
   Map<String, Set<int>> episodes,
 ) {
   var list = progressMainStoryOnly ? f.mainEntries : f.entries;
-  // آثار اعلام‌شده (هنوز پخش/منتشر نشده) در نوار پیشرفت شمرده نمی‌شوند.
   list = list
       .where((e) => !e.releaseState.excludedFromProgress)
       .toList(growable: false);
@@ -97,9 +94,6 @@ FranchiseProgress progressOf(
   return FranchiseProgress(done, total);
 }
 
-/// جست‌وجوی دو مرحله‌ای: اول نتایج لوکال + AniList (سریع) نمایش داده
-/// می‌شود، بعد نتایج تکمیلی Jikan/MAL به همان لیست اضافه می‌شود.
-/// برای همین سرچ خیلی سریع‌تر به نظر می‌رسد.
 final searchResultsProvider = StreamProvider.autoDispose
     .family<List<AnimeCardData>, String>((ref, query) async* {
       final repo = ref.watch(franchiseRepositoryProvider);
@@ -122,14 +116,12 @@ final searchResultsProvider = StreamProvider.autoDispose
         }
       }
 
-      // مرحله ۱: AniList
       var ok = false;
       final p = await repo.searchPrimary(query);
       if (p.ok) ok = true;
       addHits(p.items);
       yield List.of(results);
 
-      // مرحله ۲: Jikan + MAL (تکمیلی)
       final s = await repo.searchSecondary(query, p.seenAni, p.seenMal);
       if (s.ok) ok = true;
       if (s.items.isNotEmpty) {
@@ -158,27 +150,34 @@ class EpisodeProgressNotifier extends Notifier<Map<String, Set<int>>> {
     return out;
   }
 
-  Future<void> _save(String entryId, Set<int> eps, int total) async {
+  Future<void> _save(
+    String entryId,
+    Set<int> eps,
+    int total, {
+    bool reward = true,
+  }) async {
     final prevSet = state[entryId] ?? <int>{};
     final prev = prevSet.length;
+
     final next = Map<String, Set<int>>.from(state);
     if (eps.isEmpty) {
       next.remove(entryId);
-      await _box.delete(entryId);
     } else {
       next[entryId] = eps;
+    }
+    state = next;
+
+    if (eps.isEmpty) {
+      await _box.delete(entryId);
+    } else {
       final sorted = eps.toList()..sort();
       await _box.put(entryId, sorted.join(','));
     }
-    state = next;
+
     await _syncStatus(entryId, prev, eps.length, total);
-    // ثبت آخرین فعالیت برای «ادامه تماشا»
     if (eps.isNotEmpty) {
       await ref.read(userExtrasProvider).touchSeen(entryId);
     }
-    // اقتصاد: XP و سکه فقط برای قسمت‌هایی که «اولین بار» دیده می‌شوند
-    // (تاگِل on/off/on یا clear و علامت‌گذاری دوباره جایزه دوباره نمی‌دهد)
-    // + بررسی تکمیل فرنچایز (idempotent).
     final added = eps.length - prev;
     if (added > 0) {
       final eco = Economy(Hive.box<String>(Boxes.meta));
@@ -186,10 +185,12 @@ class EpisodeProgressNotifier extends Notifier<Map<String, Set<int>>> {
         entryId,
         eps.difference(prevSet),
       );
-      if (fresh > 0) {
-        await ref.read(economyProvider.notifier).onEpisodesWatched(fresh);
+      if (reward) {
+        if (fresh > 0) {
+          await ref.read(economyProvider.notifier).onEpisodesWatched(fresh);
+        }
+        await _awardFranchiseCompletion(ref, entryId);
       }
-      await _awardFranchiseCompletion(ref, entryId);
     }
   }
 
@@ -218,12 +219,17 @@ class EpisodeProgressNotifier extends Notifier<Map<String, Set<int>>> {
     return _save(entryId, eps, total);
   }
 
-  Future<void> markUpTo(String entryId, int ep, int total) {
+  Future<void> markUpTo(
+    String entryId,
+    int ep,
+    int total, {
+    bool reward = true,
+  }) {
     final eps = {...(state[entryId] ?? <int>{})};
     for (var i = 1; i <= ep; i++) {
       eps.add(i);
     }
-    return _save(entryId, eps, total);
+    return _save(entryId, eps, total, reward: reward);
   }
 
   Future<void> markAll(String entryId, int total) =>
@@ -238,7 +244,6 @@ final episodeProgressProvider =
       EpisodeProgressNotifier.new,
     );
 
-/// جایزه تکمیل فرنچایز: وقتی همه آثار منتشرشده‌اش کامل شدند.
 Future<void> _awardFranchiseCompletion(Ref ref, String entryId) async {
   final repo = ref.read(franchiseRepositoryProvider);
   for (final f in repo.allCachedFranchises()) {

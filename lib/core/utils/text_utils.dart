@@ -28,17 +28,18 @@ String normalizeQuery(String s) => s
     .trim()
     .toLowerCase();
 
-/// نرمال‌سازی عنوان برای مقایسه: حذف علائم، فصل‌ها و کلمات رایج.
 String normalizeTitle(String s) {
   var t = normalizeQuery(s);
   t = t.replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF ]'), ' ');
   t = t
-      .replaceAll(RegExp(r'\b(season|s|part| cour|movie|ova|ona|special)\b'), ' ')
+      .replaceAll(
+        RegExp(r'\b(season|s|part| cour|movie|ova|ona|special)\b'),
+        ' ',
+      )
       .replaceAll(RegExp(r'\b\d+(st|nd|rd|th)?\b'), ' ');
   return t.replaceAll(RegExp(r'\s+'), ' ').trim();
 }
 
-/// شباهت دو عنوان بین ۰ تا ۱ (ترکیب توکن مشترک و فاصله لونشتاین).
 double titleSimilarity(String a, String b) {
   final na = normalizeTitle(a);
   final nb = normalizeTitle(b);

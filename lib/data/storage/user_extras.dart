@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
-/// دیتای شخصی کاربر داخل meta box:
-/// یادداشت فرنچایز، امتیاز کاربر به هر اثر، زمان آخرین فعالیت،
-/// تم و رنگ اصلی، و زمان بستن بنر قسمت‌های جدید.
 class UserExtras {
   UserExtras(this._box);
   final Box<String> _box;
 
-  // ── یادداشت فرنچایز ──────────────────────────────────────────
   String? noteOf(String franchiseId) => _box.get('note:$franchiseId');
 
   Future<void> saveNote(String franchiseId, String note) async {
@@ -19,7 +15,6 @@ class UserExtras {
     }
   }
 
-  // ── امتیاز کاربر به اثر (۰ تا ۱۰) ─────────────────────────────
   double? scoreOf(String entryId) {
     final raw = _box.get('uscore:$entryId');
     return raw == null ? null : double.tryParse(raw);
@@ -33,14 +28,14 @@ class UserExtras {
     }
   }
 
-  // ── آخرین فعالیت روی اثر (برای «ادامه تماشا») ──────────────────
   int lastSeenOf(String entryId) =>
       int.tryParse(_box.get('seen:$entryId') ?? '') ?? 0;
 
-  Future<void> touchSeen(String entryId) =>
-      _box.put('seen:$entryId', DateTime.now().millisecondsSinceEpoch.toString());
+  Future<void> touchSeen(String entryId) => _box.put(
+    'seen:$entryId',
+    DateTime.now().millisecondsSinceEpoch.toString(),
+  );
 
-  // ── تم و رنگ اصلی ─────────────────────────────────────────────
   ThemeMode themeMode() {
     switch (_box.get('theme_mode')) {
       case 'light':
@@ -64,7 +59,6 @@ class UserExtras {
   Future<void> setSeedColor(Color color) =>
       _box.put('seed_color', color.toARGB32().toString());
 
-  // ── زبان اپ (fa/en) ────────────────────────────────────────────
   String language() {
     final v = _box.get('app_lang');
     return v == 'en' ? 'en' : 'fa';
@@ -73,7 +67,6 @@ class UserExtras {
   Future<void> setLanguage(String lang) =>
       _box.put('app_lang', lang == 'en' ? 'en' : 'fa');
 
-  // ── بنر قسمت‌های جدید ─────────────────────────────────────────
   int dismissedNewEpisodesAt() =>
       int.tryParse(_box.get('dismissed_new_ep') ?? '') ?? 0;
 
@@ -82,13 +75,11 @@ class UserExtras {
     DateTime.now().millisecondsSinceEpoch.toString(),
   );
 
-  // ── حالت بدون اسپویل ────────────────────────────────────────────
   bool spoilerFree() => _box.get('spoiler_free') == '1';
 
   Future<void> setSpoilerFree(bool v) =>
       _box.put('spoiler_free', v ? '1' : '0');
 
-  // ── یادداشت هر قسمت ─────────────────────────────────────────────
   String? episodeNoteOf(String entryId, int ep) =>
       _box.get('enote:$entryId:$ep');
 
@@ -100,9 +91,6 @@ class UserExtras {
     return _box.put(key, note.trim());
   }
 
-  /// پاک‌سازی کامل ردپای یک فرنچایز از «لیست من»: یادداشت فرنچایز،
-  /// امتیازها، یادداشت قسمت‌ها و آخرین بازدیدِ همه‌ی ورودی‌هایش.
-  /// (وضعیت‌ها و پیشرفت قسمت‌ها جدا و توسط notifierها پاک می‌شوند.)
   Future<void> clearFranchise(String franchiseId, Iterable<String> entryIds) {
     final ids = entryIds.toSet();
     final remove = <String>[];
@@ -112,9 +100,7 @@ class UserExtras {
         continue;
       }
       for (final e in ids) {
-        if (k == 'seen:$e' ||
-            k == 'uscore:$e' ||
-            k.startsWith('enote:$e:')) {
+        if (k == 'seen:$e' || k == 'uscore:$e' || k.startsWith('enote:$e:')) {
           remove.add(k);
           break;
         }

@@ -3,7 +3,6 @@ import '../../core/i18n/lang.dart';
 
 enum MissionPeriod { daily, weekly }
 
-/// تعریف یک مأموریت.
 class MissionDef {
   final String id;
   final String titleFa;
@@ -13,7 +12,6 @@ class MissionDef {
   final int coins;
   final MissionPeriod period;
 
-  /// کلید شمارنده در Economy.
   final String counter;
 
   const MissionDef({
@@ -28,7 +26,6 @@ class MissionDef {
   });
 }
 
-/// وضعیت یک مأموریت برای نمایش.
 class MissionState {
   final MissionDef def;
   final int progress;
@@ -104,7 +101,6 @@ List<MissionDef> weeklyMissions() =>  [
 String _periodId(MissionPeriod p) =>
     p == MissionPeriod.daily ? Economy.todayStr() : Economy.weekId();
 
-/// موتور مأموریت‌ها: خواندن پیشرفت و ثبت جایزه.
 class MissionEngine {
   MissionEngine(this._eco);
   final Economy _eco;
@@ -125,7 +121,6 @@ class MissionEngine {
     return out;
   }
 
-  /// ثبت جایزه؛ true یعنی موفق بود. XP اضافه‌شده و لول‌آپ احتمالی را برمی‌گرداند.
   Future<({bool ok, int? leveledTo})> claim(MissionDef def) async {
     final pid = _periodId(def.period);
     final progress = _eco.missionCounter(def.counter, pid);

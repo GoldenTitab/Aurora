@@ -4,7 +4,6 @@ import '../models/watch_status.dart';
 import '../providers.dart';
 import '../../core/i18n/lang.dart';
 
-/// نتیجه ایمپورت لیست.
 class LibraryImportResult {
   final bool ok;
   final String message;
@@ -53,7 +52,6 @@ WatchStatus? _jikanStatus(String? s) {
   }
 }
 
-/// ایمپورت لیست عمومی AniList با یوزرنیم.
 Future<LibraryImportResult> importFromAniList(
   Ref ref,
   String username,
@@ -65,13 +63,13 @@ Future<LibraryImportResult> importFromAniList(
   onProgress(tr('fetching_list'));
   final entries = await client.fetchUserAnimeList(username.trim());
   if (entries == null) {
-    return  LibraryImportResult(
+    return LibraryImportResult(
       ok: false,
       message: tr('user_not_found_or_their_list_is_private'),
     );
   }
   if (entries.isEmpty) {
-    return  LibraryImportResult(
+    return LibraryImportResult(
       ok: false,
       message: tr('this_user_s_list_is_empty'),
     );
@@ -98,14 +96,17 @@ Future<LibraryImportResult> importFromAniList(
         (x) => x.anilistId == anilistId,
         orElse: () => f.entries.first,
       );
-      await ref
-          .read(watchStatusProvider.notifier)
-          .setStatus(entry.id, status);
+      await ref.read(watchStatusProvider.notifier).setStatus(entry.id, status);
       final progress = (e['progress'] as num?)?.toInt() ?? 0;
       if (progress > 0 && entry.episodes > 0) {
         await ref
             .read(episodeProgressProvider.notifier)
-            .markUpTo(entry.id, progress.clamp(1, entry.episodes).toInt(), entry.episodes);
+            .markUpTo(
+              entry.id,
+              progress.clamp(1, entry.episodes).toInt(),
+              entry.episodes,
+              reward: false,
+            );
       }
       imported++;
     } catch (_) {
@@ -125,7 +126,6 @@ Future<LibraryImportResult> importFromAniList(
   );
 }
 
-/// ایمپورت لیست MAL با یوزرنیم (از طریق Jikan، بدون احراز هویت).
 Future<LibraryImportResult> importFromMal(
   Ref ref,
   String username,
@@ -148,7 +148,7 @@ Future<LibraryImportResult> importFromMal(
     while (true) {
       final batch = await jikan.fetchUserList(username.trim(), s, page);
       if (batch == null) {
-        return  LibraryImportResult(
+        return LibraryImportResult(
           ok: false,
           message: tr('user_not_found_or_their_list_is_private'),
         );
@@ -162,7 +162,7 @@ Future<LibraryImportResult> importFromMal(
     }
   }
   if (all.isEmpty) {
-    return  LibraryImportResult(
+    return LibraryImportResult(
       ok: false,
       message: tr('this_user_s_list_is_empty'),
     );
@@ -194,14 +194,17 @@ Future<LibraryImportResult> importFromMal(
         (x) => x.anilistId == anilistId,
         orElse: () => f.entries.first,
       );
-      await ref
-          .read(watchStatusProvider.notifier)
-          .setStatus(entry.id, status);
+      await ref.read(watchStatusProvider.notifier).setStatus(entry.id, status);
       final watched = (e['episodes_watched'] as num?)?.toInt() ?? 0;
       if (watched > 0 && entry.episodes > 0) {
         await ref
             .read(episodeProgressProvider.notifier)
-            .markUpTo(entry.id, watched.clamp(1, entry.episodes).toInt(), entry.episodes);
+            .markUpTo(
+              entry.id,
+              watched.clamp(1, entry.episodes).toInt(),
+              entry.episodes,
+              reward: false,
+            );
       }
       imported++;
       await Future.delayed(const Duration(milliseconds: 300));

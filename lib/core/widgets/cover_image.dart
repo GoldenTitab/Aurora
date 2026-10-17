@@ -2,12 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
-/// ویجت یکپارچه‌ی نمایش کاور با کش هوشمند.
-///
-/// [cacheWidth] عرض نمایشی تصویر به پیکسل است؛ برای روان‌تر شدن اسکرول،
-/// تصویر در همین اندازه دیکد می‌شود تا بافت‌های حجیمِ تمام‌رزولوشن وارد
-/// حافظه‌ی GPU نشوند. مقدار پیش‌فرض برای کارت‌های معمولی کافی است؛
-/// برای بندانگشتی‌های کوچک مقدار کمتری (مثلاً ۱۴۰–۱۶۰) بده.
 class CoverImage extends StatelessWidget {
   const CoverImage({
     super.key,
@@ -44,8 +38,6 @@ class CoverImage extends StatelessWidget {
     return CachedNetworkImage(
       imageUrl: u,
       fit: fit,
-      // دیکد در اندازه‌ی نمایشی: مهم‌ترین عامل روان شدن اسکرول در
-      // لیست‌های پرتصویر (جلوگیری از بافت‌های چندمگاپیکسلی روی GPU).
       memCacheWidth: cacheWidth,
       maxWidthDiskCache: cacheWidth,
       fadeInDuration: const Duration(milliseconds: 150),

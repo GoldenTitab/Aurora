@@ -1,21 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/i18n/lang.dart';
 
-/// کمیابی کارت‌ها با وزن شانس و جایزه تکراری.
-///
-/// درجه هر کارت از روی محبوبیت شخصیت (تعداد علاقه‌مندی‌های AniList)
-/// تعیین می‌شود، نه شانسی: شخصیت ناشناخته هیچ‌وقت افسانه‌ای نمی‌شود.
-/// وایفو/هازبندو دو درجه ویژه‌اند برای محبوب‌ترین شخصیت‌ها
-/// (به‌ترتیب زن و مرد) با شانسی کمتر از افسانه‌ای.
-enum CardRarity {
-  common,
-  uncommon,
-  rare,
-  epic,
-  legendary,
-  waifu,
-  husbando,
-}
+enum CardRarity { common, uncommon, rare, epic, legendary, waifu, husbando }
 
 extension CardRarityX on CardRarity {
   String get labelFa {
@@ -37,10 +23,6 @@ extension CardRarityX on CardRarity {
     }
   }
 
-  /// وزن شانس (مجموع ۱۰۰۰ — برای دقت نیم‌درصدی درجه‌های ویژه).
-  ///
-  /// عادی ۴۸٪، کمیاب ۲۶٪، فوق‌کمیاب ۱۵٪، حماسی ۷٪،
-  /// افسانه‌ای ۳٪، وایفو ۰٫۵٪، هازبندو ۰٫۵٪.
   int get weight {
     switch (this) {
       case CardRarity.common:
@@ -60,7 +42,6 @@ extension CardRarityX on CardRarity {
     }
   }
 
-  /// سکه‌ای که نسخه تکراری به آن تبدیل می‌شود.
   int get duplicateCoins {
     switch (this) {
       case CardRarity.common:
@@ -107,7 +88,6 @@ extension CardRarityX on CardRarity {
   }
 }
 
-/// یک کارت کلکسیونی (شخصیت انیمه).
 class CollectibleCard {
   final int charId;
   final String name;
@@ -126,11 +106,9 @@ class CollectibleCard {
   bool get owned => count > 0;
 }
 
-/// نتیجه باز کردن یک بسته.
 class PackResult {
   final List<CollectibleCard> cards;
 
-  /// true یعنی کارت تکراری بوده و به سکه تبدیل شده.
   final List<bool> duplicates;
   final int coinsFromDuplicates;
 

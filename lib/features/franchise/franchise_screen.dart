@@ -30,7 +30,6 @@ class FranchiseScreen extends ConsumerWidget {
 
   final int anilistId;
 
-  /// اگر از جست‌وجوی MAL/Jikan آمده باشیم و شناسه AniList نداشته باشیم.
   final int? malId;
 
   void _back(BuildContext context) {
@@ -65,9 +64,8 @@ class FranchiseScreen extends ConsumerWidget {
               onPressed: () => _back(context),
             ),
           ),
-          body:  LoadingView(
-            message:
-                tr('loading_franchise_info_it_may_take_a_few_seconds'),
+          body: LoadingView(
+            message: tr('loading_franchise_info_it_may_take_a_few_seconds'),
           ),
         ),
         error: (e, _) => Scaffold(
@@ -114,8 +112,6 @@ class _FranchiseBody extends ConsumerStatefulWidget {
 class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
   String _view = 'list';
 
-  /// بازخوانی سبک بعد از افزودن/حذف دستی (بدون force تا ورودی‌های
-  /// دستیِ ذخیره‌شده در meta ادغام شوند).
   Future<void> _reloadAfterManual() async {
     final malId = widget.malId;
     try {
@@ -165,7 +161,6 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
     }
   }
 
-  /// گروه‌بندی همه‌ی آثار بر اساس نوع (برای نمای «دسته‌بندی»).
   List<Widget> _entryTypeGroup(Franchise f, EntryType type) {
     final list = f.entries.where((e) => e.type == type).toList();
     if (list.isEmpty) return const [];
@@ -252,7 +247,10 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Color(0x66000000), AppColors.backgroundOf(context)],
+                        colors: [
+                          Color(0x66000000),
+                          AppColors.backgroundOf(context),
+                        ],
                       ),
                     ),
                   ),
@@ -377,7 +375,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   SectionTitle(tr('synopsis')),
+                  SectionTitle(tr('synopsis')),
                   const SizedBox(height: 10),
                   _SpoilerSynopsis(
                     synopsis: f.synopsis,
@@ -419,7 +417,9 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
                     isScrollControlled: true,
                     backgroundColor: AppColors.backgroundOf(context),
                     shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
                     ),
                     builder: (_) => SizedBox(
                       height: MediaQuery.of(context).size.height * 0.85,
@@ -441,7 +441,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
                   );
                 },
                 icon: const Icon(Icons.reorder_rounded),
-                label:  Text(tr('watch_order_suggested_custom')),
+                label: Text(tr('watch_order_suggested_custom')),
               ),
             ),
           ),
@@ -451,7 +451,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Center(
                 child: SegmentedButton<String>(
-                  segments:  [
+                  segments: [
                     ButtonSegment<String>(
                       value: 'list',
                       icon: Icon(Icons.list_rounded),
@@ -485,18 +485,15 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) {
-                    final t = EntryType.values[i];
-                    final items = _entryTypeGroup(f, t);
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: items,
-                    );
-                  },
-                  childCount: EntryType.values.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, i) {
+                  final t = EntryType.values[i];
+                  final items = _entryTypeGroup(f, t);
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: items,
+                  );
+                }, childCount: EntryType.values.length),
               ),
             )
           else ...[
@@ -588,7 +585,11 @@ class _InfoChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: iconColor ?? AppColors.textSecondaryOf(context)),
+          Icon(
+            icon,
+            size: 14,
+            color: iconColor ?? AppColors.textSecondaryOf(context),
+          ),
           const SizedBox(width: 5),
           Text(
             text,
@@ -618,7 +619,7 @@ class _ProgressCard extends StatelessWidget {
         children: [
           Row(
             children: [
-               Text(
+              Text(
                 tr('your_progress'),
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
               ),
@@ -652,7 +653,10 @@ class _ProgressCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            tr('of_main_story_episodes_watched', [toFa(progress.done), toFa(progress.total)]),
+            tr('of_main_story_episodes_watched', [
+              toFa(progress.done),
+              toFa(progress.total),
+            ]),
             style: TextStyle(
               color: AppColors.textSecondaryOf(context),
               fontSize: 13,
@@ -672,9 +676,6 @@ class _ExpandableText extends StatefulWidget {
   State<_ExpandableText> createState() => _ExpandableTextState();
 }
 
-/// خلاصه داستان با پشتیبانی از «حالت بدون اسپویل»:
-/// اگر [blurred] درست باشد، متن تار نشان داده می‌شود و با لمس دکمه‌ی
-/// «نمایش خلاصه» آشکار می‌گردد.
 class _SpoilerSynopsis extends StatefulWidget {
   const _SpoilerSynopsis({required this.synopsis, required this.blurred});
   final String synopsis;

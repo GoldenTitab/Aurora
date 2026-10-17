@@ -3,7 +3,6 @@ import 'dart:math';
 import '../../core/i18n/lang.dart';
 import '../models/anime_card_data.dart';
 
-/// یک پیشنهاد از بیرون «لیست من».
 class Suggestion {
   final AnimeCardData data;
   final int score;
@@ -15,16 +14,10 @@ class Suggestion {
     required this.reasonFa,
   });
 
-  /// شناسه برای تاریخچه پیشنهادها (تکراری پیشنهاد نشود).
-  String get historyId => data.anilistId > 0
-      ? 'al-${data.anilistId}'
-      : 'mal-${data.malId}';
+  String get historyId =>
+      data.anilistId > 0 ? 'al-${data.anilistId}' : 'mal-${data.malId}';
 }
 
-/// موتور پیشنهاد: از انیمه‌های بیرون «لیست من» (بخش‌های کشف) انتخاب می‌کند.
-///
-/// هیچ‌وقت چیزی که در لیست کاربر هست (وضعیت ثبت‌شده) یا در کتابخانه‌اش
-/// (فرنچایز کش‌شده) هست را پیشنهاد نمی‌دهد.
 class SuggestionEngine {
   SuggestionEngine({Random? rng}) : _rng = rng ?? Random();
 
@@ -50,7 +43,6 @@ class SuggestionEngine {
     final scored = <_Candidate>[];
     for (final c in pool) {
       var score = (c.data.score * 4).round();
-      // وزن بخش منبع: ترندها و برترین‌های هفته تازه‌ترند.
       switch (c.sourceFa) {
         case 'trending':
           score += 15;
@@ -73,13 +65,9 @@ class SuggestionEngine {
 
   String _reason(_Candidate c) {
     final d = c.data;
-    // sourceFa شناسه‌ی پایدار i18n است؛ فقط هنگام نمایش ترجمه می‌شود.
     final src = tr(c.sourceFa);
     if (d.score >= 8.5) {
-      return tr('high_score_of_from', [
-        d.score.toStringAsFixed(1),
-        src,
-      ]);
+      return tr('high_score_of_from', [d.score.toStringAsFixed(1), src]);
     }
     return tr('picked_from_for_variety', [src]);
   }

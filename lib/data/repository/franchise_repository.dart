@@ -27,16 +27,32 @@ class _Cached {
 }
 
 class FranchiseRepository {
-  FranchiseRepository(this._ani, this._jikan, this._mal, this._box);
+  FranchiseRepository(
+    this._ani,
+    this._jikan,
+    this._mal,
+    this._box, {
+    this.onChanged,
+  });
 
   final AniListClient _ani;
   final JikanClient _jikan;
   final MalClient _mal;
   final Box<String> _box;
 
+  /// Called (asynchronously) after the franchise cache changed.
+  final void Function()? onChanged;
+
+  List<Franchise>? _all;
+
+  void _invalidate() {
+    _all = null;
+    final cb = onChanged;
+    if (cb != null) scheduleMicrotask(cb);
+  }
+
   static const Duration _ttl = Duration(days: 3);
 
-  /// روابطی که زنجیره اصلی را می‌سازند و BFS روی آن‌ها ادامه می‌یابد.
   static const Set<String> _chainRelations = {
     'PREQUEL',
     'SEQUEL',
@@ -44,11 +60,6 @@ class FranchiseRepository {
     'CHILD',
   };
 
-  /// روابطی که به‌عنوان محتوای مرتبط به فرنچایز اضافه می‌شوند.
-  /// نکته: CHARACTER عمداً اینجا نیست — در AniList برای محتوای جانبیِ
-  /// شخصیت‌محور به کار می‌رود و باعث قاطی شدن فرنچایزهای نامرتبط می‌شد
-  /// (مثلاً Dragon Ball Z با رابطه CHARACTER از طریق MONSTERS وارد
-  /// فرنچایز One Piece شده و چون قدیمی‌تر بود ریشه را های‌جک کرده بود).
   static const Set<String> _relatedRelations = {
     'SIDE_STORY',
     'SPIN_OFF',
@@ -65,7 +76,6 @@ class FranchiseRepository {
 
   static const int _maxChainNodes = 20;
 
-  /// حداکثر تعداد نگاشت MAL/Jikan → AniList در هر ساخت فرنچایز.
   static const int _maxCrossResolves = 8;
 
   Future<Franchise> getFranchise(int anyId, {bool forceRefresh = false}) async {
@@ -84,9 +94,6 @@ class FranchiseRepository {
     }
   }
 
-  /// گرفتن فرنچایز از روی شناسه MAL.
-  /// اگر در AniList نگاشت داشته باشد همان فرنچایز کامل ساخته می‌شود،
-  /// وگرنه یک فرنچایز تک‌عضوی از روی دیتای Jikan ساخته می‌شود.
   Future<Franchise> getFranchiseByMal(
     int malId, {
     bool forceRefresh = false,
@@ -98,7 +105,6 @@ class FranchiseRepository {
       if (cached != null && cached.fresh) return _withManual(cached.franchise);
     }
 
-    // ۱) آیا قبلاً در کش فرنچایزی با همین malId داریم؟
     for (final f in allCachedFranchises()) {
       if (f.malId == malId || f.entries.any((e) => e.malId == malId)) {
         await _box.put(aliasKey, f.id);
@@ -106,7 +112,6 @@ class FranchiseRepository {
       }
     }
 
-    // ۲) نگاشت به AniList
     final media = await _ani.fetchMediaByMal(malId);
     if (media != null) {
       final id = media['id'] as int;
@@ -115,21 +120,19 @@ class FranchiseRepository {
       return f;
     }
 
-    // ۳) فرنچایز تک‌عضوی از Jikan
     final detail = await _jikan.fetchAnime(malId);
     if (detail == null) {
-      throw  ApiException(
+      throw ApiException(
         tr('this_anime_wasn_t_found_on_anilist_or_any_other_'),
       );
     }
     final entry = Entry.fromJikanSearch(detail);
     final images = detail['images'] as Map?;
     final jpg = images?['jpg'] as Map?;
-    final genres =
-        ((detail['genres'] as List?) ?? const [])
-            .map((g) => ((g as Map)['name'] ?? '') as String)
-            .where((g) => g.isNotEmpty)
-            .toList();
+    final genres = ((detail['genres'] as List?) ?? const [])
+        .map((g) => ((g as Map)['name'] ?? '') as String)
+        .where((g) => g.isNotEmpty)
+        .toList();
     final f = Franchise(
       id: 'mal-$malId',
       anilistId: 0,
@@ -163,7 +166,6 @@ class FranchiseRepository {
 
   Future<Franchise> _build(int anyId) async {
     final items = <int, _Item>{};
-    // نگاشت هر نود به (والد، نوع رابطه) برای ساخت درخت فرنچایز
     final edgeOf = <int, ({int parent, String rel})>{};
     final queue = <int>[anyId];
     final visited = <int>{};
@@ -173,7 +175,6 @@ class FranchiseRepository {
       if (!visited.add(id)) continue;
 
       final media = await _ani.fetchMedia(id);
-      // دیتای کامل جایگزین نود ناقصِ یال‌ها می‌شود
       items[id] = _Item(media, _mainFormats.contains(media['format']));
 
       final edges = (media['relations']?['edges'] as List?) ?? const [];
@@ -197,7 +198,6 @@ class FranchiseRepository {
           () => _Item(node, _mainFormats.contains(node['format'])),
         );
 
-        // ثبت یال برای درخت: برای PREQUEL و PARENT، والد همان نود مقصد است
         if (rel == 'PREQUEL' || rel == 'PARENT') {
           edgeOf.putIfAbsent(id, () => (parent: nid, rel: rel));
         } else {
@@ -210,10 +210,8 @@ class FranchiseRepository {
       }
     }
 
-    // ── تکمیل از MAL و Jikan (روابطی که AniList ندارد) ──
     await _mergeCrossApiRelations(items, edgeOf, anyId);
 
-    // ── ارتقای داستان اصلی با شباهت عنوان ──
     _promoteByTitleSimilarity(items, edgeOf);
 
     final sorted = items.values.toList()..sort(_compareByDate);
@@ -222,7 +220,9 @@ class FranchiseRepository {
       final edge = edgeOf[nid];
       String? parentId;
       String? rel;
-      if (edge != null && edge.parent != nid && items.containsKey(edge.parent)) {
+      if (edge != null &&
+          edge.parent != nid &&
+          items.containsKey(edge.parent)) {
         parentId = 'al-${edge.parent}';
         rel = edge.rel;
       }
@@ -234,7 +234,6 @@ class FranchiseRepository {
       );
     }).toList();
 
-    // انتخاب ریشه به متد استاتیک pickRootId سپرده شده (تست‌پذیر).
     final rootId = pickRootId(
       {for (final e in items.entries) e.key: e.value.media},
       _mainFormats,
@@ -274,8 +273,6 @@ class FranchiseRepository {
     return franchise;
   }
 
-  /// ادغام روابط MAL و Jikan برای نود ریشه؛ مواردی که AniList ندارد
-  /// از طریق idMal به AniList نگاشت و به آیتم‌ها اضافه می‌شوند.
   Future<void> _mergeCrossApiRelations(
     Map<int, _Item> items,
     Map<int, ({int parent, String rel})> edgeOf,
@@ -334,9 +331,6 @@ class FranchiseRepository {
     }
   }
 
-  /// نگاشت نام رابطه MAL/Jikan به نام استاندارد AniList.
-  ///
-  /// public است تا مستقیم تست‌پذیر باشد (رگرسیون CHARACTER).
   static String? mapExternalRelation(String raw) {
     final r = raw.trim().toLowerCase().replaceAll(RegExp(r'[_\s-]'), '');
     switch (r) {
@@ -355,7 +349,6 @@ class FranchiseRepository {
       case 'summary':
         return 'SUMMARY';
       case 'character':
-        // مثل CHARACTER در گراف اصلی: سست است و فرنچایزها را قاطی می‌کند.
         return null;
       case 'other':
         return 'OTHER';
@@ -367,15 +360,10 @@ class FranchiseRepository {
       case 'novel':
         return null;
       default:
-        // رابطه ناشناخته از منبع خارجی: حدس نزن و ادغام نکن.
-        // قبلاً 'OTHER' برمی‌گرداند که باعث قاطی شدن فرنچایزهای
-        // نامرتبط می‌شد.
         return null;
     }
   }
 
-  /// اگر عنوان یک محتوای مرتبط خیلی شبیه عنوان ریشه باشد،
-  /// احتمالاً جزو داستان اصلی است (مثلاً فصل‌بندی اشتباه API).
   void _promoteByTitleSimilarity(
     Map<int, _Item> items,
     Map<int, ({int parent, String rel})> edgeOf,
@@ -418,19 +406,6 @@ class FranchiseRepository {
     }
   }
 
-  /// انتخاب شناسه‌ی ریشه‌ی فرنچایز از بین مدیاهای جمع‌آوری‌شده.
-  ///
-  /// اولویت‌ها به ترتیب (دقیقاً همان semantics قبلی کد، فقط استخراج‌شده
-  /// برای تست‌پذیری — هیچ تغییری در رفتار ندارد):
-  /// ۱. قدیمی‌ترین آیتم با فرمت اصلی (مرتب‌سازی با [dateKey]).
-  /// ۲. وگرنه خودِ [anyId] (اگر در مپ باشد).
-  /// ۳. وگرنه اولین آیتم مپ.
-  ///
-  /// نکته: باگ One Piece/DBZ با حذف رابطه‌ی CHARACTER از
-  /// _relatedRelations حل شده (DBZ اصلاً وارد آیتم‌ها نمی‌شود)؛ این متد
-  /// فقط همان منطق قبلی را نگه می‌دارد.
-  ///
-  /// public و استاتیک است تا مستقیم تست‌پذیر باشد.
   static int pickRootId(
     Map<int, Map<String, dynamic>> mediaById,
     Set<String> mainFormats,
@@ -472,6 +447,7 @@ class FranchiseRepository {
       await _box.put('a:${e.id}', f.id);
     }
     await _box.put(requestedKey, f.id);
+    _invalidate();
   }
 
   _Cached? _readCache(String franchiseId) {
@@ -492,7 +468,9 @@ class FranchiseRepository {
     }
   }
 
-  List<Franchise> allCachedFranchises() {
+  List<Franchise> allCachedFranchises() => _all ??= _loadAllFranchises();
+
+  List<Franchise> _loadAllFranchises() {
     final result = <Franchise>[];
     for (final key in _box.keys) {
       final k = key.toString();
@@ -503,15 +481,7 @@ class FranchiseRepository {
     return result;
   }
 
-
   String? aliasOf(int anilistId) => _box.get('a:al-$anilistId');
-
-  // ── ورودی‌های دستی کاربر ──────────────────────────────────────────
-  //
-  // وقتی API یک انیمه را در فرنچایز جا می‌اندازد، کاربر می‌تواند آن را
-  // دستی اضافه کند. این ورودی‌ها در باکس meta (نه کش فرنچایز) ذخیره
-  // می‌شوند تا با پاک شدن کش از بین نروند، و در هر بار خواندن فرنچایز
-  // (تازه یا از کش) با [_withManual] ادغام می‌شوند.
 
   List<Entry> _readManualList(String franchiseId) {
     try {
@@ -520,7 +490,8 @@ class FranchiseRepository {
       ).get('manual_entries:$franchiseId');
       if (raw == null) return [];
       final items =
-          ((jsonDecode(raw) as Map).cast<String, dynamic>()['items'] as List?) ??
+          ((jsonDecode(raw) as Map).cast<String, dynamic>()['items']
+              as List?) ??
           const [];
       return items
           .map((e) => Entry.fromJson((e as Map).cast<String, dynamic>()))
@@ -530,10 +501,8 @@ class FranchiseRepository {
     }
   }
 
-  /// همه ورودی‌های دستی یک فرنچایز.
   List<Entry> manualEntries(String franchiseId) => _readManualList(franchiseId);
 
-  /// افزودن دستی یک انیمه به فرنچایز.
   Future<void> addManualEntry(String franchiseId, Entry entry) async {
     final list = _readManualList(franchiseId);
     if (list.any((e) => e.id == entry.id)) return;
@@ -542,9 +511,9 @@ class FranchiseRepository {
       'manual_entries:$franchiseId',
       jsonEncode({'items': list.map((e) => e.toJson()).toList()}),
     );
+    _invalidate();
   }
 
-  /// حذف یک ورودی دستی از فرنچایز.
   Future<void> removeManualEntry(String franchiseId, String entryId) async {
     final list = _readManualList(franchiseId);
     list.removeWhere((e) => e.id == entryId);
@@ -552,9 +521,9 @@ class FranchiseRepository {
       'manual_entries:$franchiseId',
       jsonEncode({'items': list.map((e) => e.toJson()).toList()}),
     );
+    _invalidate();
   }
 
-  /// ادغام ورودی‌های دستی کاربر به فرنچایز (بعد از ساخت یا خواندن از کش).
   Franchise _withManual(Franchise f) {
     final manual = _readManualList(f.id);
     if (manual.isEmpty) return f;
@@ -564,8 +533,6 @@ class FranchiseRepository {
     return f.copyWith(entries: [...f.entries, ...extra]);
   }
 
-  /// ساخت Entry کامل از یک نتیجه جست‌وجو (برای افزودن دستی).
-  /// null یعنی دیتای کامل پیدا نشد.
   Future<Entry?> resolveManualEntry(AnimeCardData d) async {
     try {
       if (d.anilistId > 0) {
@@ -594,10 +561,6 @@ class FranchiseRepository {
     }).toList();
   }
 
-  /// جست‌وجوی جهانی دو مرحله‌ای (برای سرعت درک‌شده):
-  /// مرحله ۱ فقط AniList است (سریع‌ترین و کامل‌ترین) و مرحله ۲
-  /// Jikan + MAL را برای پوشش موارد جامانده اضافه می‌کند.
-  /// نتایج تکراری بر اساس malId/anilistId حذف و منبع هر نتیجه مشخص است.
   Future<List<AnimeCardData>> searchRemote(String query) async {
     final p = await searchPrimary(query);
     final out = [...p.items];
@@ -605,14 +568,8 @@ class FranchiseRepository {
     return out;
   }
 
-  /// مرحله ۱ جست‌وجو: فقط AniList.
   Future<
-    ({
-      List<AnimeCardData> items,
-      Set<int> seenAni,
-      Set<int> seenMal,
-      bool ok,
-    })
+    ({List<AnimeCardData> items, Set<int> seenAni, Set<int> seenMal, bool ok})
   >
   searchPrimary(String query) async {
     final out = <AnimeCardData>[];
@@ -651,8 +608,6 @@ class FranchiseRepository {
     return (items: out, seenAni: seenAni, seenMal: seenMal, ok: true);
   }
 
-  /// مرحله ۲ جست‌وجو: Jikan + MAL (موازی با هم) برای مواردی که
-  /// مرحله ۱ نداشت.
   Future<({List<AnimeCardData> items, bool ok})> searchSecondary(
     String query,
     Set<int> seenAni,
@@ -676,7 +631,6 @@ class FranchiseRepository {
     ]);
     var ok = false;
 
-    // Jikan (بدون احراز هویت) — مواردی که AniList نداشت
     if (results[0].isNotEmpty) ok = true;
     for (final m in results[0]) {
       if (out.length >= 24) break;
@@ -697,7 +651,6 @@ class FranchiseRepository {
       );
     }
 
-    // MAL مستقیم — مواردی که هیچ‌کدام نداشتند
     if (results[1].isNotEmpty) ok = true;
     for (final m in results[1]) {
       if (out.length >= 24) break;

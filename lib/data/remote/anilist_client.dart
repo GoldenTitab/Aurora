@@ -83,27 +83,21 @@ class AniListClient {
   static final Uri _endpoint = Uri.parse('https://graphql.anilist.co');
 
   Future<Map<String, dynamic>> fetchMedia(int id) async {
-    final data = await _query(
-      _mediaQuery,
-      {'id': id},
-      cacheTtl: const Duration(hours: 6),
-    );
+    final data = await _query(_mediaQuery, {
+      'id': id,
+    }, cacheTtl: const Duration(hours: 6));
     final media = data['Media'];
     if (media == null) {
-      throw  ApiException(tr('this_anime_wasn_t_found_on_anilist'));
+      throw ApiException(tr('this_anime_wasn_t_found_on_anilist'));
     }
     return (media as Map).cast<String, dynamic>();
   }
 
-  /// پیدا کردن مدیای AniList از روی شناسه MAL (برای نگاشت نتایج MAL/Jikan).
-  /// اگر پیدا نشود null برمی‌گرداند.
   Future<Map<String, dynamic>?> fetchMediaByMal(int idMal) async {
     try {
-      final data = await _query(
-        _mediaByMalQuery,
-        {'idMal': idMal},
-        cacheTtl: const Duration(hours: 12),
-      );
+      final data = await _query(_mediaByMalQuery, {
+        'idMal': idMal,
+      }, cacheTtl: const Duration(hours: 12));
       final media = data['Media'];
       if (media == null) return null;
       return (media as Map).cast<String, dynamic>();
@@ -166,7 +160,9 @@ class AniListClient {
       final hasNext =
           ((pageData?['pageInfo'] as Map?)?['hasNextPage'] as bool?) ?? false;
       if (kDebugMode) {
-        debugPrint('Home[$key p$page] OK ${sw.elapsedMilliseconds}ms, ${list.length} items');
+        debugPrint(
+          'Home[$key p$page] OK ${sw.elapsedMilliseconds}ms, ${list.length} items',
+        );
       }
       return (
         items: list.map((e) => (e as Map).cast<String, dynamic>()).toList(),
@@ -174,7 +170,9 @@ class AniListClient {
       );
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('Home[$key p$page] FAILED after ${sw.elapsedMilliseconds}ms: ${e.runtimeType}: $e');
+        debugPrint(
+          'Home[$key p$page] FAILED after ${sw.elapsedMilliseconds}ms: ${e.runtimeType}: $e',
+        );
       }
       rethrow;
     }
@@ -186,7 +184,6 @@ class AniListClient {
     int perPage = 15,
   }) async => (await browsePage(key, args, perPage: perPage)).items;
 
-  /// شخصیت‌های یک انیمه (برای استخر کارت‌های کلکسیونی).
   Future<List<Map<String, dynamic>>> fetchCharacters(
     int mediaId, {
     int perPage = 20,
@@ -203,14 +200,13 @@ query ($id: Int, $perPage: Int) {
   }
 }
 ''';
-    final data = await _query(
-      q,
-      {'id': mediaId, 'perPage': perPage},
-      cacheTtl: const Duration(days: 3),
-    );
+    final data = await _query(q, {
+      'id': mediaId,
+      'perPage': perPage,
+    }, cacheTtl: const Duration(days: 3));
     final edges =
         ((data['Media'] as Map?)?['characters'] as Map?)?['edges'] as List? ??
-            const [];
+        const [];
     final out = <Map<String, dynamic>>[];
     for (final e in edges) {
       final m = (e as Map).cast<String, dynamic>();
@@ -228,9 +224,6 @@ query ($id: Int, $perPage: Int) {
     return out;
   }
 
-  /// گاید پخش هفتگی: همه قسمت‌هایی که در ۷ روز آینده پخش می‌شوند،
-  /// مستقیم از AiringSchedule (بدون وابستگی به کتابخانه کاربر).
-  /// کش ۶ ساعته؛ خروجی بر اساس شناسه مدیا یکتا شده و مرتب زمانی است.
   Future<List<Map<String, dynamic>>> fetchWeeklyAiringGuide() async {
     const q = r'''
 query ($page: Int, $perPage: Int, $gte: Int, $lte: Int) {
@@ -248,22 +241,18 @@ query ($page: Int, $perPage: Int, $gte: Int, $lte: Int) {
   }
 }
 ''';
-    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final now = (DateTime.now().millisecondsSinceEpoch ~/ 1000 ~/ 3600) * 3600;
     final out = <Map<String, dynamic>>[];
     final seen = <int>{};
     for (var page = 1; page <= 3; page++) {
       Map<String, dynamic> data;
       try {
-        data = await _query(
-          q,
-          {
-            'page': page,
-            'perPage': 50,
-            'gte': now,
-            'lte': now + 7 * 86400,
-          },
-          cacheTtl: const Duration(hours: 6),
-        );
+        data = await _query(q, {
+          'page': page,
+          'perPage': 50,
+          'gte': now,
+          'lte': now + 7 * 86400,
+        }, cacheTtl: const Duration(hours: 6));
       } catch (_) {
         break;
       }
@@ -288,7 +277,6 @@ query ($page: Int, $perPage: Int, $gte: Int, $lte: Int) {
     return out;
   }
 
-  /// پیشنهادهای AniList برای یک مدیا («اگه اینو دوست داشتی...»).
   Future<List<Map<String, dynamic>>> fetchRecommendations(
     int mediaId, {
     int perPage = 8,
@@ -310,24 +298,20 @@ query ($id: Int, $perPage: Int) {
 }
 ''';
     try {
-      final data = await _query(
-        q,
-        {'id': mediaId, 'perPage': perPage},
-        cacheTtl: const Duration(days: 1),
-      );
+      final data = await _query(q, {
+        'id': mediaId,
+        'perPage': perPage,
+      }, cacheTtl: const Duration(days: 1));
       final nodes =
           ((data['Media'] as Map?)?['recommendations'] as Map?)?['nodes']
-                  as List? ??
-              const [];
-      return nodes
-          .map((e) => (e as Map).cast<String, dynamic>())
-          .toList();
+              as List? ??
+          const [];
+      return nodes.map((e) => (e as Map).cast<String, dynamic>()).toList();
     } catch (_) {
       return const [];
     }
   }
 
-  /// لیست عمومی انیمه‌های یک کاربر (برای ایمپورت). null یعنی پیدا نشد/خصوصی.
   Future<List<Map<String, dynamic>>?> fetchUserAnimeList(
     String username,
   ) async {
@@ -364,7 +348,6 @@ query ($userName: String) {
     }
   }
 
-  /// جست‌وجوی پیشرفته با فیلترهای ترکیبی.
   Future<({List<Map<String, dynamic>> items, bool hasNext})> advancedBrowse({
     int page = 1,
     int perPage = 24,
@@ -446,7 +429,7 @@ query ($page: Int, $perPage: Int, $sort: [MediaSort], $genreIn: [String],
     }
 
     if (res.statusCode == 404) {
-      throw  ApiException(tr('this_anime_wasn_t_found_on_anilist'));
+      throw ApiException(tr('this_anime_wasn_t_found_on_anilist'));
     }
     if (res.statusCode != 200 || body == null || body['errors'] != null) {
       if (kDebugMode) {
@@ -455,7 +438,8 @@ query ($page: Int, $perPage: Int, $sort: [MediaSort], $genreIn: [String],
       throw ApiException(tr('anilist_error_code', [res.statusCode]));
     }
     final data = body['data'];
-    if (data == null) throw  ApiException(tr('anilist_returned_an_empty_response'));
+    if (data == null)
+      throw ApiException(tr('anilist_returned_an_empty_response'));
     return (data as Map).cast<String, dynamic>();
   }
 }

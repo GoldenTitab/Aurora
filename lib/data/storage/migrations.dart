@@ -100,8 +100,6 @@ class Migrations {
     };
   }
 
-  /// اسنپ‌شات کامل برای خروجی/انتقال: علاوه بر وضعیت‌ها،
-  /// extras داخل meta (یادداشت، امتیاز، تم، ترتیب شخصی) و کش فرنچایزها.
   static Map<String, dynamic> snapshotFull() {
     Map<String, String> dump(String name, {String? prefix}) {
       final box = Hive.box<String>(name);
@@ -123,7 +121,6 @@ class Migrations {
     };
   }
 
-  /// بازیابی کامل از خروجی buildFull (با فرمت قدیمی ۱ هم سازگار است).
   static Future<bool> restoreFull(Map<String, dynamic> m) async {
     try {
       Map<String, String> read(String key) {
@@ -131,7 +128,8 @@ class Migrations {
         if (raw == null) return const {};
         if (raw is! Map) throw FormatException(tr('section_is_invalid', [key]));
         return raw.map((k, v) {
-          if (v is! String) throw FormatException(tr('section_is_invalid', [key]));
+          if (v is! String)
+            throw FormatException(tr('section_is_invalid', [key]));
           return MapEntry(k.toString(), v);
         });
       }
@@ -160,9 +158,7 @@ class Migrations {
           if (decoded is Map && decoded['data'] is Map) {
             await fBox.put(kv.key, kv.value);
           }
-        } catch (_) {
-          // ورودی خراب نادیده گرفته می‌شود
-        }
+        } catch (_) {}
       }
       if (aliases.isNotEmpty) await fBox.putAll(aliases);
       return true;
@@ -174,6 +170,8 @@ class Migrations {
 
   static Future<bool> _backupUserData({required String reason}) async {
     final snap = snapshotFull();
+    snap.remove('franchises');
+    snap.remove('aliases');
     final empty =
         (snap['watch_status'] as Map).isEmpty &&
         (snap['episode_progress'] as Map).isEmpty;
@@ -217,9 +215,9 @@ class Migrations {
 
     Map<String, String> read(String key) {
       final raw = b[key];
-      if (raw is! Map) throw  FormatException(tr('backup_is_invalid'));
+      if (raw is! Map) throw FormatException(tr('backup_is_invalid'));
       return raw.map((k, v) {
-        if (v is! String) throw  FormatException(tr('backup_is_invalid'));
+        if (v is! String) throw FormatException(tr('backup_is_invalid'));
         return MapEntry(k.toString(), v);
       });
     }

@@ -12,11 +12,6 @@ import '../../data/models/collectible_card.dart';
 import '../../data/providers.dart';
 import '../../core/i18n/lang.dart';
 
-/// تب «کارت‌ها»: باز کردن بسته و مشاهده کلکسیون.
-///
-/// برای روان ماندن اسکرول با کلکسیون‌های بزرگ، کل صفحه یک
-/// CustomScrollView تنبل است؛ هیچ گرید تو‌در‌تویی با shrinkWrap
-/// وجود ندارد که کل کلکسیون را یکجا بسازد.
 class CardsTab extends ConsumerWidget {
   const CardsTab({super.key});
 
@@ -33,7 +28,9 @@ class CardsTab extends ConsumerWidget {
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          sliver: SliverToBoxAdapter(child: _PackHeader(cards: cards, ecoCoins: eco.coins)),
+          sliver: SliverToBoxAdapter(
+            child: _PackHeader(cards: cards, ecoCoins: eco.coins),
+          ),
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -85,16 +82,14 @@ class CardsTab extends ConsumerWidget {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 sliver: SliverGrid(
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     childAspectRatio: 0.72,
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
                   ),
                   delegate: SliverChildBuilderDelegate(
-                    (context, i) =>
-                        _CardTile(card: cards.collection[r]![i]),
+                    (context, i) => _CardTile(card: cards.collection[r]![i]),
                     childCount: cards.collection[r]!.length,
                   ),
                 ),
@@ -179,9 +174,12 @@ class _PackHeader extends ConsumerWidget {
                             SnackBar(
                               content: Text(
                                 n > 0
-                                    ? tr('pool_refreshed_with_characters',
-                                        [toFa(n)])
-                                    : tr('no_characters_found_add_a_few_anime_to_your_list'),
+                                    ? tr('pool_refreshed_with_characters', [
+                                        toFa(n),
+                                      ])
+                                    : tr(
+                                        'no_characters_found_add_a_few_anime_to_your_list',
+                                      ),
                               ),
                             ),
                           );
@@ -269,10 +267,7 @@ class _CardTile extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(12),
               ),
-              child: CoverImage(
-                url: card.image,
-                cacheWidth: 340,
-              ),
+              child: CoverImage(url: card.image, cacheWidth: 340),
             ),
           ),
           Padding(
@@ -283,10 +278,7 @@ class _CardTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textDirection: dirFor(card.name),
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
             ),
           ),
           Padding(

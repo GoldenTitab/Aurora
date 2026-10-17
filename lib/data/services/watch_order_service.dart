@@ -16,12 +16,7 @@ class WatchOrderItem {
 class WatchOrderService {
   const WatchOrderService();
 
-  /// ترتیب پیشنهادی بر اساس گراف روابط (parentEntryId) + تاریخ انتشار.
-  /// اگر [customOrder] داده شده، آن اولویت دارد؛ entries جدید به انتها می‌چسبند.
-  List<WatchOrderItem> compute(
-    Franchise f, {
-    List<String>? customOrder,
-  }) {
+  List<WatchOrderItem> compute(Franchise f, {List<String>? customOrder}) {
     final map = {for (final e in f.entries) e.id: e};
 
     if (customOrder != null && customOrder.isNotEmpty) {
@@ -31,24 +26,27 @@ class WatchOrderService {
         final e = map[id];
         if (e == null) continue;
         if (!seen.add(id)) continue;
-        result.add(WatchOrderItem(
-          entry: e,
-          isEssential: e.isMainStory,
-          relationNote: e.relationType,
-        ));
+        result.add(
+          WatchOrderItem(
+            entry: e,
+            isEssential: e.isMainStory,
+            relationNote: e.relationType,
+          ),
+        );
       }
       for (final e in f.entries) {
         if (seen.contains(e.id)) continue;
-        result.add(WatchOrderItem(
-          entry: e,
-          isEssential: e.isMainStory,
-          relationNote: e.relationType,
-        ));
+        result.add(
+          WatchOrderItem(
+            entry: e,
+            isEssential: e.isMainStory,
+            relationNote: e.relationType,
+          ),
+        );
       }
       return result;
     }
 
-    // topological sort بر اساس parentEntryId
     final order = <String>[];
     final visited = <String>{};
 
@@ -62,23 +60,18 @@ class WatchOrderService {
       }
       if (!order.contains(e.id)) order.add(e.id);
 
-      final children = f.entries
-          .where((c) => c.parentEntryId == e.id)
-          .toList()
+      final children = f.entries.where((c) => c.parentEntryId == e.id).toList()
         ..sort((a, b) => _dateKey(a).compareTo(_dateKey(b)));
       for (final c in children) {
         visit(c);
       }
     }
 
-    final roots = f.entries
-        .where((e) => e.parentEntryId == null)
-        .toList()
+    final roots = f.entries.where((e) => e.parentEntryId == null).toList()
       ..sort((a, b) => _dateKey(a).compareTo(_dateKey(b)));
     for (final r in roots) {
       visit(r);
     }
-    // اگر چیزی جا ماند (cycle یا داده ناقص)
     for (final e in f.entries) {
       visit(e);
     }
@@ -86,11 +79,13 @@ class WatchOrderService {
     final result = <WatchOrderItem>[];
     for (final id in order) {
       final e = map[id]!;
-      result.add(WatchOrderItem(
-        entry: e,
-        isEssential: e.isMainStory,
-        relationNote: e.relationType,
-      ));
+      result.add(
+        WatchOrderItem(
+          entry: e,
+          isEssential: e.isMainStory,
+          relationNote: e.relationType,
+        ),
+      );
     }
     return result;
   }
@@ -106,7 +101,7 @@ class WatchOrderService {
   }
 
   ({List<WatchOrderItem> essential, List<WatchOrderItem> optional})
-      splitByImportance(List<WatchOrderItem> items) {
+  splitByImportance(List<WatchOrderItem> items) {
     final essential = <WatchOrderItem>[];
     final optional = <WatchOrderItem>[];
     for (final item in items) {

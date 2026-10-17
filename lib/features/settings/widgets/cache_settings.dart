@@ -10,10 +10,6 @@ import '../../../data/remote/api_gateway.dart';
 import '../../../data/storage/migrations.dart';
 import '../../../core/i18n/lang.dart';
 
-/// بخش «حافظه‌ی کش» در تنظیمات: نمایش حجم تقریبی هر بخش و پاک‌سازی جدا یا کلی.
-///
-/// فقط کش‌ها پاک می‌شوند؛ داده‌ی کاربر (لیست، وضعیت‌ها، قسمت‌های دیده‌شده،
-/// اقتصاد و پشتیبان‌ها) دست‌نخورده می‌ماند.
 class CacheSettings extends StatefulWidget {
   const CacheSettings({super.key});
 
@@ -35,7 +31,6 @@ class _CacheSettingsState extends State<CacheSettings> {
 
   static const _cacheBoxes = <String>[
     Boxes.apiCache,
-    Boxes.franchiseCache,
     'home_cache',
     'discover_cache',
     'card_cache',
@@ -50,7 +45,10 @@ class _CacheSettingsState extends State<CacheSettings> {
   Future<int> _dirSize(Directory dir) async {
     var total = 0;
     try {
-      await for (final entity in dir.list(recursive: true, followLinks: false)) {
+      await for (final entity in dir.list(
+        recursive: true,
+        followLinks: false,
+      )) {
         if (entity is File) {
           try {
             total += await entity.length();
@@ -68,7 +66,6 @@ class _CacheSettingsState extends State<CacheSettings> {
       final tmp = await getTemporaryDirectory();
       imageBytes = await _dirSize(tmp);
     } catch (_) {}
-    // هرس خودکار ورودی‌های قدیمی کش API (بیش از ۱۴ روز یا بیش از ۴۰۰ ورودی).
     try {
       await ApiGateway.pruneCache(Hive.box<String>(Boxes.apiCache));
     } catch (_) {}
@@ -107,11 +104,11 @@ class _CacheSettingsState extends State<CacheSettings> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child:  Text(tr('cancel')),
+            child: Text(tr('cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child:  Text(tr('clear_2')),
+            child: Text(tr('clear_2')),
           ),
         ],
       ),
@@ -123,7 +120,7 @@ class _CacheSettingsState extends State<CacheSettings> {
     if (!await _confirm(
       tr('clear_image_cache'),
       tr('cached_images_will_be_deleted_and_re_downloaded_') +
-      tr('your_list_data_and_progress_will_stay_untouched'),
+          tr('your_list_data_and_progress_will_stay_untouched'),
     )) {
       return;
     }
@@ -136,9 +133,9 @@ class _CacheSettingsState extends State<CacheSettings> {
       }
     } catch (_) {}
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-       SnackBar(content: Text(tr('image_cache_cleared'))),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(tr('image_cache_cleared'))));
     await _measure();
   }
 
@@ -146,7 +143,7 @@ class _CacheSettingsState extends State<CacheSettings> {
     if (!await _confirm(
       tr('clear_cache'),
       tr('these_caches_only_speed_things_up_and_are_rebuil') +
-      tr('progress_will_stay_untouched'),
+          tr('progress_will_stay_untouched'),
     )) {
       return;
     }
@@ -156,7 +153,9 @@ class _CacheSettingsState extends State<CacheSettings> {
       } catch (_) {}
     }
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(doneText)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(doneText)));
     await _measure();
   }
 
@@ -164,7 +163,7 @@ class _CacheSettingsState extends State<CacheSettings> {
     if (!await _confirm(
       tr('clear_all_caches_2'),
       tr('all_image_and_api_caches_will_be_cleared_your_li') +
-      tr('watched_episodes_and_rewards_will_stay_untouched'),
+          tr('watched_episodes_and_rewards_will_stay_untouched'),
     )) {
       return;
     }
@@ -182,9 +181,9 @@ class _CacheSettingsState extends State<CacheSettings> {
       } catch (_) {}
     }
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-       SnackBar(content: Text(tr('all_caches_cleared'))),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(tr('all_caches_cleared'))));
     await _measure();
   }
 
@@ -204,21 +203,12 @@ class _CacheSettingsState extends State<CacheSettings> {
       ),
       _CacheSection(
         title: tr('api_cache'),
-        subtitle:
-            tr('entries', [toFa(_boxCounts[Boxes.apiCache] ?? 0)]),
-      ),
-      _CacheSection(
-        title: tr('franchise_cache'),
-        subtitle:
-            tr('entries', [toFa(_boxCounts[Boxes.franchiseCache] ?? 0)]),
+        subtitle: tr('entries', [toFa(_boxCounts[Boxes.apiCache] ?? 0)]),
       ),
       _CacheSection(
         title: tr('home_discover_cards_cache'),
-        subtitle: 'تعداد ورودی: ${toFa(
-          (_boxCounts['home_cache'] ?? 0) +
-              (_boxCounts['discover_cache'] ?? 0) +
-              (_boxCounts['card_cache'] ?? 0),
-        )}',
+        subtitle:
+            'تعداد ورودی: ${toFa((_boxCounts['home_cache'] ?? 0) + (_boxCounts['discover_cache'] ?? 0) + (_boxCounts['card_cache'] ?? 0))}',
       ),
     ];
 
@@ -233,22 +223,18 @@ class _CacheSettingsState extends State<CacheSettings> {
             children: [
               _row(sections[0], () => _clearImages()),
               const Divider(height: 1, indent: 14, endIndent: 14),
-              _row(sections[1], () => _clearBoxes([Boxes.apiCache], tr('api_cache_cleared'))),
-              const Divider(height: 1, indent: 14, endIndent: 14),
               _row(
-                sections[2],
-                () => _clearBoxes(
-                  [Boxes.franchiseCache],
-                  tr('franchise_cache_cleared'),
-                ),
+                sections[1],
+                () => _clearBoxes([Boxes.apiCache], tr('api_cache_cleared')),
               ),
               const Divider(height: 1, indent: 14, endIndent: 14),
               _row(
-                sections[3],
-                () => _clearBoxes(
-                  ['home_cache', 'discover_cache', 'card_cache'],
-                  tr('home_discover_cards_cache_cleared'),
-                ),
+                sections[2],
+                () => _clearBoxes([
+                  'home_cache',
+                  'discover_cache',
+                  'card_cache',
+                ], tr('home_discover_cards_cache_cleared')),
               ),
             ],
           ),
@@ -259,7 +245,7 @@ class _CacheSettingsState extends State<CacheSettings> {
           child: OutlinedButton.icon(
             onPressed: _clearAll,
             icon: const Icon(Icons.delete_sweep_rounded),
-            label:  Text(tr('clear_all_caches')),
+            label: Text(tr('clear_all_caches')),
           ),
         ),
         const SizedBox(height: 8),
@@ -299,7 +285,7 @@ class _CacheSettingsState extends State<CacheSettings> {
               ],
             ),
           ),
-          TextButton(onPressed: onClear, child:  Text(tr('clear_2'))),
+          TextButton(onPressed: onClear, child: Text(tr('clear_2'))),
         ],
       ),
     );

@@ -10,7 +10,6 @@ import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
 import '../../core/i18n/lang.dart';
 
-/// چارت فصلی: تب فصل جاری و فصل بعد.
 class SeasonalScreen extends ConsumerWidget {
   const SeasonalScreen({super.key});
 
@@ -20,8 +19,8 @@ class SeasonalScreen extends ConsumerWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title:  Text(tr('seasonal_chart')),
-          bottom:  TabBar(
+          title: Text(tr('seasonal_chart')),
+          bottom: TabBar(
             tabs: [
               Tab(text: tr('this_season')),
               Tab(text: tr('next_season_2')),
@@ -48,8 +47,9 @@ class _SeasonGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = kind == _SeasonKind.current
-        ? ref.watch(discoverSectionProvider(DiscoverSection.seasonal))
-            .whenData((d) => d.items)
+        ? ref
+              .watch(discoverSectionProvider(DiscoverSection.seasonal))
+              .whenData((d) => d.items)
         : ref.watch(seasonalNextProvider);
 
     return async.when(
@@ -68,8 +68,7 @@ class _SeasonGrid extends ConsumerWidget {
       error: (e, _) => ErrorView(
         message: friendlyError(e),
         onRetry: () => kind == _SeasonKind.current
-            ? ref.invalidate(
-                discoverSectionProvider(DiscoverSection.seasonal))
+            ? ref.invalidate(discoverSectionProvider(DiscoverSection.seasonal))
             : ref.invalidate(seasonalNextProvider),
       ),
       data: (items) => _grid(context, ref, items),

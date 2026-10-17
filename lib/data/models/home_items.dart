@@ -1,5 +1,3 @@
-// مدل‌های سبک برای ویجت‌های صفحه خانه (ادامه تماشا، قسمت‌های جدید، تقویم پخش).
-
 import '../../core/i18n/lang.dart';
 
 class ContinueWatchItem {
@@ -34,13 +32,10 @@ class NewEpisodeItem {
   final String entryTitle;
   final String? cover;
 
-  /// تعداد قسمت‌های پخش‌شده‌ای که هنوز دیده نشده‌اند.
   final int newCount;
 
-  /// آخرین قسمت پخش‌شده.
   final int latestEpisode;
 
-  /// زمان پخش آخرین قسمت (epoch seconds)؛ برای مرتب‌سازی و dismiss.
   final int airingAt;
 
   const NewEpisodeItem({
@@ -76,7 +71,6 @@ class AiringEntry {
 }
 
 class AiringDay {
-  /// 1=دوشنبه ... 7=یکشنبه (مطابق DateTime.weekday)
   final int weekday;
   final List<AiringEntry> items;
 
@@ -104,7 +98,6 @@ class AiringDay {
     'Sunday',
   ];
 
-  /// نام روز به زبان فعلی اپ.
   String get labelFa {
     final names = Lang.isEn ? _weekdayEn : weekdayFa;
     return weekday >= 1 && weekday <= 7 ? names[weekday] : tr('unknown');

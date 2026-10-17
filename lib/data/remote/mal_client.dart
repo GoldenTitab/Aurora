@@ -18,7 +18,6 @@ class MalClient {
 
   Map<String, String> get _authHeaders => {'X-MAL-CLIENT-ID': _clientId};
 
-  /// جست‌وجوی انیمه در MAL. خروجی: لیستی از nodeهای خام MAL.
   Future<List<Map<String, dynamic>>> search(
     String query, {
     int limit = 20,
@@ -49,8 +48,6 @@ class MalClient {
     }
   }
 
-  /// روابط یک انیمه در MAL (برای تکمیل گراف فرنچایز).
-  /// خروجی: لیست (relationType, node).
   Future<List<({String relation, Map<String, dynamic> node})>> related(
     int malId,
   ) async {
@@ -58,9 +55,7 @@ class MalClient {
     try {
       final res = await _gw.get(
         ApiHost.mal,
-        Uri.parse(
-          '$_base/anime/$malId?fields=related_anime{relation_type}',
-        ),
+        Uri.parse('$_base/anime/$malId?fields=related_anime{relation_type}'),
         headers: _authHeaders,
         cacheTtl: const Duration(hours: 12),
         maxAttempts: 2,

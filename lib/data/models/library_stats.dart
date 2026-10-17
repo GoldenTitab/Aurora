@@ -1,5 +1,4 @@
 import '../../core/i18n/lang.dart';
-// آمار تماشای کتابخانه (داشبورد آماری).
 
 class FranchiseStat {
   final String franchiseId;
@@ -46,7 +45,6 @@ class LibraryStats {
 
   int get tracked => started + completed + dropped + onHold + planToWatch;
 
-  /// قالب‌بندی «X ساعت» یا «Y روز و Z ساعت».
   static String formatMinutes(int minutes) {
     if (minutes < 60) return tr('min', [minutes]);
     final h = minutes ~/ 60;

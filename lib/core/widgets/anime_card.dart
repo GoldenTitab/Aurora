@@ -35,7 +35,6 @@ class AnimeCard extends StatelessWidget {
                     right: 8,
                     child: ScoreBadge(score: data.score),
                   ),
-                  // نشان منبع برای نتایج MAL/Jikan (جست‌وجوی جهانی)
                   if (data.source == SearchSource.mal ||
                       data.source == SearchSource.jikan)
                     Positioned(
@@ -148,12 +147,18 @@ class AnimeCardError extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.refresh_rounded, color: AppColors.textSecondaryOf(context)),
+              Icon(
+                Icons.refresh_rounded,
+                color: AppColors.textSecondaryOf(context),
+              ),
               SizedBox(height: 8),
               Text(
                 tr('couldn_t_load_tap_to_retry'),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondaryOf(context), fontSize: 12),
+                style: TextStyle(
+                  color: AppColors.textSecondaryOf(context),
+                  fontSize: 12,
+                ),
               ),
             ],
           ),

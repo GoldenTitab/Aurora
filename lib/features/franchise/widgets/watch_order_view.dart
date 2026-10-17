@@ -51,8 +51,6 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
         .saveCustomOrder(widget.franchise.id, ids);
   }
 
-  /// جابه‌جایی داخل لیست نمایشی؛ آیتم‌های مخفی (فیلتر «فقط ضروری‌ها»)
-  /// سر جای خودشان می‌مانند و ترتیب جدید ذخیره می‌شود.
   Future<void> _onReorderVisible(
     List<WatchOrderItem> full,
     List<WatchOrderItem> visible,
@@ -60,7 +58,6 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
     int newIndex,
   ) async {
     final vis = visible.toList();
-    // onReorderItem قبلاً newIndex را برای آیتم حذف‌شده تنظیم کرده است.
     final moved = vis.removeAt(oldIndex);
     vis.insert(newIndex, moved);
     final visIds = vis.map((e) => e.entry.id).toSet();
@@ -122,7 +119,7 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
                 TextButton.icon(
                   onPressed: _reset,
                   icon: const Icon(Icons.restore_rounded, size: 18),
-                  label:  Text(tr('back_to_suggested')),
+                  label: Text(tr('back_to_suggested')),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primaryTextOf(context),
                     visualDensity: VisualDensity.compact,
@@ -148,13 +145,15 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
             spacing: 8,
             children: [
               ChoiceChip(
-                label:  Text(tr('all')),
+                label: Text(tr('all')),
                 selected: _showOptional,
                 onSelected: (_) => setState(() => _showOptional = true),
               ),
               ChoiceChip(
                 label: Text(
-                  tr('essentials_only', [toFa(items.where((i) => i.isEssential).length)]),
+                  tr('essentials_only', [
+                    toFa(items.where((i) => i.isEssential).length),
+                  ]),
                 ),
                 selected: !_showOptional,
                 onSelected: (_) => setState(() => _showOptional = false),

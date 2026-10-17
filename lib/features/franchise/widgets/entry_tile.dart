@@ -23,10 +23,8 @@ class EntryTile extends ConsumerStatefulWidget {
   });
   final Entry entry;
 
-  /// شناسه فرنچایز (برای حذف ورودی دستی)؛ null یعنی حذف پشتیبانی نمی‌شود.
   final String? franchiseId;
 
-  /// بعد از حذف ورودی دستی صدا زده می‌شود (بازخوانی صفحه).
   final VoidCallback? onManualRemoved;
 
   @override
@@ -42,7 +40,7 @@ class _EntryTileState extends ConsumerState<EntryTile> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title:  Text(tr('remove_manual_entry')),
+        title: Text(tr('remove_manual_entry')),
         content: Text(
           tr('remove_from_this_franchise', [widget.entry.title]),
           textDirection: dirFor(widget.entry.title),
@@ -50,11 +48,11 @@ class _EntryTileState extends ConsumerState<EntryTile> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child:  Text(tr('cancel')),
+            child: Text(tr('cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child:  Text(tr('delete')),
+            child: Text(tr('delete')),
           ),
         ],
       ),
@@ -74,8 +72,6 @@ class _EntryTileState extends ConsumerState<EntryTile> {
         ref.watch(episodeProgressProvider.select((m) => m[entry.id])) ??
         const <int>{};
     final hasEpisodes = entry.episodes > 1;
-    // حالت بدون اسپویل: کاور اثری که هنوز هیچ قسمتی از آن دیده نشده
-    // و وضعیتی هم برایش ثبت نشده، تار نشان داده می‌شود.
     final spoilerBlur =
         ref.watch(userExtrasProvider).spoilerFree() &&
         watched.isEmpty &&
@@ -180,7 +176,9 @@ class _EntryTileState extends ConsumerState<EntryTile> {
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: Text(
-                tr('last_watched_episode', [toFa(watched.reduce((a, b) => a > b ? a : b))]),
+                tr('last_watched_episode', [
+                  toFa(watched.reduce((a, b) => a > b ? a : b)),
+                ]),
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondaryOf(context),
@@ -244,7 +242,7 @@ class _EpisodesHeader extends StatelessWidget {
               color: AppColors.primaryTextOf(context),
             ),
             const SizedBox(width: 8),
-             Text(
+            Text(
               tr('episodes_3'),
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
             ),
@@ -271,10 +269,6 @@ class _EpisodesHeader extends StatelessWidget {
   }
 }
 
-/// گرید قسمت‌ها با یادداشت شخصی هر قسمت.
-///
-/// با دو بار ضربه زدن روی یک قسمت، دیالوگ یادداشت باز می‌شود؛
-/// چیپ‌هایی که یادداشت دارند یک نقطه‌ی کهربایی نشان می‌دهند.
 class _EpisodesGrid extends ConsumerStatefulWidget {
   const _EpisodesGrid({required this.entry, required this.watched});
   final Entry entry;
@@ -309,18 +303,18 @@ class _EpisodesGridState extends ConsumerState<_EpisodesGrid> {
           if (existing != null && existing.isNotEmpty)
             TextButton(
               onPressed: () => Navigator.pop(ctx, _NoteAction.delete),
-              child:  Text(
+              child: Text(
                 tr('delete'),
                 style: TextStyle(color: AppColors.dropped),
               ),
             ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, _NoteAction.cancel),
-            child:  Text(tr('cancel')),
+            child: Text(tr('cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, _NoteAction.save),
-            child:  Text(tr('save')),
+            child: Text(tr('save')),
           ),
         ],
       ),
@@ -368,15 +362,18 @@ class _EpisodesGridState extends ConsumerState<_EpisodesGrid> {
         const SizedBox(height: 8),
         Text(
           tr('long_press_an_episode_to_mark_all_episodes_up_to') +
-          tr('double_tap_any_episode_to_add_a_note'),
-          style: TextStyle(fontSize: 11, color: AppColors.textSecondaryOf(context)),
+              tr('double_tap_any_episode_to_add_a_note'),
+          style: TextStyle(
+            fontSize: 11,
+            color: AppColors.textSecondaryOf(context),
+          ),
         ),
         const SizedBox(height: 4),
         Row(
           children: [
             TextButton(
               onPressed: () => notifier.markAll(entry.id, total),
-              child:  Text(tr('mark_all_as_watched')),
+              child: Text(tr('mark_all_as_watched')),
             ),
             TextButton(
               onPressed: () => notifier.clear(entry.id, total),
@@ -427,7 +424,9 @@ class _EpisodeChip extends StatelessWidget {
                   : AppColors.surfaceHighOf(context),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: watched ? AppColors.completed : AppColors.borderOf(context),
+                color: watched
+                    ? AppColors.completed
+                    : AppColors.borderOf(context),
               ),
             ),
             child: watched
@@ -458,19 +457,13 @@ class _EpisodeChip extends StatelessWidget {
                     ),
                   ),
           ),
-          if (hasNote)
-            const Positioned(
-              top: 4,
-              right: 4,
-              child: _NoteDot(),
-            ),
+          if (hasNote) const Positioned(top: 4, right: 4, child: _NoteDot()),
         ],
       ),
     );
   }
 }
 
-/// نقطه‌ی کهربایی روی چیپ قسمت‌هایی که یادداشت دارند.
 class _NoteDot extends StatelessWidget {
   const _NoteDot();
 
@@ -511,7 +504,6 @@ class _TypePill extends StatelessWidget {
   }
 }
 
-/// بج «دستی» برای ورودی‌هایی که کاربر خودش به فرنچایز اضافه کرده.
 class _ManualPill extends StatelessWidget {
   const _ManualPill();
 
@@ -546,19 +538,24 @@ class _Meta extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: iconColor ?? AppColors.textSecondaryOf(context)),
+        Icon(
+          icon,
+          size: 13,
+          color: iconColor ?? AppColors.textSecondaryOf(context),
+        ),
         const SizedBox(width: 4),
         Text(
           text,
-          style: TextStyle(fontSize: 12, color: AppColors.textSecondaryOf(context)),
+          style: TextStyle(
+            fontSize: 12,
+            color: AppColors.textSecondaryOf(context),
+          ),
         ),
       ],
     );
   }
 }
 
-/// نشان وضعیت انتشار: «به‌زودی» برای آثار اعلام‌شده و
-/// «در حال پخش» برای آثار در حال پخش.
 class _ReleaseBadge extends StatelessWidget {
   const _ReleaseBadge({required this.state});
   final ReleaseState state;
@@ -586,7 +583,9 @@ class _ReleaseBadge extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: airing ? AppColors.watching : AppColors.textSecondaryOf(context),
+              color: airing
+                  ? AppColors.watching
+                  : AppColors.textSecondaryOf(context),
             ),
           ),
         ),

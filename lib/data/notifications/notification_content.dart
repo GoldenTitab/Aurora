@@ -4,21 +4,17 @@ import 'package:hive/hive.dart';
 import '../../core/i18n/lang.dart';
 import '../../core/utils/persian_numbers.dart';
 
-/// شناسه کانال اعلان «قسمت‌های جدید».
 const String airingChannelId = 'aurora_airing';
 
-/// نام نمایشی کانال (به زبان فعلی اپ).
 String get airingChannelName => tr('new_episodes');
 
-String get airingChannelDescription => tr('newly_aired_episodes_from_anime_you_follow');
+String get airingChannelDescription =>
+    tr('newly_aired_episodes_from_anime_you_follow');
 
-/// payload اعلان: با تپ روی اعلان، کاربر به تقویم پخش هفتگی می‌رود.
 const String notifPayloadCalendar = '/calendar';
 
-/// شناسه ثابت اعلان روزانه تا اعلان جدید جایگزین قبلی شود (انباشته نشود).
 const int airingNotificationId = 1001;
 
-/// کانال اندروید «قسمت‌های جدید» (importance بالا).
 final AndroidNotificationChannel airingChannel = AndroidNotificationChannel(
   airingChannelId,
   airingChannelName,
@@ -26,8 +22,6 @@ final AndroidNotificationChannel airingChannel = AndroidNotificationChannel(
   importance: Importance.high,
 );
 
-/// آیتم سبک برای ساخت اعلان؛ هم در ایزولیت اصلی و هم در ایزولیت
-/// پس‌زمینه استفاده می‌شود (بدون وابستگی به providerها).
 class NewEpisodeNotifItem {
   final String entryId;
   final String titleFa;
@@ -42,7 +36,6 @@ class NewEpisodeNotifItem {
   });
 }
 
-/// تنظیمات initialize مشترک (بدون درخواست دسترسی؛ دسترسی جدا گرفته می‌شود).
 InitializationSettings notificationInitSettings() =>
     const InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/launcher_icon'),
@@ -53,12 +46,9 @@ InitializationSettings notificationInitSettings() =>
       ),
     );
 
-/// متن خلاصه فارسی اعلان، مثلاً: «۳ قسمت جدید از ۲ انیمه».
 String buildAiringBody({required int totalNew, required int animeCount}) =>
     '${toFa(totalNew)} قسمت جدید از ${toFa(animeCount)} انیمه';
 
-/// جزئیات اعلان برای اندروید/iOS؛ روی اندروید با BigText لیست
-/// حداکثر ۵ عنوان اول نمایش داده می‌شود.
 NotificationDetails buildAiringDetails(List<NewEpisodeNotifItem> items) {
   final lines = items
       .take(5)
@@ -82,12 +72,10 @@ NotificationDetails buildAiringDetails(List<NewEpisodeNotifItem> items) {
   );
 }
 
-/// خواندن/نوشتن تنظیمات اعلان داخل [Boxes.meta] (کلیدها رشته‌ای).
 class NotificationPrefs {
   static const String enabledKey = 'notif_enabled';
   static const String hourKey = 'notif_hour';
 
-  /// آخرین تعداد قسمت پخش‌شده‌ای که برایش اعلان رفته، به‌ازای هر entry.
   static const String lastAiredPrefix = 'notif_aired:';
 
   static const int defaultHour = 20;

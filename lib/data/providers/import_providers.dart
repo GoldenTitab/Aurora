@@ -8,8 +8,6 @@ import 'gamification_providers.dart';
 import 'mylist_providers.dart';
 import 'watch_providers.dart';
 
-// ─── Step 22: ایمپورت لیست ────────────────────────────────────────────────
-
 class ImportState {
   final bool running;
   final String status;
@@ -17,16 +15,20 @@ class ImportState {
 
   const ImportState({this.running = false, this.status = '', this.result});
 
-  ImportState copyWith({bool? running, String? status, LibraryImportResult? result}) =>
-      ImportState(
-        running: running ?? this.running,
-        status: status ?? this.status,
-        result: result ?? this.result,
-      );
+  ImportState copyWith({
+    bool? running,
+    String? status,
+    LibraryImportResult? result,
+  }) => ImportState(
+    running: running ?? this.running,
+    status: status ?? this.status,
+    result: result ?? this.result,
+  );
 }
 
-final importProvider =
-    NotifierProvider<ImportNotifier, ImportState>(ImportNotifier.new);
+final importProvider = NotifierProvider<ImportNotifier, ImportState>(
+  ImportNotifier.new,
+);
 
 class ImportNotifier extends Notifier<ImportState> {
   @override
@@ -34,14 +36,20 @@ class ImportNotifier extends Notifier<ImportState> {
 
   Future<void> run({required bool useAnilist, required String username}) async {
     if (state.running) return;
-    state =  ImportState(running: true, status: tr('starting'));
+    state = ImportState(running: true, status: tr('starting'));
     LibraryImportResult r;
     try {
       r = useAnilist
           ? await importFromAniList(
-              ref, username, (s) => state = state.copyWith(status: s))
+              ref,
+              username,
+              (s) => state = state.copyWith(status: s),
+            )
           : await importFromMal(
-              ref, username, (s) => state = state.copyWith(status: s));
+              ref,
+              username,
+              (s) => state = state.copyWith(status: s),
+            );
     } catch (e) {
       r = LibraryImportResult(ok: false, message: tr('error', [e]));
     }

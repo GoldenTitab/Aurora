@@ -13,7 +13,6 @@ import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
 import '../../core/i18n/lang.dart';
 
-/// صفحه تقویم پخش هفتگی.
 class WeeklyCalendarScreen extends ConsumerWidget {
   const WeeklyCalendarScreen({super.key});
 
@@ -23,7 +22,7 @@ class WeeklyCalendarScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title:  Text(tr('weekly_airing_calendar')),
+        title: Text(tr('weekly_airing_calendar')),
         actions: [
           IconButton(
             tooltip: tr('refresh'),
@@ -33,9 +32,7 @@ class WeeklyCalendarScreen extends ConsumerWidget {
         ],
       ),
       body: async.when(
-        loading: () =>  LoadingView(
-          message: tr('fetching_airing_schedule'),
-        ),
+        loading: () => LoadingView(message: tr('fetching_airing_schedule')),
         error: (e, _) => ErrorView(
           message: friendlyError(e),
           onRetry: () => ref.invalidate(weeklyAiringProvider),
@@ -46,7 +43,7 @@ class WeeklyCalendarScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(24),
                   child: Text(
                     tr('no_new_episodes_to_show') +
-                    tr('open_airing_anime_to_add_them_to_the_calendar'),
+                        tr('open_airing_anime_to_add_them_to_the_calendar'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.textSecondaryOf(context),
@@ -121,9 +118,7 @@ class _DaySection extends StatelessWidget {
               color: AppColors.surfaceOf(context),
               borderRadius: BorderRadius.circular(16),
               border: isToday
-                  ? Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.5),
-                    )
+                  ? Border.all(color: AppColors.primary.withValues(alpha: 0.5))
                   : null,
             ),
             child: Column(

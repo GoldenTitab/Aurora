@@ -1,4 +1,5 @@
 import '../../core/i18n/lang.dart';
+
 enum EntryType { series, movie, ova, special }
 
 extension EntryTypeX on EntryType {
@@ -47,7 +48,6 @@ extension ReleaseStateX on ReleaseState {
     }
   }
 
-  /// آیا این اثر نباید در نوار پیشرفت فرنچایز شمرده شود؟
   bool get excludedFromProgress => this == ReleaseState.announced;
 }
 
@@ -70,16 +70,12 @@ class Entry {
   final int? nextEpisode;
   final int? nextAiringAt;
 
-  /// مدت زمان هر قسمت به دقیقه (برای فیلم: کل مدت فیلم).
   final int durationMin;
 
-  /// نوع رابطه با entry والد (SEQUEL, PREQUEL, SIDE_STORY, ...)
   final String? relationType;
 
-  /// شناسه entry والد داخل همین فرنچایز (مثلاً al-12345)
   final String? parentEntryId;
 
-  /// true یعنی کاربر دستی به فرنچایز اضافه‌اش کرده (نه از API).
   final bool manual;
 
   const Entry({
@@ -147,7 +143,6 @@ class Entry {
     );
   }
 
-  /// ساخت Entry از نتیجه جست‌وجوی MAL (بدون شناسه AniList).
   factory Entry.fromMalSearch(Map<String, dynamic> m) {
     final id = (m['id'] as num).toInt();
     final pics = m['main_picture'] as Map?;
@@ -165,7 +160,6 @@ class Entry {
     );
   }
 
-  /// ساخت Entry از نتیجه جست‌وجوی Jikan (بدون شناسه AniList).
   factory Entry.fromJikanSearch(Map<String, dynamic> m) {
     final id = (m['mal_id'] as num).toInt();
     final images = m['images'] as Map?;

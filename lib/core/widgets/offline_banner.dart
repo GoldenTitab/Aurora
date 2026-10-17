@@ -5,10 +5,6 @@ import '../../data/providers.dart';
 import '../i18n/lang.dart';
 import '../theme/app_colors.dart';
 
-/// بنر باریک «حالت آفلاین» که بالای صفحه‌های اصلی نشان داده می‌شود.
-///
-/// فقط وقتی آفلاین هستیم رندر می‌شود (در غیر این صورت هیچ فضایی
-/// نمی‌گیرد تا لی‌آوت به‌هم نریزد).
 class OfflineBanner extends ConsumerWidget {
   const OfflineBanner({super.key});
 

@@ -31,16 +31,10 @@ final GlobalKey<NavigatorState> _rootKey = GlobalKey<NavigatorState>(
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootKey,
   initialLocation: '/discover',
-  // باکس‌ها در main قبل از runApp باز می‌شوند، پس خواندن همگام امن است.
   redirect: (context, state) {
-    final done =
-        Hive.box<String>(Boxes.meta).get('onboarding_done') == '1';
+    final done = Hive.box<String>(Boxes.meta).get('onboarding_done') == '1';
     final loc = state.matchedLocation;
     final onOnboarding = loc == '/onboarding';
-    // حین آنبوردینگ فقط خود آنبوردینگ و ایمپورت (دکمه‌ی داخل آنبوردینگ)
-    // مجازند؛ بقیه مسیرها به آنبوردینگ برمی‌گردند.
-    // بعد از اتمام آنبوردینگ، نمایش مجدد آن (دکمه‌ی «پخش مجدد آموزش» در
-    // تنظیمات) مجاز است و _finish با go('/discover') خارج می‌شود.
     if (!done && !onOnboarding && loc != '/import') return '/onboarding';
     return null;
   },
@@ -161,7 +155,9 @@ final GoRouter appRouter = GoRouter(
         final raw = state.pathParameters['id'] ?? '';
         final Widget child;
         if (raw.startsWith('mal-')) {
-          child = FranchiseScreen.mal(malId: int.tryParse(raw.substring(4)) ?? 0);
+          child = FranchiseScreen.mal(
+            malId: int.tryParse(raw.substring(4)) ?? 0,
+          );
         } else {
           child = FranchiseScreen.anilist(anilistId: int.tryParse(raw) ?? 0);
         }

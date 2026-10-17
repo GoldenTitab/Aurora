@@ -14,8 +14,6 @@ import '../storage/migrations.dart' show Boxes;
 import 'core_providers.dart';
 import 'mylist_providers.dart';
 
-// ─── Step 15: اقتصاد بازی‌وار (XP، لول، سکه شفق) ───────────────────────────
-
 class EconomyState {
   final int xp;
   final int level;
@@ -30,17 +28,15 @@ class EconomyState {
   });
 }
 
-/// وقتی لول بالا می‌رود، ایندکس لول جدید این‌جا گذاشته می‌شود تا UI جشن بگیرد.
 final levelUpEventProvider = StateProvider<int?>((ref) => null);
 
-/// صف اچیومنت‌های تازه بازشده برای نمایش در UI.
-final achievementEventProvider =
-    StateProvider<List<AchievementDef>>((ref) => const []);
+final achievementEventProvider = StateProvider<List<AchievementDef>>(
+  (ref) => const [],
+);
 
 class EconomyNotifier extends Notifier<EconomyState> {
   Economy get _eco => Economy(Hive.box<String>(Boxes.meta));
 
-  /// فرنچایزهایی که جایزه تکمیلشان هم‌اکنون در حال ثبت است.
   final Set<String> _completing = {};
 
   EconomyState _read() {
@@ -105,7 +101,6 @@ class EconomyNotifier extends Notifier<EconomyState> {
   }
 
   Future<void> onFranchiseCompleted(String franchiseId) async {
-    // محافظت در برابر فراخوانی هم‌زمان (جایزه فقط یک بار).
     if (_completing.contains(franchiseId)) return;
     final box = Hive.box<String>(Boxes.meta);
     if (box.get('frdone:$franchiseId') == '1') return;
@@ -127,24 +122,22 @@ class EconomyNotifier extends Notifier<EconomyState> {
   }
 }
 
-final economyProvider =
-    NotifierProvider<EconomyNotifier, EconomyState>(EconomyNotifier.new);
+final economyProvider = NotifierProvider<EconomyNotifier, EconomyState>(
+  EconomyNotifier.new,
+);
 
-/// استریک فعلی (از economyProvider خوانده می‌شود تا به‌روز بماند).
-final streakProvider = Provider<int>((ref) => ref.watch(economyProvider).streak);
+final streakProvider = Provider<int>(
+  (ref) => ref.watch(economyProvider).streak,
+);
 
-/// هیت‌مپ ۲۶ هفته اخیر.
 final heatmapProvider = Provider<List<({String day, int count})>>((ref) {
   ref.watch(economyProvider);
   return Economy(Hive.box<String>(Boxes.meta)).heatDays(182);
 });
 
-// ─── Step 16: مأموریت‌ها ──────────────────────────────────────────────────
-
-final missionsProvider =
-    NotifierProvider<MissionsNotifier, List<MissionState>>(
-      MissionsNotifier.new,
-    );
+final missionsProvider = NotifierProvider<MissionsNotifier, List<MissionState>>(
+  MissionsNotifier.new,
+);
 
 class MissionsNotifier extends Notifier<List<MissionState>> {
   MissionEngine get _engine =>
@@ -166,8 +159,6 @@ class MissionsNotifier extends Notifier<List<MissionState>> {
   }
 }
 
-// ─── Step 17: اچیومنت‌ها ──────────────────────────────────────────────────
-
 final achievementsProvider =
     NotifierProvider<AchievementsNotifier, Set<String>>(
       AchievementsNotifier.new,
@@ -176,8 +167,6 @@ final achievementsProvider =
 class AchievementsNotifier extends Notifier<Set<String>> {
   late final List<AchievementDef> _defs = buildAchievements();
 
-  /// اچیومنت‌هایی که هم‌اکنون در حال باز شدن‌اند؛ برای جلوگیری از
-  /// جایزه‌ی دوباره وقتی دو evaluate هم‌زمان اجرا می‌شوند.
   final Set<String> _inflight = {};
 
   List<AchievementDef> get all => _defs;
@@ -198,8 +187,9 @@ class AchievementsNotifier extends Notifier<Set<String>> {
     return AchCtx(
       episodesWatched: eco.statOf('ep_total'),
       franchisesStarted: franchises.length,
-      franchisesCompleted:
-          franchises.where((m) => m.status == WatchStatus.completed).length,
+      franchisesCompleted: franchises
+          .where((m) => m.status == WatchStatus.completed)
+          .length,
       distinctGenres: genres.length,
       streak: eco.streak(),
       ratingsGiven: eco.statOf('rate_total'),
@@ -218,7 +208,6 @@ class AchievementsNotifier extends Notifier<Set<String>> {
     );
   }
 
-  /// همه اچیومنت‌های محقق‌شده ولی بازنشده را باز می‌کند و جایزه می‌دهد.
   Future<void> evaluate() async {
     final eco = Economy(Hive.box<String>(Boxes.meta));
     final ctx = _buildCtx();
@@ -230,7 +219,6 @@ class AchievementsNotifier extends Notifier<Set<String>> {
         pass = d.test(ctx);
       } catch (_) {}
       if (!pass) continue;
-      // بازبینی دوباره روی باکس: اگر evaluate دیگری همین حالا بازش کرده، رد شو.
       if (eco.achievementUnlocked(d.id)) continue;
       _inflight.add(d.id);
       try {
@@ -256,8 +244,6 @@ class AchievementsNotifier extends Notifier<Set<String>> {
   }
 }
 
-// ─── Step 18: کارت‌های کلکسیونی ────────────────────────────────────────────
-
 final cardPoolProvider = Provider<CardPool>((ref) {
   return CardPool(
     Hive.box<String>(Boxes.meta),
@@ -271,7 +257,6 @@ class CardsState {
   final Map<CardRarity, List<CollectibleCard>> collection;
   final int poolSize;
 
-  /// ترکیب استخر بر اساس درجه (برای نمایش شفافیت در تب کلکسیون).
   final Map<CardRarity, int> poolBreakdown;
   final bool poolLoading;
 
@@ -283,19 +268,20 @@ class CardsState {
   });
 }
 
-final cardsProvider =
-    NotifierProvider<CardsNotifier, CardsState>(CardsNotifier.new);
+final cardsProvider = NotifierProvider<CardsNotifier, CardsState>(
+  CardsNotifier.new,
+);
 
 class CardsNotifier extends Notifier<CardsState> {
   CardPool get _pool => ref.read(cardPoolProvider);
   Economy get _eco => Economy(Hive.box<String>(Boxes.meta));
 
   CardsState _read({bool loading = false}) => CardsState(
-        collection: _pool.collection(),
-        poolSize: _pool.poolSize(),
-        poolBreakdown: _pool.rarityBreakdown(),
-        poolLoading: loading,
-      );
+    collection: _pool.collection(),
+    poolSize: _pool.poolSize(),
+    poolBreakdown: _pool.rarityBreakdown(),
+    poolLoading: loading,
+  );
 
   @override
   CardsState build() => _read();
@@ -307,7 +293,6 @@ class CardsNotifier extends Notifier<CardsState> {
     return n;
   }
 
-  /// پاک‌سازی کش استخر کارت‌ها (از تب کلکسیون).
   Future<void> clearPoolCache() async {
     await _pool.clearPool();
     state = _read();
@@ -323,8 +308,6 @@ class CardsNotifier extends Notifier<CardsState> {
     return r;
   }
 }
-
-// ─── Step 19: نمره فرنچایز (۱ تا ۱۰) ───────────────────────────────────────
 
 final franchiseRatingProvider =
     NotifierProvider.family<FranchiseRatingNotifier, int?, String>(

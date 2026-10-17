@@ -22,9 +22,6 @@ enum HomeSection {
   const HomeSection(this.key);
   final String key;
 
-  /// عنوان نمایشی بخش به زبان فعلی.
-  /// (قبلاً tr() داخل سازنده‌ی enum بود که عبارت ثابت نیست؛ حالا شناسه‌ی
-  /// ثابت نگه داشته می‌شود و ترجمه با getter انجام می‌شود.)
   String get titleFa => tr(key);
 }
 
@@ -198,8 +195,6 @@ final homeSectionProvider =
       List<AnimeCardData>,
       HomeSection
     >(HomeSectionNotifier.new);
-
-// ─── Step 9: Watch order / Suggestions / Plan ───────────────────────────────
 
 final watchOrderStorageProvider = Provider<WatchOrderStorage>((ref) {
   return WatchOrderStorage(Hive.box<String>(Boxes.meta));

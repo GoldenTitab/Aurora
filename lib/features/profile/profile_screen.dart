@@ -8,24 +8,16 @@ import '../../data/providers.dart';
 import '../../data/storage/economy.dart';
 import '../../core/i18n/lang.dart';
 
-/// صفحه «پروفایل»: مرکز شخصی کاربر.
-///
-/// لول، XP، سکه «شفق» و استریک اینجاست و از همین‌جا به بخش‌های شخصی
-/// (پیشنهاد، برنامه تماشا، تقویم، آمار، جوایز، ایمپورت) می‌رسی.
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title:  Text(tr('profile'))),
+      appBar: AppBar(title: Text(tr('profile'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        children: const [
-          _ProfileHeader(),
-          SizedBox(height: 16),
-          _MenuList(),
-        ],
+        children: const [_ProfileHeader(), SizedBox(height: 16), _MenuList()],
       ),
     );
   }
@@ -177,7 +169,11 @@ class _MenuList extends StatelessWidget {
     final items = [
       (Icons.casino_outlined, tr('pick_an_anime_for_me'), '/suggestions'),
       (Icons.schedule_outlined, tr('watch_plan'), '/plan'),
-      (Icons.calendar_month_outlined, tr('weekly_airing_calendar'), '/calendar'),
+      (
+        Icons.calendar_month_outlined,
+        tr('weekly_airing_calendar'),
+        '/calendar',
+      ),
       (Icons.bar_chart_outlined, tr('watch_stats'), '/stats'),
       (Icons.emoji_events_outlined, tr('rewards_collection'), '/rewards'),
       (Icons.download_outlined, tr('import_list'), '/import'),

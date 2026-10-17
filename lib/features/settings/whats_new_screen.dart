@@ -7,30 +7,19 @@ import '../../core/i18n/lang.dart';
 import '../../core/utils/persian_numbers.dart';
 import '../../data/storage/migrations.dart';
 
-/// منطق «یک بار نمایش به‌ازای هر نسخه».
-///
-/// بعد از این‌که آنبوردینگ تمام شد، هر بار که نسخه‌ی اپ عوض شده باشد
-/// (کلید `last_seen_version` در باکس meta)، دیالوگ/صفحه‌ی «تازه‌ها» یک بار
-/// نشان داده می‌شود. در اولین اجرای تمیز، نسخه فقط ثبت می‌شود و چیزی
-/// نشان داده نمی‌شود تا کاربر تازه‌کار با دیالوگ اضافه مواجه نشود.
 class WhatsNew {
   WhatsNew._();
 
   static const versionKey = 'last_seen_version';
 
-  /// نسخه‌ی فعلی را ثبت می‌کند و برمی‌گرداند که آیا باید «تازه‌ها»
-  /// نمایش داده شود یا نه.
   static Future<bool> consume() async {
     final box = Hive.box<String>(Boxes.meta);
     final seen = box.get(versionKey);
     if (box.get('onboarding_done') != '1') {
-      // نصب تازه: فقط نسخه ثبت شود تا بعداً «به‌روزرسانی» حساب نشود.
       if (seen == null) await box.put(versionKey, kAppVersion);
       return false;
     }
     await box.put(versionKey, kAppVersion);
-    // کاربر قدیمی که کلید نسخه را ندارد (نسخه‌های قبل از ۱٫۱٫۰) هم
-    // به‌روزرسانی محسوب می‌شود و «تازه‌ها» یک بار نمایش داده می‌شود.
     return seen == null || seen != kAppVersion;
   }
 }
@@ -42,7 +31,6 @@ class _ChangeEntry {
   final List<String> items;
 }
 
-/// ورودی‌های تغییرات — فقط قابلیت‌هایی که واقعاً در کد هستند.
 List<_ChangeEntry> get _changelog => <_ChangeEntry>[
   _ChangeEntry(tr('1_1_0'), [
     tr('4_page_onboarding_tutorial_to_get_started_with_t'),
@@ -59,7 +47,6 @@ List<_ChangeEntry> get _changelog => <_ChangeEntry>[
   ]),
 ];
 
-/// دیالوگ «تازه‌های نسخه» — قابل بستن با دکمه یا لمس بیرون.
 class WhatsNewDialog extends StatelessWidget {
   const WhatsNewDialog({super.key});
 
@@ -78,7 +65,6 @@ class WhatsNewDialog extends StatelessWidget {
   }
 }
 
-/// صفحه‌ی کامل «تازه‌های نسخه» (از تنظیمات هم قابل دسترسی است).
 class WhatsNewScreen extends StatelessWidget {
   const WhatsNewScreen({super.key});
 

@@ -1,7 +1,5 @@
 import '../i18n/lang.dart';
 
-/// تبدیل ارقام به فارسی؛ در حالت انگلیسی اپ، ارقام لاتین برمی‌گرداند.
-/// (نام قدیمی برای سازگاری نگه داشته شده؛ رفتارش زبان‌آگاه است.)
 String toFa(Object value) {
   final s = value.toString();
   if (Lang.isEn) return s;

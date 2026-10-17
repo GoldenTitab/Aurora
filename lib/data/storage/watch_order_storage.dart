@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:hive/hive.dart';
 
-/// ذخیره ترتیب شخصی تماشا و تاریخچه پیشنهادها داخل meta box.
 class WatchOrderStorage {
   WatchOrderStorage(this._box);
   final Box<String> _box;

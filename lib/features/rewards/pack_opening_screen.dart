@@ -10,7 +10,6 @@ import '../../data/models/collectible_card.dart';
 import '../../data/providers.dart';
 import '../../core/i18n/lang.dart';
 
-/// صفحه باز کردن بسته کارت با نمایش مرحله‌ای.
 class PackOpeningScreen extends ConsumerStatefulWidget {
   const PackOpeningScreen({super.key});
 
@@ -50,7 +49,7 @@ class _PackOpeningScreenState extends ConsumerState<PackOpeningScreen> {
   Widget build(BuildContext context) {
     final eco = ref.watch(economyProvider);
     return Scaffold(
-      appBar: AppBar(title:  Text(tr('opening_pack'))),
+      appBar: AppBar(title: Text(tr('opening_pack'))),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
@@ -89,7 +88,9 @@ class _PackOpeningScreenState extends ConsumerState<PackOpeningScreen> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: _opening || eco.coins < packPriceCoins ? null : _open,
+                  onPressed: _opening || eco.coins < packPriceCoins
+                      ? null
+                      : _open,
                   icon: _opening
                       ? const SizedBox(
                           width: 18,
@@ -131,7 +132,9 @@ class _PackOpeningScreenState extends ConsumerState<PackOpeningScreen> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Text(
-                      tr('duplicate_cards_turned_into_shafaq', [toFa(_result!.coinsFromDuplicates)]),
+                      tr('duplicate_cards_turned_into_shafaq', [
+                        toFa(_result!.coinsFromDuplicates),
+                      ]),
                       style: TextStyle(
                         color: AppColors.starTextOf(context),
                         fontWeight: FontWeight.w700,
@@ -142,10 +145,13 @@ class _PackOpeningScreenState extends ConsumerState<PackOpeningScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed: _opening || eco.coins < packPriceCoins ? null : _open,
+                    onPressed: _opening || eco.coins < packPriceCoins
+                        ? null
+                        : _open,
                     icon: const Icon(Icons.refresh_rounded),
-                    label:
-                        Text(tr('another_pack_shafaq', [toFa(packPriceCoins)])),
+                    label: Text(
+                      tr('another_pack_shafaq', [toFa(packPriceCoins)]),
+                    ),
                   ),
                 ),
               ],
@@ -188,14 +194,10 @@ class _PackArt extends StatelessWidget {
                 ),
               ],
             ),
-            child:  Column(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.style_rounded,
-                  size: 56,
-                  color: Colors.white,
-                ),
+                Icon(Icons.style_rounded, size: 56, color: Colors.white),
                 SizedBox(height: 8),
                 Text(
                   tr('shafaq_pack'),
@@ -265,10 +267,7 @@ class _RevealedCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.surfaceOf(context),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: card.rarity.color,
-                width: 2,
-              ),
+              border: Border.all(color: card.rarity.color, width: 2),
               boxShadow: [
                 BoxShadow(
                   color: card.rarity.color.withValues(alpha: 0.35),
@@ -324,7 +323,9 @@ class _RevealedCard extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            tr('duplicate_shafaq', [toFa(card.rarity.duplicateCoins)]),
+                            tr('duplicate_shafaq', [
+                              toFa(card.rarity.duplicateCoins),
+                            ]),
                             style: TextStyle(
                               fontSize: 10,
                               color: AppColors.starTextOf(context),

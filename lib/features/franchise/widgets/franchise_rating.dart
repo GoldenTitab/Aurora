@@ -6,7 +6,6 @@ import '../../../core/utils/persian_numbers.dart';
 import '../../../data/providers.dart';
 import '../../../core/i18n/lang.dart';
 
-/// نمره کاربر به فرنچایز از ۱ تا ۱۰.
 class FranchiseRating extends ConsumerWidget {
   const FranchiseRating({super.key, required this.franchiseId});
 
@@ -34,7 +33,7 @@ class FranchiseRating extends ConsumerWidget {
                 color: AppColors.starTextOf(context),
               ),
               const SizedBox(width: 8),
-               Text(
+              Text(
                 tr('my_score_for_this_franchise'),
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
               ),

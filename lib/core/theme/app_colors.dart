@@ -22,9 +22,6 @@ class AppColors {
   static const onHold = Color(0xFFF59E0B);
   static const dropped = Color(0xFFEF4444);
 
-  // ── نسخه‌های آگاه از تم ──────────────────────────────────────────
-  // در تم تیره دقیقاً همان پالت کلاسیک بالا برمی‌گردد (بدون تغییر ظاهری)؛
-  // در تم روشن معادل خوانا از colorScheme تا متن روی سطح‌ها خوانا بماند.
   static Color backgroundOf(BuildContext context) =>
       Theme.of(context).colorScheme.surface;
 
@@ -55,14 +52,11 @@ class AppColors {
     return s.brightness == Brightness.dark ? textSecondary : s.onSurfaceVariant;
   }
 
-  /// رنگ متن/آیکون تاکیدی: در تم تیره بنفش روشن، در تم روشن بنفش
-  /// تیره‌تر برای خوانایی.
   static Color primaryTextOf(BuildContext context) {
     final s = Theme.of(context).colorScheme;
     return s.brightness == Brightness.dark ? primaryLight : primary;
   }
 
-  /// رنگ متن/آیکون ستاره‌ای (امتیاز، سکه): در تم روشن کهربایی تیره.
   static Color starTextOf(BuildContext context) {
     final s = Theme.of(context).colorScheme;
     return s.brightness == Brightness.dark ? star : const Color(0xFFB45309);

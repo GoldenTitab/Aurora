@@ -10,14 +10,12 @@ import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
 import '../../core/i18n/lang.dart';
 
-/// لیست کامل یک بخش از «کشف» با اسکرول بی‌نهایت.
 class DiscoverListScreen extends ConsumerStatefulWidget {
   const DiscoverListScreen({super.key, required this.section});
   final DiscoverSection section;
 
   @override
-  ConsumerState<DiscoverListScreen> createState() =>
-      _DiscoverListScreenState();
+  ConsumerState<DiscoverListScreen> createState() => _DiscoverListScreenState();
 }
 
 class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
@@ -59,7 +57,9 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
       _error = null;
     });
     try {
-      final r = await ref.read(anilistClientProvider).browsePage(
+      final r = await ref
+          .read(anilistClientProvider)
+          .browsePage(
             'discover_${widget.section.name}_list',
             _args,
             page: _page + 1,
@@ -67,7 +67,6 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
           );
       if (!mounted) return;
       final cards = cardsFromRaw(r.items);
-      // برای تاپ ۱۰ هفتگی: تغییر رتبه نسبت به اسنپ‌شات
       setState(() {
         _page += 1;
         _hasNext = r.hasNext;
@@ -141,8 +140,7 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
                 final d = _items[i];
                 return AnimeCard(
                   data: d,
-                  onTap: () =>
-                      context.push('/franchise/${d.anilistId}'),
+                  onTap: () => context.push('/franchise/${d.anilistId}'),
                 );
               }, childCount: _items.length),
             ),
@@ -168,7 +166,7 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
             TextButton.icon(
               onPressed: _load,
               icon: const Icon(Icons.refresh_rounded),
-              label:  Text(tr('retry')),
+              label: Text(tr('retry')),
             ),
           ],
         ),
@@ -195,7 +193,10 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
         child: Center(
           child: Text(
             tr('you_ve_reached_the_end_of_the_list'),
-            style: TextStyle(color: AppColors.textSecondaryOf(context), fontSize: 12),
+            style: TextStyle(
+              color: AppColors.textSecondaryOf(context),
+              fontSize: 12,
+            ),
           ),
         ),
       );

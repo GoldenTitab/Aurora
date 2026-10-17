@@ -33,6 +33,7 @@ WatchStatus _franchiseStatus(
 }
 
 final myListFranchisesProvider = Provider<List<MyListFranchise>>((ref) {
+  ref.watch(franchiseCacheVersionProvider);
   final statuses = ref.watch(watchStatusProvider);
   final episodes = ref.watch(episodeProgressProvider);
   if (statuses.isEmpty) return const [];
@@ -57,11 +58,8 @@ final myListFranchisesProvider = Provider<List<MyListFranchise>>((ref) {
   return result;
 });
 
-// ─── Step 11: ادامه تماشا ─────────────────────────────────────────────────
-
-/// آیتم‌های «ادامه تماشا»: آثاری که حداقل یک قسمت دیده‌شده دارند و
-/// هنوز کامل نشده‌اند؛ مرتب بر اساس آخرین فعالیت.
 final continueWatchingProvider = Provider<List<ContinueWatchItem>>((ref) {
+  ref.watch(franchiseCacheVersionProvider);
   final episodes = ref.watch(episodeProgressProvider);
   final statuses = ref.watch(watchStatusProvider);
   final extras = ref.watch(userExtrasProvider);
@@ -85,7 +83,9 @@ final continueWatchingProvider = Provider<List<ContinueWatchItem>>((ref) {
     if (f == null || e == null) continue;
     if (statuses[kv.key] == WatchStatus.completed) continue;
     final total = e.episodes > 0 ? e.episodes : watched.length;
-    final valid = watched.where((n) => n >= 1 && (e.episodes <= 0 || n <= e.episodes));
+    final valid = watched.where(
+      (n) => n >= 1 && (e.episodes <= 0 || n <= e.episodes),
+    );
     if (valid.isEmpty) continue;
     if (e.episodes > 0 && valid.length >= e.episodes) continue;
     final last = valid.reduce((a, b) => a > b ? a : b);
@@ -106,16 +106,17 @@ final continueWatchingProvider = Provider<List<ContinueWatchItem>>((ref) {
   return items;
 });
 
-// ─── Step 12: قسمت‌های جدید (یادآوری درون‌برنامه‌ای) ───────────────────────
-
-/// آثاری که قسمت پخش‌شده‌ی دیده‌نشده دارند.
 final newEpisodesProvider = Provider<List<NewEpisodeItem>>((ref) {
+  ref.watch(franchiseCacheVersionProvider);
+  final statuses = ref.watch(watchStatusProvider);
   final episodes = ref.watch(episodeProgressProvider);
   final repo = ref.read(franchiseRepositoryProvider);
 
   final out = <NewEpisodeItem>[];
   for (final f in repo.allCachedFranchises()) {
     for (final e in f.entries) {
+      // Only titles the user is actually watching.
+      if (statuses[e.id] != WatchStatus.watching) continue;
       final aired = e.airedEpisodes();
       if (aired == null || aired <= 0) continue;
       final watched = episodes[e.id] ?? const <int>{};
@@ -140,12 +141,6 @@ final newEpisodesProvider = Provider<List<NewEpisodeItem>>((ref) {
   return out;
 });
 
-// ─── Step 13: تقویم پخش هفتگی ─────────────────────────────────────────────
-
-/// گاید پخش هفتگی (مثل گاید تلویزیونی): همه انیمه‌هایی که در ۷ روز آینده
-/// قسمت جدید دارند، مستقیم از AiringSchedule ـی AniList.
-/// برخلاف نسخه قبلی به کتابخانه کاربر وابسته نیست، پس هیچ‌وقت به‌خاطر
-/// خالی بودن کش خالی نمی‌ماند (فقط با قطعی اینترنت خالی است).
 final weeklyAiringProvider = FutureProvider<List<AiringDay>>((ref) async {
   final ani = ref.read(anilistClientProvider);
   final schedules = await ani.fetchWeeklyAiringGuide();
@@ -158,33 +153,30 @@ final weeklyAiringProvider = FutureProvider<List<AiringDay>>((ref) async {
     final media = s['media'] as Map<String, dynamic>;
     final id = (media['id'] as num).toInt();
     final t = (media['title'] as Map?) ?? const {};
-    final title =
-        (t['english'] ?? t['romaji'] ?? t['native'] ?? '—') as String;
+    final title = (t['english'] ?? t['romaji'] ?? t['native'] ?? '—') as String;
     final dt = DateTime.fromMillisecondsSinceEpoch(at * 1000);
-    buckets.putIfAbsent(dt.weekday, () => []).add(
-      AiringEntry(
-        entryId: 'al-$id',
-        franchiseAnilistId: id,
-        franchiseTitleFa: persianTitles[id] ?? title,
-        entryTitle: title,
-        cover: (media['coverImage'] as Map?)?['large'] as String?,
-        episode: ep,
-        airingAt: at,
-      ),
-    );
+    buckets
+        .putIfAbsent(dt.weekday, () => [])
+        .add(
+          AiringEntry(
+            entryId: 'al-$id',
+            franchiseAnilistId: id,
+            franchiseTitleFa: persianTitles[id] ?? title,
+            entryTitle: title,
+            cover: (media['coverImage'] as Map?)?['large'] as String?,
+            episode: ep,
+            airingAt: at,
+          ),
+        );
   }
   final days = buckets.entries.map((en) {
-    final items = en.value
-      ..sort((a, b) => a.airingAt.compareTo(b.airingAt));
+    final items = en.value..sort((a, b) => a.airingAt.compareTo(b.airingAt));
     return AiringDay(weekday: en.key, items: items);
   }).toList();
-  // شروع هفته فارسی: شنبه
   int weekOrder(int w) => (w + 1) % 7;
   days.sort((a, b) => weekOrder(a.weekday).compareTo(weekOrder(b.weekday)));
   return days;
 });
-
-// ─── Step 14: داشبورد آمار تماشا ───────────────────────────────────────────
 
 final libraryStatsProvider = Provider<LibraryStats>((ref) {
   final franchises = ref.watch(myListFranchisesProvider);

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/providers.dart';
 import '../../../core/i18n/lang.dart';
 
-/// بخش «ظاهر» در صفحه‌ی تنظیمات: انتخاب حالت روشن/تیره/سیستمی و رنگ اصلی.
 class ThemeSettings extends ConsumerWidget {
   const ThemeSettings({super.key});
 
@@ -28,7 +27,7 @@ class ThemeSettings extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-         Padding(
+        Padding(
           padding: EdgeInsets.only(top: 8, bottom: 12),
           child: Text(
             tr('appearance'),
@@ -38,7 +37,7 @@ class ThemeSettings extends ConsumerWidget {
         SizedBox(
           width: double.infinity,
           child: SegmentedButton<ThemeMode>(
-            segments:  [
+            segments: [
               ButtonSegment<ThemeMode>(
                 value: ThemeMode.system,
                 label: Text(tr('system')),
@@ -57,7 +56,7 @@ class ThemeSettings extends ConsumerWidget {
                 ref.read(themeModeProvider.notifier).set(selection.first),
           ),
         ),
-         Padding(
+        Padding(
           padding: EdgeInsets.only(top: 20, bottom: 12),
           child: Text(
             tr('primary_color'),

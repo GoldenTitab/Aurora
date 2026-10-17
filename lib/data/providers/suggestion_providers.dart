@@ -14,16 +14,12 @@ class SuggestionService {
   SuggestionService(this._ref);
   final Ref _ref;
 
-  /// پیشنهاد از بیرون «لیست من»: از بخش‌های کشف (ترند، برترین‌ها، فصلی)
-  /// انتخاب می‌کند؛ فقط انیمه‌های تمام‌شده (نه در حال پخش) و هیچ‌وقت
-  /// انیمه‌ای که در لیست کاربر یا کتابخانه‌اش هست را پیشنهاد نمی‌دهد.
   Future<Suggestion?> pick() async {
     final repo = _ref.read(franchiseRepositoryProvider);
     final statuses = _ref.read(watchStatusProvider);
     final storage = _ref.read(watchOrderStorageProvider);
     final recent = storage.recentSuggestions().toSet();
 
-    // شناسه همه ورودی‌هایی که کاربر می‌شناسد: لیست من + کتابخانه.
     final excluded = <String>{...statuses.keys};
     for (final f in repo.allCachedFranchises()) {
       for (final e in f.entries) {
@@ -31,9 +27,6 @@ class SuggestionService {
       }
     }
 
-    // جمع‌کردن نامزدها از بخش‌های کشف.
-    // مقادیر، شناسه‌های پایدار i18n هستند (در switch موتور پیشنهاد استفاده
-    // می‌شوند)؛ ترجمه فقط هنگام نمایش در _reason انجام می‌شود.
     final sectionWeight = {
       DiscoverSection.trending: 'trending',
       DiscoverSection.seasonal: 'seasonal',
@@ -44,12 +37,8 @@ class SuggestionService {
     final candidates = <({AnimeCardData data, String sourceFa})>[];
     for (final entry in sectionWeight.entries) {
       try {
-        final data = await _ref.read(
-          discoverSectionProvider(entry.key).future,
-        );
+        final data = await _ref.read(discoverSectionProvider(entry.key).future);
         for (final d in data.items) {
-          // فقط انیمه‌های تمام‌شده پیشنهاد می‌شوند، نه در حال پخش.
-          // وضعیت نامشخص (کش قدیمی) رد نمی‌شود تا پیشنهاد خالی نماند.
           if (d.status != null && d.status != 'FINISHED') continue;
           candidates.add((data: d, sourceFa: entry.value));
         }

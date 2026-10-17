@@ -11,11 +11,6 @@ import '../storage/economy.dart';
 const int packPriceCoins = 100;
 const int packSize = 3;
 
-/// مدیریت استخر کارت‌ها (شخصیت‌های انیمه‌های کتابخانه) و باز کردن بسته.
-///
-/// درجه هر کارت از روی محبوبیت شخصیت (favourites در AniList) تعیین می‌شود:
-/// هرچه شخصیت معروف‌تر، درجه بالاتر. وایفو/هازبندو دو درجه ویژه‌اند برای
-/// محبوب‌ترین‌ها (به‌ترتیب زن و مرد) با شانسی کمتر از افسانه‌ای.
 class CardPool {
   CardPool(this._meta, this._cache, this._ani, this._repo);
 
@@ -26,21 +21,17 @@ class CardPool {
 
   static const _poolKey = 'cardpool';
 
-  /// نسخه ساختار کش استخر؛ با تغییر ساختار، کش قدیمی نادیده گرفته می‌شود.
   static const _poolVersion = 2;
   static const _poolTtl = Duration(days: 7);
   static const _maxFranchises = 40;
   static const _charsPerMedia = 20;
 
-  /// آستانه‌های محبوبیت (تعداد علاقه‌مندی‌های AniList) برای هر درجه.
-  /// این عددها قابل تنظیم‌اند؛ هرچه بالاتر، سخت‌گیری بیشتر.
   static const int _favUncommon = 80;
   static const int _favRare = 300;
   static const int _favEpic = 1000;
   static const int _favLegendary = 3000;
   static const int _favSpecial = 10000;
 
-  /// درجه کارت از روی محبوبیت و جنسیت شخصیت.
   static CardRarity rarityFor(int favourites, String? gender) {
     if (favourites >= _favSpecial) {
       final g = (gender ?? '').toLowerCase();
@@ -55,8 +46,6 @@ class CardPool {
     return CardRarity.common;
   }
 
-  /// ساخت/به‌روزرسانی استخر از شخصیت‌های انیمه‌های کتابخانه.
-  /// خروجی: تعداد شخصیت‌های استخر.
   Future<int> rebuildPool({bool force = false}) async {
     if (!force) {
       final items = _poolItems();
@@ -107,7 +96,6 @@ class CardPool {
       final raw = _cache.get(_poolKey);
       if (raw == null) return const [];
       final m = (jsonDecode(raw) as Map).cast<String, dynamic>();
-      // کش قدیمی (بدون نسخه/محبوبیت) معتبر نیست.
       if ((m['v'] as int?) != _poolVersion) return const [];
       final ts = m['ts'] as int? ?? 0;
       final items = (m['items'] as List?) ?? const [];
@@ -116,9 +104,7 @@ class CardPool {
           items.isEmpty) {
         return const [];
       }
-      return items
-          .map((e) => (e as Map).cast<String, dynamic>())
-          .toList();
+      return items.map((e) => (e as Map).cast<String, dynamic>()).toList();
     } catch (_) {
       return const [];
     }
@@ -126,11 +112,8 @@ class CardPool {
 
   int poolSize() => _poolItems().length;
 
-  /// پاک‌سازی کش استخر؛ در باز کردن بعدیِ بسته، استخر از نو ساخته می‌شود.
   Future<void> clearPool() => _cache.delete(_poolKey);
 
-  /// ترکیب استخر بر اساس درجه (برای شفافیت: کاربر ببیند استخرش
-  /// از هر درجه چند شخصیت دارد).
   Map<CardRarity, int> rarityBreakdown() {
     final out = <CardRarity, int>{};
     for (final p in _poolItems()) {
@@ -140,7 +123,6 @@ class CardPool {
     return out;
   }
 
-  /// تاس درجه بر اساس وزن‌ها (مجموع ۱۰۰۰).
   CardRarity _rollRarity(Random rnd) {
     final roll = rnd.nextInt(1000);
     var acc = 0;
@@ -151,11 +133,6 @@ class CardPool {
     return CardRarity.common;
   }
 
-  /// انتخاب شخصیت از استخر برای درجه [tier].
-  ///
-  /// درجه کارت همیشه با درجه واقعی شخصیت (محبوبیت) یکی است. اگر برای
-  /// درجه تاس‌آمده شخصیتی نباشد، به نزدیک‌ترین درجه‌های دارای شخصیت
-  /// می‌رویم (اول پایین‌تر، بعد بالاتر) تا بسته خالی نماند.
   Map<String, dynamic>? _pickForTier(
     List<Map<String, dynamic>> pool,
     CardRarity tier,
@@ -182,8 +159,6 @@ class CardPool {
   int _ownedCount(int charId) =>
       int.tryParse(_meta.get('card:$charId') ?? '') ?? 0;
 
-  /// درجه مؤثر یک کارت: اگر شخصیت در استخر باشد، درجه محبوبیتی‌اش
-  /// (این، درجه‌های قدیمیِ شانسی را هم اصلاح می‌کند)؛ وگرنه مقدار ذخیره‌شده.
   CardRarity _effectiveRarity(
     int charId,
     Map<int, Map<String, dynamic>> poolIndex,
@@ -200,11 +175,9 @@ class CardPool {
     }
   }
 
-  /// باز کردن یک بسته (۳ کارت، ۱۰۰ سکه). null یعنی سکه کافی نیست یا استخر خالی.
   Future<PackResult?> openPack(Economy eco) async {
     var pool = _poolItems();
     if (pool.isEmpty) {
-      // استخر خالی است (مثلاً کش قدیمی بعد از آپدیت): یک بار می‌سازیم.
       await rebuildPool();
       pool = _poolItems();
       if (pool.isEmpty) return null;
@@ -219,15 +192,13 @@ class CardPool {
 
     for (var i = 0; i < packSize; i++) {
       var tier = _rollRarity(rnd);
-      // اگر درجه‌ی تاس‌آمده در استخر شخصیت نداشت، به‌جای سقوطِ بی‌صدا
-      // به درجه‌ی پایین‌تر، تاس را چند بار از نو می‌اندازیم تا توزیع
-      // واقعی کارت‌ها به وزن‌های مصوب نزدیک بماند.
       Map<String, dynamic>? p;
       for (var attempt = 0; attempt < 6; attempt++) {
         final cand = _pickForTier(pool, tier, rnd, pickedIds);
         if (cand == null) break;
-        final actual =
-            CardRarityX.fromKey(cand['rarity'] as String? ?? tier.name);
+        final actual = CardRarityX.fromKey(
+          cand['rarity'] as String? ?? tier.name,
+        );
         if (actual == tier || attempt == 5) {
           p = cand;
           break;
@@ -237,8 +208,7 @@ class CardPool {
       if (p == null) continue;
       final id = p['id'] as int;
       pickedIds.add(id);
-      final rarity =
-          CardRarityX.fromKey(p['rarity'] as String? ?? tier.name);
+      final rarity = CardRarityX.fromKey(p['rarity'] as String? ?? tier.name);
       final owned = _ownedCount(id);
       if (owned > 0) {
         dups.add(true);
@@ -275,7 +245,6 @@ class CardPool {
     );
   }
 
-  /// کلکسیون کاربر گروه‌بندی‌شده بر اساس کمیابی.
   Map<CardRarity, List<CollectibleCard>> collection() {
     final pool = _poolItems();
     final poolIndex = {for (final p in pool) (p['id'] as int): p};

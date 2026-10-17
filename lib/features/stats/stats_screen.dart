@@ -12,7 +12,6 @@ import '../../data/models/watch_status.dart';
 import '../../data/providers.dart';
 import '../../core/i18n/lang.dart';
 
-/// صفحه داشبورد آمار تماشا.
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
 
@@ -21,28 +20,28 @@ class StatsScreen extends ConsumerWidget {
     final stats = ref.watch(libraryStatsProvider);
 
     return Scaffold(
-      appBar: AppBar(title:  Text(tr('watch_stats'))),
+      appBar: AppBar(title: Text(tr('watch_stats'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-           Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: SectionTitle(tr('statuses')),
           ),
           _StatusGrid(stats: stats),
-           Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: SectionTitle(tr('watch_time')),
           ),
           _TimeCards(stats: stats),
-           Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: SectionTitle(tr('streak_activity')),
           ),
           const _StreakCard(),
           const SizedBox(height: 12),
           const _Heatmap(),
-           Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: SectionTitle(tr('most_watched_franchises')),
           ),
@@ -126,9 +125,7 @@ class _TimeCards extends StatelessWidget {
         Expanded(
           child: _TimeCard(
             label: tr('time_watched'),
-            value: toFa(
-              LibraryStats.formatMinutes(stats.totalWatchedMinutes),
-            ),
+            value: toFa(LibraryStats.formatMinutes(stats.totalWatchedMinutes)),
             sub: tr('episodes_watched', [toFa(stats.totalWatchedEpisodes)]),
             accent: AppColors.completed,
           ),
@@ -205,7 +202,6 @@ class _TimeCard extends StatelessWidget {
   }
 }
 
-/// کارت استریک تماشای روزهای متوالی.
 class _StreakCard extends ConsumerWidget {
   const _StreakCard();
 
@@ -217,9 +213,7 @@ class _StreakCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceOf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.onHold.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: AppColors.onHold.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
@@ -264,7 +258,6 @@ class _StreakCard extends ConsumerWidget {
   }
 }
 
-/// هیت‌مپ فعالیت ۲۶ هفته اخیر (به سبک گیت‌هاب).
 class _Heatmap extends ConsumerWidget {
   const _Heatmap();
 
@@ -288,7 +281,7 @@ class _Heatmap extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Text(
+          Text(
             tr('last_26_weeks_of_activity'),
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
           ),
@@ -354,12 +347,12 @@ class _Heatmap extends ConsumerWidget {
     final level = count <= 0
         ? 0
         : count == 1
-            ? 1
-            : count <= 3
-                ? 2
-                : count <= 6
-                    ? 3
-                    : 4;
+        ? 1
+        : count <= 3
+        ? 2
+        : count <= 6
+        ? 3
+        : 4;
     return _HeatBox(level: level);
   }
 }
@@ -394,9 +387,9 @@ class _LegendBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(left: 3),
-        child: _HeatBox(level: level),
-      );
+    padding: const EdgeInsets.only(left: 3),
+    child: _HeatBox(level: level),
+  );
 }
 
 class _TopFranchises extends StatelessWidget {
@@ -440,9 +433,8 @@ class _FranchiseRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () => context.push(
-        franchiseRouteFor(stat.anilistId, stat.franchiseId),
-      ),
+      onTap: () =>
+          context.push(franchiseRouteFor(stat.anilistId, stat.franchiseId)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
@@ -471,7 +463,10 @@ class _FranchiseRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    tr('episodes_2', [toFa(stat.watchedEpisodes), toFa(LibraryStats.formatMinutes(stat.watchedMinutes))]),
+                    tr('episodes_2', [
+                      toFa(stat.watchedEpisodes),
+                      toFa(LibraryStats.formatMinutes(stat.watchedMinutes)),
+                    ]),
                     style: TextStyle(
                       color: AppColors.textSecondaryOf(context),
                       fontSize: 12,

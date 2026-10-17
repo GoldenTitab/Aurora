@@ -17,7 +17,7 @@ class HostPolicy {
   const HostPolicy({
     required this.label,
     required this.minGap,
-    required this.rateLimitMessage,
+    required this.rateLimitKey,
     this.attemptTimeout = const Duration(seconds: 8),
     this.maxAttempts = 4,
   });
@@ -30,7 +30,9 @@ class HostPolicy {
 
   final int maxAttempts;
 
-  final String rateLimitMessage;
+  final String rateLimitKey;
+
+  String get rateLimitMessage => tr(rateLimitKey);
 }
 
 class ApiResponse {
@@ -58,27 +60,23 @@ class ApiGateway {
           ),
       _cache = cacheBox;
 
-  /// (static final است نه const، چون پیام‌ها با tr() در رانتایم ساخته می‌شوند.)
   static final Map<ApiHost, HostPolicy> policies = {
     ApiHost.anilist: HostPolicy(
       label: 'AniList',
       minGap: Duration(milliseconds: 750),
-      rateLimitMessage:
-          tr('too_many_requests_to_anilist_try_again_in_a_few_'),
+      rateLimitKey: 'too_many_requests_to_anilist_try_again_in_a_few_',
     ),
     ApiHost.mal: HostPolicy(
       label: 'MAL',
       minGap: Duration(milliseconds: 400),
       maxAttempts: 3,
-      rateLimitMessage:
-          tr('too_many_requests_to_myanimelist_try_again_in_a_'),
+      rateLimitKey: 'too_many_requests_to_myanimelist_try_again_in_a_',
     ),
     ApiHost.jikan: HostPolicy(
       label: 'Jikan',
       minGap: Duration(milliseconds: 1100),
       maxAttempts: 3,
-      rateLimitMessage:
-          tr('too_many_requests_to_jikan_try_again_in_a_few_mi'),
+      rateLimitKey: 'too_many_requests_to_jikan_try_again_in_a_few_mi',
     ),
   };
 
@@ -214,7 +212,8 @@ class ApiGateway {
         if (res.statusCode == 429) {
           final retryAfter =
               int.tryParse(res.headers['retry-after'] ?? '') ?? 20;
-          delay = Duration(seconds: retryAfter.clamp(1, 65).toInt());
+          // Capped at 12s so the UI never hangs for a minute on a 429.
+          delay = Duration(seconds: retryAfter.clamp(1, 12).toInt());
         } else {
           delay = _backoff(attempt);
         }

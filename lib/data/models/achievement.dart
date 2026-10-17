@@ -1,4 +1,3 @@
-/// تعریف یک اچیومنت.
 class AchievementDef {
   final String id;
   final String titleFa;
@@ -7,7 +6,6 @@ class AchievementDef {
   final int xp;
   final int coins;
 
-  /// شرط باز شدن؛ روی اسنپ‌شات آماری ارزیابی می‌شود.
   final bool Function(AchCtx) test;
 
   const AchievementDef({
@@ -21,7 +19,6 @@ class AchievementDef {
   });
 }
 
-/// اسنپ‌شات آماری برای ارزیابی اچیومنت‌ها.
 class AchCtx {
   final int episodesWatched;
   final int franchisesStarted;

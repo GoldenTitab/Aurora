@@ -11,7 +11,6 @@ import '../../../data/models/home_items.dart';
 import '../../../data/providers.dart';
 import '../../../core/i18n/lang.dart';
 
-/// بنر یادآوری قسمت‌های جدید در بالای صفحه خانه.
 class NewEpisodesBanner extends ConsumerStatefulWidget {
   const NewEpisodesBanner({super.key});
 
@@ -43,9 +42,7 @@ class _NewEpisodesBannerState extends ConsumerState<NewEpisodesBanner> {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.star.withValues(alpha: 0.45),
-            ),
+            border: Border.all(color: AppColors.star.withValues(alpha: 0.45)),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 10, 16, 10),
@@ -68,7 +65,7 @@ class _NewEpisodesBannerState extends ConsumerState<NewEpisodesBanner> {
                     foregroundColor: AppColors.primaryTextOf(context),
                     visualDensity: VisualDensity.compact,
                   ),
-                  child:  Text(
+                  child: Text(
                     tr('view'),
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
@@ -110,7 +107,7 @@ class _NewEpisodesBannerState extends ConsumerState<NewEpisodesBanner> {
                 padding: const EdgeInsets.fromLTRB(8, 8, 20, 4),
                 child: Row(
                   children: [
-                     Expanded(
+                    Expanded(
                       child: Text(
                         tr('new_episodes'),
                         style: TextStyle(
@@ -161,19 +158,20 @@ class _NewEpisodesBannerState extends ConsumerState<NewEpisodesBanner> {
                               child: SizedBox(
                                 width: 46,
                                 height: 66,
-                                child: CoverImage(url: item.cover, cacheWidth: 140),
+                                child: CoverImage(
+                                  url: item.cover,
+                                  cacheWidth: 140,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     item.entryTitle,
-                                    textDirection:
-                                        dirFor(item.entryTitle),
+                                    textDirection: dirFor(item.entryTitle),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(

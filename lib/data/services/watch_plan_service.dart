@@ -23,10 +23,7 @@ class WatchPlanService {
     var remaining = budget;
     final items = <WatchPlanItem>[];
 
-    // فقط انیمه‌هایی که «در حال تماشا» یا «متوقف‌شده» هستند؛
-    // چیزی که اصلاً شروع نشده (بدون وضعیت / plan-to-watch) انتخاب نمی‌شود.
     final eligible = franchises.where(_isEligible).toList();
-    // اولویت: watching → onHold
     eligible.sort((a, b) => _priority(b).compareTo(_priority(a)));
 
     for (final f in eligible) {
@@ -34,10 +31,9 @@ class WatchPlanService {
 
       final order = _order.compute(f);
       for (final wo in order) {
-        if (!wo.isEssential) continue; // فقط داستان اصلی
+        if (!wo.isEssential) continue;
         final e = wo.entry;
         final st = statuses[e.id];
-        // فقط ورودیِ در حال تماشا یا متوقف‌شده.
         if (st != WatchStatus.watching && st != WatchStatus.onHold) continue;
 
         final totalEps = e.episodes > 0 ? e.episodes : 1;
@@ -80,8 +76,6 @@ class WatchPlanService {
     return WatchPlan(requested: budget, total: total, items: items);
   }
 
-  /// فرنچایز واجد شرایط است اگر حداقل یک ورودی‌اش
-  /// «در حال تماشا» یا «متوقف‌شده» باشد.
   bool _isEligible(Franchise f) {
     return f.entries.any((e) {
       final st = statuses[e.id];

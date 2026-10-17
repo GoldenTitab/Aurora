@@ -5,13 +5,14 @@ import 'app_colors.dart';
 class AppTheme {
   AppTheme._();
 
-  /// تم پویا بر اساس روشنایی و رنگ اصلی (seed). هر دو حالت روشن و تیره
-  /// از ColorScheme.fromSeed ساخته می‌شوند تا خوانایی تضمین شود.
   static ThemeData build({
     required Brightness brightness,
     required Color seed,
   }) {
-    final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness);
+    final scheme = ColorScheme.fromSeed(
+      seedColor: seed,
+      brightness: brightness,
+    );
 
     final base = ThemeData(
       brightness: brightness,
@@ -38,14 +39,11 @@ class AppTheme {
         ),
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
-        style: SegmentedButton.styleFrom(
-          textStyle: textTheme.labelLarge,
-        ),
+        style: SegmentedButton.styleFrom(textStyle: textTheme.labelLarge),
       ),
     );
   }
 
-  /// برای سازگاری با کدهای قدیمی؛ معادل تم تیره با رنگ اصلی پیش‌فرض.
   static ThemeData get dark =>
       build(brightness: Brightness.dark, seed: AppColors.primary);
 }

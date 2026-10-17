@@ -7,8 +7,6 @@ import '../../data/storage/migrations.dart';
 import '../settings/whats_new_screen.dart';
 import '../../core/i18n/lang.dart';
 
-/// صفحه‌ی آموزش اولیه (۴ صفحه، راست‌چین).
-/// با پایان یا رد شدن، کلید `onboarding_done` در باکس meta ذخیره می‌شود.
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -77,7 +75,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _finish() async {
     await Hive.box<String>(Boxes.meta).put('onboarding_done', '1');
     if (!mounted) return;
-    // برای کاربری که نسخه را به‌روز کرده، یک بار «تازه‌ها» را نشان بده.
     final showWhatsNew = await WhatsNew.consume();
     if (!mounted) return;
     if (showWhatsNew) {
@@ -110,10 +107,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           children: [
             Align(
               alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: _finish,
-                child:  Text(tr('skip')),
-              ),
+              child: TextButton(onPressed: _finish, child: Text(tr('skip'))),
             ),
             Expanded(
               child: PageView.builder(
@@ -123,7 +117,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemBuilder: (context, i) => _OnboardingPage(data: _pages[i]),
               ),
             ),
-            // نقطه‌های راهنما
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -136,7 +129,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     decoration: BoxDecoration(
                       color: i == _page
                           ? AppColors.primary
-                          : AppColors.textSecondaryOf(context).withValues(alpha: 0.35),
+                          : AppColors.textSecondaryOf(
+                              context,
+                            ).withValues(alpha: 0.35),
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
@@ -197,13 +192,12 @@ class _OnboardingPage extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          // صفحه‌ی ایمپورت: دکمه‌ی مستقیم به /import
           if (data.icon == Icons.download_rounded) ...[
             const SizedBox(height: 24),
             OutlinedButton.icon(
               onPressed: () => context.push('/import'),
               icon: const Icon(Icons.download_rounded),
-              label:  Text(tr('import_from_anilist_mal')),
+              label: Text(tr('import_from_anilist_mal')),
             ),
           ],
         ],

@@ -15,7 +15,6 @@ import 'widgets/continue_watching.dart';
 import 'widgets/new_episodes_banner.dart';
 import '../../core/i18n/lang.dart';
 
-/// صفحه «کشف»: رتبه‌بندی‌ها، پیشنهادها و چارت فصلی.
 class DiscoverScreen extends ConsumerWidget {
   const DiscoverScreen({super.key});
 
@@ -23,7 +22,7 @@ class DiscoverScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title:  Text(tr('discover')),
+        title: Text(tr('discover')),
         actions: [
           IconButton(
             tooltip: tr('seasonal_chart'),
@@ -32,10 +31,6 @@ class DiscoverScreen extends ConsumerWidget {
           ),
         ],
       ),
-      // ساخت تنبل بخش‌ها: فقط آیتم‌های نزدیک به دید ساخته می‌شوند تا
-      // اسکرول اول صفحه روان بماند. ترتیب: ۰ همگام‌سازی ویجت، ۱ ادامه‌ی
-      // تماشا، ۲ قسمت‌های تازه، ۳ پیشنهادها، ۴ به بعد بلوک‌های بخش‌ها.
-      // بنر آفلاین بالای لیست است و وقتی آنلاین هستیم هیچ فضایی نمی‌گیرد.
       body: Column(
         children: [
           const OfflineBanner(),
@@ -58,7 +53,6 @@ class DiscoverScreen extends ConsumerWidget {
   }
 }
 
-/// «اگه اینو دوست داشتی...» — بر اساس نمره‌های بالا و فرنچایزهای تکمیل‌شده.
 class _RecommendationsRow extends ConsumerWidget {
   const _RecommendationsRow();
 
@@ -102,17 +96,18 @@ class _DiscoverBlock extends ConsumerWidget {
               children: [
                 Expanded(child: SectionTitle(section.titleFa)),
                 TextButton(
-                  onPressed: () =>
-                      context.push('/discover/${section.name}'),
+                  onPressed: () => context.push('/discover/${section.name}'),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primaryTextOf(context),
                     visualDensity: VisualDensity.compact,
                   ),
-                  child:  Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(tr('more'),
-                          style: TextStyle(fontWeight: FontWeight.w700)),
+                      Text(
+                        tr('more'),
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
                       SizedBox(width: 2),
                       Icon(Icons.chevron_right_rounded, size: 20),
                     ],
@@ -147,11 +142,8 @@ class _DiscoverBlock extends ConsumerWidget {
                   ),
                 ),
               ),
-              data: (data) => _Row(
-                title: '',
-                items: data.items,
-                rankDelta: data.rankDelta,
-              ),
+              data: (data) =>
+                  _Row(title: '', items: data.items, rankDelta: data.rankDelta),
             ),
           ),
         ],
@@ -250,8 +242,6 @@ class _Row extends StatelessWidget {
   }
 }
 
-/// هوک نامرئی: هوم‌ویجت اندروید/iOS را با «ادامه تماشا» و پخش امروز
-/// به‌روز نگه می‌دارد (اولین ساخت + هر تغییر در دو provider).
 class _HomeWidgetSync extends ConsumerStatefulWidget {
   const _HomeWidgetSync();
 

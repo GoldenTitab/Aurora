@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/i18n/lang.dart';
 import '../../core/theme/app_colors.dart';
 
-/// سیاست حریم خصوصی — اپ کاملاً local-first است.
 class PrivacyScreen extends StatelessWidget {
   const PrivacyScreen({super.key});
 
@@ -92,8 +91,8 @@ class PrivacyScreen extends StatelessWidget {
           ],
           Text(
             tr('publishing_note_to_publish_on_google_play_this_p') +
-            tr('public_url_and_that_link_registered_on_the_app_s') +
-            tr('play_store_page'),
+                tr('public_url_and_that_link_registered_on_the_app_s') +
+                tr('play_store_page'),
             style: TextStyle(
               color: AppColors.textSecondaryOf(context),
               fontSize: 12,

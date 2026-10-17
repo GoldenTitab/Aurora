@@ -6,7 +6,6 @@ import '../../core/widgets/section_title.dart';
 import '../../data/providers.dart';
 import '../../core/i18n/lang.dart';
 
-/// ایمپورت لیست انیمه با یوزرنیم از AniList یا MAL.
 class ImportScreen extends ConsumerStatefulWidget {
   const ImportScreen({super.key});
 
@@ -27,16 +26,15 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
   Future<void> _start() async {
     final username = _ctrl.text.trim();
     if (username.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(content: Text(tr('enter_your_username_first'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('enter_your_username_first'))));
       return;
     }
     FocusScope.of(context).unfocus();
-    await ref.read(importProvider.notifier).run(
-          useAnilist: _useAnilist,
-          username: username,
-        );
+    await ref
+        .read(importProvider.notifier)
+        .run(useAnilist: _useAnilist, username: username);
   }
 
   @override
@@ -44,11 +42,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     final state = ref.watch(importProvider);
 
     return Scaffold(
-      appBar: AppBar(title:  Text(tr('import_list'))),
+      appBar: AppBar(title: Text(tr('import_list'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-           SectionTitle(tr('import_from_where')),
+          SectionTitle(tr('import_from_where')),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -74,13 +72,15 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             ],
           ),
           const SizedBox(height: 16),
-           SectionTitle(tr('username')),
+          SectionTitle(tr('username')),
           const SizedBox(height: 10),
           TextField(
             controller: _ctrl,
             textDirection: TextDirection.ltr,
             decoration: InputDecoration(
-              hintText: _useAnilist ? 'AniList username' : 'MyAnimeList username',
+              hintText: _useAnilist
+                  ? 'AniList username'
+                  : 'MyAnimeList username',
               hintStyle: TextStyle(color: AppColors.textSecondaryOf(context)),
               filled: true,
               fillColor: AppColors.surfaceOf(context),
@@ -180,15 +180,15 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             OutlinedButton.icon(
               onPressed: () => ref.read(importProvider.notifier).reset(),
               icon: const Icon(Icons.refresh_rounded),
-              label:  Text(tr('import_again')),
+              label: Text(tr('import_again')),
             ),
           ],
           const SizedBox(height: 16),
           Text(
             tr('your_list_must_be_public') +
-            tr('statuses_map_as_follows_watching_completed_on_ho') +
-            tr('watched_episode_counts_carry_over_too') +
-            tr('to_avoid_api_rate_limits_each_import_brings_in_a'),
+                tr('statuses_map_as_follows_watching_completed_on_ho') +
+                tr('watched_episode_counts_carry_over_too') +
+                tr('to_avoid_api_rate_limits_each_import_brings_in_a'),
             style: TextStyle(
               color: AppColors.textSecondaryOf(context),
               fontSize: 12,

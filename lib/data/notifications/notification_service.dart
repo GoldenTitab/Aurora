@@ -4,12 +4,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../core/router/app_router.dart';
 import 'notification_content.dart';
 
-/// سرویس اعلان‌های محلی اپ (ایزولیت اصلی).
-///
-/// - [init] را یک بار در [main] صدا بزن.
-/// - [requestPermissions] را هنگام روشن کردن سوییچ در تنظیمات صدا بزن.
-/// - [showNewEpisodes] اعلان خلاصه فارسی قسمت‌های جدید را نمایش می‌دهد.
-/// - با تپ روی اعلان، کاربر به مسیر داخل payload (مثلاً `/calendar`) می‌رود.
 class NotificationService {
   NotificationService();
 
@@ -30,8 +24,6 @@ class NotificationService {
         >();
     await android?.createNotificationChannel(airingChannel);
 
-    // اگر اپ با تپ روی اعلان (در حالت کاملاً بسته) باز شده، بعد از
-    // اولین فریم به مسیر payload برو.
     try {
       final launch = await _plugin.getNotificationAppLaunchDetails();
       final payload = launch?.notificationResponse?.payload;
@@ -46,8 +38,6 @@ class NotificationService {
     _initialized = true;
   }
 
-  /// درخواست دسترسی اعلان: اندروید ۱۳+ (POST_NOTIFICATIONS) و iOS.
-  /// true یعنی دسترسی داده شد.
   Future<bool> requestPermissions() async {
     var granted = true;
     try {
@@ -73,7 +63,6 @@ class NotificationService {
     return granted;
   }
 
-  /// نمایش اعلان خلاصه قسمت‌های جدید.
   Future<void> showNewEpisodes(List<NewEpisodeNotifItem> items) async {
     if (items.isEmpty) return;
     if (!_initialized) {

@@ -11,8 +11,6 @@ import '../../../data/providers.dart';
 import '../../../data/remote/api_exception.dart';
 import '../../../core/i18n/lang.dart';
 
-/// شیت «افزودن دستی انیمه»: وقتی API یک انیمه را در فرنچایز جا انداخته،
-/// کاربر این‌جا سرچش می‌کند و دستی به فرنچایز اضافه‌اش می‌کند.
 class ManualAddSheet extends ConsumerStatefulWidget {
   const ManualAddSheet({
     super.key,
@@ -54,7 +52,6 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
     try {
       final repo = ref.read(franchiseRepositoryProvider);
       final res = await repo.searchRemote(q);
-      // آن‌هایی که همین حالا در فرنچایز هستند را کنار بگذار.
       final inFranchise = widget.franchise.entries
           .map((e) => '${e.anilistId}:${e.malId ?? 0}')
           .toSet();
@@ -82,8 +79,10 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
       if (entry == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(
-              content: Text(tr('full_data_for_this_anime_wasn_t_found_try_anothe')),
+            SnackBar(
+              content: Text(
+                tr('full_data_for_this_anime_wasn_t_found_try_anothe'),
+              ),
             ),
           );
         }
@@ -94,14 +93,16 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
       if (mounted) {
         setState(() => _added.add(key));
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(tr('was_added_to_the_franchise', [entry.title]))),
+          SnackBar(
+            content: Text(tr('was_added_to_the_franchise', [entry.title])),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(friendlyError(e))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(friendlyError(e))));
       }
     } finally {
       if (mounted) setState(() => _adding.remove(key));
@@ -124,18 +125,15 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
           children: [
             Row(
               children: [
-                 Expanded(
+                Expanded(
                   child: Text(
                     tr('add_anime_manually'),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 17,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
                   ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child:  Text(tr('done')),
+                  child: Text(tr('done')),
                 ),
               ],
             ),
@@ -170,7 +168,7 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
                 const SizedBox(width: 8),
                 FilledButton(
                   onPressed: _searching ? null : _search,
-                  child:  Text(tr('search_2')),
+                  child: Text(tr('search_2')),
                 ),
               ],
             ),
@@ -179,44 +177,40 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
               child: _searching
                   ? const Center(child: CircularProgressIndicator())
                   : _error != null
-                      ? Center(
-                          child: Text(
-                            _error!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: AppColors.textSecondaryOf(context),
-                            ),
-                          ),
-                        )
-                      : _results == null
-                          ? Center(
-                              child: Text(
-                                tr('no_search_performed_yet'),
-                                style: TextStyle(
-                                  color:
-                                      AppColors.textSecondaryOf(context),
-                                ),
-                              ),
-                            )
-                          : _results!.isEmpty
-                              ?  Center(
-                                  child: Text(tr('nothing_found')),
-                                )
-                              : ListView.separated(
-                                  shrinkWrap: true,
-                                  itemCount: _results!.length,
-                                  separatorBuilder: (_, _) =>
-                                      const SizedBox(height: 8),
-                                  itemBuilder: (context, i) {
-                                    final d = _results![i];
-                                    return _ResultRow(
-                                      data: d,
-                                      adding: _adding.contains(_keyOf(d)),
-                                      added: _added.contains(_keyOf(d)),
-                                      onAdd: () => _add(d),
-                                    );
-                                  },
-                                ),
+                  ? Center(
+                      child: Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textSecondaryOf(context),
+                        ),
+                      ),
+                    )
+                  : _results == null
+                  ? Center(
+                      child: Text(
+                        tr('no_search_performed_yet'),
+                        style: TextStyle(
+                          color: AppColors.textSecondaryOf(context),
+                        ),
+                      ),
+                    )
+                  : _results!.isEmpty
+                  ? Center(child: Text(tr('nothing_found')))
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: _results!.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      itemBuilder: (context, i) {
+                        final d = _results![i];
+                        return _ResultRow(
+                          data: d,
+                          adding: _adding.contains(_keyOf(d)),
+                          added: _added.contains(_keyOf(d)),
+                          onAdd: () => _add(d),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -297,10 +291,7 @@ class _ResultRow extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           else
-            OutlinedButton(
-              onPressed: onAdd,
-              child:  Text(tr('add')),
-            ),
+            OutlinedButton(onPressed: onAdd, child: Text(tr('add'))),
         ],
       ),
     );

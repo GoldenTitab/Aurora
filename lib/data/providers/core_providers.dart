@@ -28,12 +28,19 @@ final malClientProvider = Provider<MalClient>(
   (ref) => MalClient(ref.watch(apiGatewayProvider)),
 );
 
+final franchiseCacheVersionProvider = StateProvider<int>((ref) => 0);
+
 final franchiseRepositoryProvider = Provider<FranchiseRepository>((ref) {
   return FranchiseRepository(
     ref.watch(anilistClientProvider),
     ref.watch(jikanClientProvider),
     ref.watch(malClientProvider),
     Hive.box<String>('franchise_cache'),
+    onChanged: () {
+      try {
+        ref.read(franchiseCacheVersionProvider.notifier).state++;
+      } catch (_) {}
+    },
   );
 });
 

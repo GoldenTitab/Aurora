@@ -11,7 +11,6 @@ import '../../data/storage/economy.dart';
 import 'cards_tab.dart';
 import '../../core/i18n/lang.dart';
 
-/// ناحیه «جوایز»: سطح، کارت‌ها، مأموریت‌ها و اچیومنت‌ها.
 class RewardsScreen extends ConsumerWidget {
   const RewardsScreen({super.key});
 
@@ -22,7 +21,7 @@ class RewardsScreen extends ConsumerWidget {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title:  Text(tr('rewards')),
+          title: Text(tr('rewards')),
           actions: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -62,7 +61,7 @@ class RewardsScreen extends ConsumerWidget {
               ),
             ),
           ],
-          bottom:  TabBar(
+          bottom: TabBar(
             isScrollable: true,
             tabs: [
               Tab(text: tr('my_level')),
@@ -84,8 +83,6 @@ class RewardsScreen extends ConsumerWidget {
     );
   }
 }
-
-// ── تب سطح ────────────────────────────────────────────────────────────
 
 class _LevelTab extends ConsumerWidget {
   const _LevelTab();
@@ -155,18 +152,18 @@ class _LevelTab extends ConsumerWidget {
               Text(
                 next == null
                     ? tr('you_reached_the_highest_level')
-                    : tr('xp_to', [toFa(next - xp), Economy.levelNames[level + 1]]),
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
+                    : tr('xp_to', [
+                        toFa(next - xp),
+                        Economy.levelNames[level + 1],
+                      ]),
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
                 textDirection: TextDirection.rtl,
               ),
             ],
           ),
         ),
         const SizedBox(height: 20),
-         SectionTitle(tr('level_path')),
+        SectionTitle(tr('level_path')),
         const SizedBox(height: 12),
         for (var i = 0; i < Economy.levelNames.length; i++)
           Container(
@@ -176,7 +173,9 @@ class _LevelTab extends ConsumerWidget {
               color: AppColors.surfaceOf(context),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: i == level ? AppColors.primary : AppColors.borderOf(context),
+                color: i == level
+                    ? AppColors.primary
+                    : AppColors.borderOf(context),
               ),
             ),
             child: Row(
@@ -185,8 +184,8 @@ class _LevelTab extends ConsumerWidget {
                   i < level
                       ? Icons.check_circle_rounded
                       : i == level
-                          ? Icons.radio_button_checked_rounded
-                          : Icons.radio_button_unchecked_rounded,
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_unchecked_rounded,
                   color: i <= level
                       ? AppColors.primary
                       : AppColors.textSecondaryOf(context),
@@ -198,8 +197,9 @@ class _LevelTab extends ConsumerWidget {
                     textDirection: TextDirection.ltr,
                     textAlign: TextAlign.left,
                     style: TextStyle(
-                      fontWeight:
-                          i == level ? FontWeight.w800 : FontWeight.w600,
+                      fontWeight: i == level
+                          ? FontWeight.w800
+                          : FontWeight.w600,
                     ),
                   ),
                 ),
@@ -214,14 +214,14 @@ class _LevelTab extends ConsumerWidget {
             ),
           ),
         const SizedBox(height: 8),
-         SectionTitle(tr('ways_to_earn_xp')),
+        SectionTitle(tr('ways_to_earn_xp')),
         const SizedBox(height: 8),
         Text(
           tr('each_watched_episode_10_xp_and_5_shafaq') +
-          tr('rating_5_xp') +
-          tr('writing_a_note_5_xp') +
-          tr('completing_a_franchise_50_xp') +
-          tr('daily_check_in_5_xp_and_20_shafaq'),
+              tr('rating_5_xp') +
+              tr('writing_a_note_5_xp') +
+              tr('completing_a_franchise_50_xp') +
+              tr('daily_check_in_5_xp_and_20_shafaq'),
           style: TextStyle(
             color: AppColors.textSecondaryOf(context),
             fontSize: 13,
@@ -232,8 +232,6 @@ class _LevelTab extends ConsumerWidget {
     );
   }
 }
-
-// ── تب مأموریت‌ها ─────────────────────────────────────────────────────
 
 class _MissionsTab extends ConsumerWidget {
   const _MissionsTab();
@@ -251,11 +249,11 @@ class _MissionsTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       children: [
-         SectionTitle(tr('daily_missions')),
+        SectionTitle(tr('daily_missions')),
         const SizedBox(height: 12),
         for (final m in daily) _MissionCard(m: m),
         const SizedBox(height: 16),
-         SectionTitle(tr('weekly_missions')),
+        SectionTitle(tr('weekly_missions')),
         const SizedBox(height: 12),
         for (final m in weekly) _MissionCard(m: m),
       ],
@@ -338,7 +336,7 @@ class _MissionCard extends ConsumerWidget {
               ),
               const Spacer(),
               if (m.claimed)
-                 Row(
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
@@ -378,7 +376,7 @@ class _MissionCard extends ConsumerWidget {
                   style: FilledButton.styleFrom(
                     visualDensity: VisualDensity.compact,
                   ),
-                  child:  Text(tr('claim_reward')),
+                  child: Text(tr('claim_reward')),
                 ),
             ],
           ),
@@ -387,8 +385,6 @@ class _MissionCard extends ConsumerWidget {
     );
   }
 }
-
-// ── تب اچیومنت‌ها ─────────────────────────────────────────────────────
 
 class _AchievementsTab extends ConsumerWidget {
   const _AchievementsTab();
@@ -424,7 +420,10 @@ class _AchievementsTab extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  tr('of_achievements_unlocked', [toFa(unlocked.length), toFa(all.length)]),
+                  tr('of_achievements_unlocked', [
+                    toFa(unlocked.length),
+                    toFa(all.length),
+                  ]),
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
@@ -433,9 +432,7 @@ class _AchievementsTab extends ConsumerWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(6),
                   child: LinearProgressIndicator(
-                    value: all.isEmpty
-                        ? 0
-                        : unlocked.length / all.length,
+                    value: all.isEmpty ? 0 : unlocked.length / all.length,
                     minHeight: 8,
                     backgroundColor: AppColors.surfaceHighOf(context),
                     valueColor: const AlwaysStoppedAnimation<Color>(
@@ -493,7 +490,9 @@ class _AchievementRow extends ConsumerWidget {
               unlocked
                   ? Icons.emoji_events_rounded
                   : Icons.lock_outline_rounded,
-              color: unlocked ? AppColors.starTextOf(context) : AppColors.textSecondaryOf(context),
+              color: unlocked
+                  ? AppColors.starTextOf(context)
+                  : AppColors.textSecondaryOf(context),
               size: 22,
             ),
           ),

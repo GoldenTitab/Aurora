@@ -13,7 +13,6 @@ class AuroraApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(themeModeProvider);
     final seed = ref.watch(seedColorProvider);
-    // تماشای زبان: با تغییر آن کل درخت بازسازی و tr() همه‌جا تازه می‌شود.
     final lang = ref.watch(langProvider);
 
     return MaterialApp.router(
@@ -32,12 +31,6 @@ class AuroraApp extends ConsumerWidget {
   }
 }
 
-/// بعد از این‌که آنبوردینگ تمام شده باشد، در اولین فریم «تازه‌های نسخه»
-/// را یک بار به‌ازای هر نسخه نشان می‌دهد (قابل بستن).
-///
-/// برای کاربر تازه‌ای که همین حالا آنبوردینگ را تمام کرده، خود صفحه‌ی
-/// آنبوردینگ این کار را می‌کند؛ این گیت برای کاربری است که نسخه را
-/// به‌روزرسانی کرده و آنبوردینگش از قبل تمام شده.
 class _WhatsNewGate extends StatefulWidget {
   const _WhatsNewGate({required this.child});
 
@@ -62,8 +55,7 @@ class _WhatsNewGateState extends State<_WhatsNewGate> {
     if (!mounted) return;
     final show = await WhatsNew.consume();
     if (!show || !mounted) return;
-    final navContext =
-        appRouter.routerDelegate.navigatorKey.currentContext;
+    final navContext = appRouter.routerDelegate.navigatorKey.currentContext;
     if (navContext == null || !navContext.mounted) return;
     await showDialog<void>(
       context: navContext,

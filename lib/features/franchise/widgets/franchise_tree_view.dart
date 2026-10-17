@@ -11,11 +11,6 @@ import '../../../data/models/watch_status.dart';
 import '../../../data/providers.dart';
 import '../../../core/i18n/lang.dart';
 
-/// نمای درختی فرنچایز بر اساس [Entry.parentEntryId].
-///
-/// ریشه‌ها آثاری‌اند که والد ندارند (یا والدشان داخل این فرنچایز نیست)
-/// و بقیه زیر والد خودشان قرار می‌گیرند. در برابر چرخه‌ی والد-فرزند
-/// با دنبال‌کردن شناسه‌های دیده‌شده مقاوم است.
 class FranchiseTreeView extends ConsumerWidget {
   const FranchiseTreeView({super.key, required this.franchise});
 
@@ -119,7 +114,8 @@ class _TreeNode extends ConsumerWidget {
                             height: 10,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: status?.color ?? AppColors.borderOf(context),
+                              color:
+                                  status?.color ?? AppColors.borderOf(context),
                             ),
                           ),
                           const SizedBox(width: 6),

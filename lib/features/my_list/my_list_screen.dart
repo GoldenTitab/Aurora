@@ -16,10 +16,6 @@ import '../../data/storage/economy.dart';
 import '../../data/storage/migrations.dart';
 import '../../core/i18n/lang.dart';
 
-/// «لیست من»: گروه‌بندی بر اساس وضعیت، با مرتب‌سازی و فیلتر نوع.
-///
-/// انتخاب‌های مرتب‌سازی/فیلتر در meta box ذخیره می‌شوند:
-/// `mylist_sort`، `mylist_type`، `mylist_hide_done`.
 class MyListScreen extends ConsumerStatefulWidget {
   const MyListScreen({super.key});
 
@@ -44,7 +40,6 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
   EntryType? _type;
   bool _hideDone = false;
 
-  /// حالت انتخاب چندتایی برای حذف گروهی فرنچایزها.
   bool _selecting = false;
   final _selected = <String>{};
 
@@ -71,8 +66,7 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
 
   bool _passes(MyListFranchise item) {
     if (_hideDone && item.status == WatchStatus.completed) return false;
-    if (_type != null &&
-        !item.franchise.entries.any((e) => e.type == _type)) {
+    if (_type != null && !item.franchise.entries.any((e) => e.type == _type)) {
       return false;
     }
     return true;
@@ -85,7 +79,6 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
   ) {
     switch (_sort) {
       case 'rating':
-        // امتیاز من (۱ تا ۱۰) نزولی؛ بدون امتیاز آخر.
         return (ratings[b.franchise.id] ?? -1).compareTo(
           ratings[a.franchise.id] ?? -1,
         );
@@ -102,7 +95,6 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
         );
         return (hb ? 1 : 0).compareTo(ha ? 1 : 0);
       default:
-        // 'status': همان ترتیب پیش‌فرض (گروه‌بندی وضعیت).
         return 0;
     }
   }
@@ -132,7 +124,7 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
             const SizedBox(width: 8),
           ],
           FilterChip(
-            label:  Text(tr('hide_completed')),
+            label: Text(tr('hide_completed')),
             selected: _hideDone,
             onSelected: (v) async {
               await _meta.put(_hideDoneKey, v ? '1' : '0');
@@ -154,8 +146,6 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
     });
   }
 
-  /// حذف یک یا چند فرنچایز از «لیست من»: وضعیت‌ها، پیشرفت قسمت‌ها،
-  /// امتیازها، یادداشت‌ها و آخرین بازدید — همه پاک می‌شوند.
   Future<void> _deleteSelected(List<MyListFranchise> items) async {
     if (_selected.isEmpty) return;
     final confirmed = await showDialog<bool>(
@@ -213,16 +203,13 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
 
     if (items.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title:  Text(tr('my_list'))),
+        appBar: AppBar(title: Text(tr('my_list'))),
         body: const _EmptyList(),
       );
     }
 
     final visible = items.where(_passes).toList();
 
-    // ردیف‌های تخت برای ListView تنبل: سرگروه وضعیت + تایل‌های همان گروه.
-    // (قبلاً کل لیست با children ساخته می‌شد که برای لیست‌های بزرگ
-    // اسکرول را کند می‌کرد.)
     final rows = <Object>[];
     for (final s in WatchStatus.values) {
       final list = visible.where((i) => i.status == s).toList()
@@ -234,9 +221,11 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selecting
-            ? tr('selected_count', [toFa(_selected.length)])
-            : tr('my_list')),
+        title: Text(
+          _selecting
+              ? tr('selected_count', [toFa(_selected.length)])
+              : tr('my_list'),
+        ),
         leading: _selecting
             ? IconButton(
                 icon: const Icon(Icons.close_rounded),
@@ -264,27 +253,26 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
                   onPressed: () => setState(() => _selecting = true),
                 ),
                 PopupMenuButton<String>(
-            icon: const Icon(Icons.sort_rounded),
-            tooltip: tr('sort', [_sortLabels[_sort]]),
-            initialValue: _sort,
-            onSelected: (v) async {
-              await _meta.put(_sortKey, v);
-              if (mounted) setState(() => _sort = v);
-            },
-            itemBuilder: (ctx) => [
-              for (final e in _sortLabels.entries)
-                CheckedPopupMenuItem<String>(
-                  value: e.key,
-                  checked: _sort == e.key,
-                  child: Text(e.value),
+                  icon: const Icon(Icons.sort_rounded),
+                  tooltip: tr('sort', [_sortLabels[_sort]]),
+                  initialValue: _sort,
+                  onSelected: (v) async {
+                    await _meta.put(_sortKey, v);
+                    if (mounted) setState(() => _sort = v);
+                  },
+                  itemBuilder: (ctx) => [
+                    for (final e in _sortLabels.entries)
+                      CheckedPopupMenuItem<String>(
+                        value: e.key,
+                        checked: _sort == e.key,
+                        child: Text(e.value),
+                      ),
+                  ],
                 ),
-            ],
-          ),
-        ],
+              ],
       ),
       body: Column(
         children: [
-          // بنر آفلاین؛ وقتی آنلاین هستیم هیچ فضایی نمی‌گیرد.
           const OfflineBanner(),
           _filterChips(),
           Expanded(
@@ -296,10 +284,7 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
                     itemBuilder: (context, i) {
                       final r = rows[i];
                       if (r is _HeaderRow) {
-                        return _GroupHeader(
-                          status: r.status,
-                          count: r.count,
-                        );
+                        return _GroupHeader(status: r.status, count: r.count);
                       }
                       final item = r as MyListFranchise;
                       final fid = item.franchise.id;
@@ -321,7 +306,6 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
   }
 }
 
-/// سرگروه وضعیت در لیست تخت «لیست من».
 class _HeaderRow {
   const _HeaderRow(this.status, this.count);
   final WatchStatus status;
@@ -374,7 +358,6 @@ class _FranchiseTile extends StatelessWidget {
   });
   final MyListFranchise item;
 
-  /// حالت انتخاب چندتایی برای حذف گروهی.
   final bool selecting;
   final bool selected;
   final VoidCallback? onToggle;
@@ -447,7 +430,11 @@ class _FranchiseTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      tr('of_episodes', [toFa(p.done), toFa(p.total), toFa(p.percent)]),
+                      tr('of_episodes', [
+                        toFa(p.done),
+                        toFa(p.total),
+                        toFa(p.percent),
+                      ]),
                       style: TextStyle(
                         fontSize: 11,
                         color: item.status.color,
@@ -490,7 +477,10 @@ class _EmptyList extends StatelessWidget {
             Text(
               tr('open_a_franchise_page_and_set_a_status_for_each_'),
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.7),
+              style: TextStyle(
+                color: AppColors.textSecondaryOf(context),
+                height: 1.7,
+              ),
             ),
           ],
         ),
@@ -499,7 +489,6 @@ class _EmptyList extends StatelessWidget {
   }
 }
 
-/// وقتی فیلترها هیچ نتیجه‌ای ندارند (نه وقتی لیست کلاً خالی است).
 class _EmptyFilter extends StatelessWidget {
   const _EmptyFilter();
 
@@ -525,7 +514,10 @@ class _EmptyFilter extends StatelessWidget {
             Text(
               tr('try_changing_the_media_type_filter_or_hide_compl'),
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.7),
+              style: TextStyle(
+                color: AppColors.textSecondaryOf(context),
+                height: 1.7,
+              ),
             ),
           ],
         ),

@@ -13,8 +13,6 @@ import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
 import '../../core/i18n/lang.dart';
 
-/// باز کردن صفحه فرنچایز برای یک کارت؛ اگر کارت فقط MAL/Jikan باشد
-/// اول به AniList نگاشت می‌شود وگرنه فرنچایز تک‌عضوی ساخته می‌شود.
 Future<void> openAnimeCard(
   BuildContext context,
   WidgetRef ref,
@@ -26,9 +24,7 @@ Future<void> openAnimeCard(
   }
   if (d.malId <= 0) return;
   final messenger = ScaffoldMessenger.of(context);
-  messenger.showSnackBar(
-     SnackBar(content: Text(tr('fetching_full_details'))),
-  );
+  messenger.showSnackBar(SnackBar(content: Text(tr('fetching_full_details'))));
   try {
     final f = await ref
         .read(franchiseRepositoryProvider)
@@ -38,7 +34,6 @@ Future<void> openAnimeCard(
       if (f.anilistId > 0) {
         context.push('/franchise/${f.anilistId}');
       } else {
-        // فرنچایز تک‌عضوی MAL — با شناسه منفی مال به صفحه می‌رویم
         context.push('/franchise/mal-${f.malId}');
       }
     }
@@ -94,7 +89,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     final async = ref.watch(searchResultsProvider(_query));
     return async.when(
-      loading: () =>  LoadingView(message: tr('searching')),
+      loading: () => LoadingView(message: tr('searching')),
       error: (e, _) => ErrorView(
         message: friendlyError(e),
         onRetry: () => ref.invalidate(searchResultsProvider(_query)),
@@ -107,7 +102,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               child: Text(
                 tr('no_results_on_anilist_mal_or_jikan_persian_searc'),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.8),
+                style: TextStyle(
+                  color: AppColors.textSecondaryOf(context),
+                  height: 1.8,
+                ),
               ),
             ),
           );
@@ -140,7 +138,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         bottom: false,
         child: Column(
           children: [
-            // وقتی آفلاین هستیم بالای فیلد جست‌وجو بنر نشان داده می‌شود.
             const OfflineBanner(),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -249,7 +246,7 @@ class _SearchHint extends StatelessWidget {
               color: AppColors.primaryTextOf(context),
             ),
             const SizedBox(height: 12),
-             Text(
+            Text(
               tr('type_an_anime_title'),
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
             ),
@@ -257,7 +254,10 @@ class _SearchHint extends StatelessWidget {
             Text(
               tr('anilist_is_searched_first_if_nothing_is_found_ma'),
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.7),
+              style: TextStyle(
+                color: AppColors.textSecondaryOf(context),
+                height: 1.7,
+              ),
             ),
             const SizedBox(height: 16),
             Wrap(

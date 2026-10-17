@@ -48,19 +48,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title:  Text(tr('restore_from_clipboard_2')),
-        content:  Text(
+        title: Text(tr('restore_from_clipboard_2')),
+        content: Text(
           tr('current_data_statuses_notes_scores_coins_and_car') +
-          tr('will_be_replaced_with_the_clipboard_content'),
+              tr('will_be_replaced_with_the_clipboard_content'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child:  Text(tr('cancel')),
+            child: Text(tr('cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child:  Text(tr('restore_2')),
+            child: Text(tr('restore_2')),
           ),
         ],
       ),
@@ -73,7 +73,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ref.invalidate(userExtrasProvider);
       ref.invalidate(economyProvider);
       ref.invalidate(missionsProvider);
+      ref.invalidate(franchiseRepositoryProvider);
       ref.invalidate(myListFranchisesProvider);
+      ref.invalidate(achievementsProvider);
+      ref.invalidate(cardsProvider);
       setState(() {});
     }
     _snack(result.message);
@@ -88,20 +91,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title:  Text(tr('restore_the_automatic_backup')),
-        content:  Text(
+        title: Text(tr('restore_the_automatic_backup')),
+        content: Text(
           tr('statuses_and_watched_episodes_revert_to_the_last') +
-          tr('later_changes_are_lost_before_restoring_a_backup') +
-          tr('is_taken_as_well'),
+              tr('later_changes_are_lost_before_restoring_a_backup') +
+              tr('is_taken_as_well'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child:  Text(tr('cancel')),
+            child: Text(tr('cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child:  Text(tr('restore')),
+            child: Text(tr('restore')),
           ),
         ],
       ),
@@ -133,11 +136,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final version = Migrations.readVersion();
 
     return Scaffold(
-      appBar: AppBar(title:  Text(tr('settings'))),
+      appBar: AppBar(title: Text(tr('settings'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-           _GroupTitle(tr('my_data')),
+          _GroupTitle(tr('my_data')),
           _InfoCard(
             rows: [
               (tr('app_version'), toFa(kAppVersion)),
@@ -148,29 +151,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
           ),
           const SizedBox(height: 12),
-           _GroupTitle(tr('backup_transfer')),
+          _GroupTitle(tr('backup_transfer')),
           FilledButton.icon(
             onPressed: _copyFull,
             icon: const Icon(Icons.copy_rounded),
-            label:  Text(tr('copy_full_export_json')),
+            label: Text(tr('copy_full_export_json')),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: _restoreFromClipboard,
             icon: const Icon(Icons.paste_rounded),
-            label:  Text(tr('restore_from_clipboard')),
+            label: Text(tr('restore_from_clipboard')),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: backups == 0 ? null : _restoreBackup,
             icon: const Icon(Icons.restore_rounded),
-            label:  Text(tr('restore_latest_automatic_backup')),
+            label: Text(tr('restore_latest_automatic_backup')),
           ),
           const SizedBox(height: 8),
           Text(
             tr('the_full_export_includes_statuses_notes_scores_c') +
-            tr('is_enough_to_move_to_another_phone_automatic_bac') +
-            tr('and_are_deleted_when_the_app_is_removed'),
+                tr('is_enough_to_move_to_another_phone_automatic_bac') +
+                tr('and_are_deleted_when_the_app_is_removed'),
             style: TextStyle(
               color: AppColors.textSecondaryOf(context),
               fontSize: 12,
@@ -178,38 +181,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 8),
-           _GroupTitle(tr('appearance')),
+          _GroupTitle(tr('appearance')),
           const ThemeSettings(),
           const SizedBox(height: 8),
-           _GroupTitle(tr('language')),
+          _GroupTitle(tr('language')),
           const _LanguageSettings(),
           const SizedBox(height: 8),
-           _GroupTitle(tr('spoiler_free')),
+          _GroupTitle(tr('spoiler_free')),
           const _SpoilerFreeSwitch(),
           const SizedBox(height: 8),
-           _GroupTitle(tr('notifications')),
+          _GroupTitle(tr('notifications')),
           const NotificationSettings(),
           const SizedBox(height: 8),
-           _GroupTitle(tr('cache')),
+          _GroupTitle(tr('cache')),
           const CacheSettings(),
           const SizedBox(height: 8),
-           _GroupTitle(tr('help_info')),
+          _GroupTitle(tr('help_info')),
           OutlinedButton.icon(
             onPressed: () => context.push('/onboarding'),
             icon: const Icon(Icons.school_rounded),
-            label:  Text(tr('replay_tutorial')),
+            label: Text(tr('replay_tutorial')),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: () => context.push('/whats-new'),
             icon: const Icon(Icons.new_releases_rounded),
-            label:  Text(tr('what_s_new')),
+            label: Text(tr('what_s_new')),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: () => context.push('/privacy'),
             icon: const Icon(Icons.privacy_tip_rounded),
-            label:  Text(tr('privacy')),
+            label: Text(tr('privacy')),
           ),
         ],
       ),
@@ -253,7 +256,9 @@ class _InfoCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       r.$1,
-                      style: TextStyle(color: AppColors.textSecondaryOf(context)),
+                      style: TextStyle(
+                        color: AppColors.textSecondaryOf(context),
+                      ),
                     ),
                   ),
                   Text(
@@ -269,8 +274,6 @@ class _InfoCard extends StatelessWidget {
   }
 }
 
-/// سوییچ «حالت بدون اسپویل»: خلاصه‌ی مجموعه‌های شروع‌نشده و کاور
-/// فصل‌های دیده‌نشده تار می‌شوند تا داستان لو نرود.
 class _SpoilerFreeSwitch extends ConsumerWidget {
   const _SpoilerFreeSwitch();
 
@@ -278,23 +281,21 @@ class _SpoilerFreeSwitch extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final extras = ref.watch(userExtrasProvider);
     return SwitchListTile(
-      title:  Text(tr('spoiler_free_mode')),
-      subtitle:  Text(
+      title: Text(tr('spoiler_free_mode')),
+      subtitle: Text(
         tr('story_summaries_of_franchises_you_haven_t_starte') +
-        tr('unwatched_seasons_are_blurred_so_nothing_gets_sp'),
+            tr('unwatched_seasons_are_blurred_so_nothing_gets_sp'),
         style: TextStyle(fontSize: 12, height: 1.7),
       ),
       value: extras.spoilerFree(),
       onChanged: (v) async {
         await extras.setSpoilerFree(v);
-        // ignore: unused_result
         ref.invalidate(userExtrasProvider);
       },
     );
   }
 }
 
-/// انتخاب زبان اپ (فارسی/انگلیسی) — تغییر آن کل اپ را بازسازی می‌کند.
 class _LanguageSettings extends ConsumerWidget {
   const _LanguageSettings();
 

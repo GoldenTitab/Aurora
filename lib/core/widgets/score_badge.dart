@@ -21,7 +21,6 @@ class ScoreBadge extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             score <= 0 ? '—' : toFa(score.toStringAsFixed(1)),
-            // چیپ همیشه تیره است؛ متن هم همیشه روشن تا در هر دو تم خوانا بماند.
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,

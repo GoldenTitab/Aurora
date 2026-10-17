@@ -1,6 +1,5 @@
 import '../../core/i18n/lang.dart';
 
-/// عنوان‌های دستی برای چند انیمه پرطرفدار (به زبان فعلی اپ).
 Map<int, String> get persianTitles => {
   16498: tr('attack_on_titan'),
   101922: tr('demon_slayer'),
@@ -13,7 +12,4 @@ const bool progressMainStoryOnly = true;
 
 const String malClientId = '9d37b60eb8d4e7b6c611e1eea3b987d9';
 
-/// نسخه‌ی نمایشی اپ — در صفحه‌ی «تازه‌های نسخه» و منطق نمایش یک‌باره‌ی آن
-/// استفاده می‌شود. موقع انتشار نسخه‌ی جدید، این را هم‌زمان با `version`
-/// داخل pubspec.yaml بالا ببر.
 const String kAppVersion = '1.1.0';

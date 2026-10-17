@@ -13,8 +13,6 @@ import 'core_providers.dart';
 import 'home_providers.dart';
 import 'watch_providers.dart';
 
-// ─── Step 20: کشف (بخش‌های رتبه‌بندی) ─────────────────────────────────────
-
 enum DiscoverSection {
   trending('trending_anime'),
   topSeries('top_100_tv_anime'),
@@ -25,14 +23,12 @@ enum DiscoverSection {
   const DiscoverSection(this.key);
   final String key;
 
-  /// عنوان نمایشی بخش به زبان فعلی (علت getter: توضیح enum بالا).
   String get titleFa => tr(key);
 }
 
 class DiscoverSectionData {
   final List<AnimeCardData> items;
 
-  /// تغییر رتبه نسبت به دوره قبل (در حال حاضر استفاده نمی‌شود).
   final Map<int, int> rankDelta;
 
   const DiscoverSectionData({required this.items, this.rankDelta = const {}});
@@ -109,7 +105,6 @@ class DiscoverSectionNotifier
     } else {
       data = await _fetchAndSave();
     }
-    // آندرریتد: انیمه‌های چینی (دونگ‌هوا) نمایش داده نمی‌شوند.
     if (arg == DiscoverSection.underrated) {
       final filtered = data.items
           .where((c) => c.countryOfOrigin != 'CN')
@@ -173,8 +168,8 @@ class DiscoverSectionNotifier
       final dm = m['delta'] as Map?;
       if (dm != null) {
         for (final kv in dm.entries) {
-          delta[int.tryParse(kv.key.toString()) ?? 0] =
-              (kv.value as num).toInt();
+          delta[int.tryParse(kv.key.toString()) ?? 0] = (kv.value as num)
+              .toInt();
         }
       }
       return (
@@ -205,19 +200,22 @@ class DiscoverSectionNotifier
                 'st': c.status,
               },
           ],
-          'delta': {for (final kv in data.rankDelta.entries) '${kv.key}': kv.value},
+          'delta': {
+            for (final kv in data.rankDelta.entries) '${kv.key}': kv.value,
+          },
         }),
       );
     } catch (_) {}
   }
 }
 
-final discoverSectionProvider = AsyncNotifierProvider.family<
-    DiscoverSectionNotifier,
-    DiscoverSectionData,
-    DiscoverSection>(DiscoverSectionNotifier.new);
+final discoverSectionProvider =
+    AsyncNotifierProvider.family<
+      DiscoverSectionNotifier,
+      DiscoverSectionData,
+      DiscoverSection
+    >(DiscoverSectionNotifier.new);
 
-/// چارت فصل بعد (برای تب دوم صفحه چارت فصلی).
 final seasonalNextProvider = FutureProvider<List<AnimeCardData>>((ref) async {
   final n = _nextSeason(DateTime.now());
   final client = ref.read(anilistClientProvider);
@@ -229,11 +227,9 @@ final seasonalNextProvider = FutureProvider<List<AnimeCardData>>((ref) async {
   return cardsFromRaw(r.items);
 });
 
-// ─── Step 21: پیشنهادها («اگه اینو دوست داشتی...») ──────────────────────────
-
-/// بر اساس فرنچایزهایی با نمره ≥ ۸ یا تکمیل‌شده؛ حداکثر ۲۰ پیشنهاد.
-final recommendationsProvider =
-    FutureProvider<List<AnimeCardData>>((ref) async {
+final recommendationsProvider = FutureProvider<List<AnimeCardData>>((
+  ref,
+) async {
   final eco = Economy(Hive.box<String>(Boxes.meta));
   final repo = ref.read(franchiseRepositoryProvider);
   final client = ref.read(anilistClientProvider);
@@ -283,8 +279,6 @@ final recommendationsProvider =
   return out;
 });
 
-/// کپی عمدی از همان تابع در home_providers.dart (private و مختص این
-/// کتابخانه) تا چرخه‌ی import بین home و discover پیش نیاید.
 ({String season, int year}) _nextSeason(DateTime now) {
   final m = now.month;
   if (m <= 3) return (season: 'SPRING', year: now.year);

@@ -1,19 +1,19 @@
-/// ترجمه‌ها با شناسه‌ی پایدار.
-///
-/// برخلاف نسخه‌ی قبلی، کلیدها متن فارسی نیستند بلکه شناسه‌های انگلیسی
-/// ثابت‌اند؛ پس ویرایش متن فارسی یا انگلیسی، ترجمه را گم نمی‌کند.
-/// [kFa] فارسی و [kEn] انگلیسی است. تابع `tr` در lang.dart از این‌ها
-/// استفاده می‌کند. شناسه‌ها از روی متن انگلیسی ساخته شده‌اند.
 const kEn = <String, String>{
   'skipped': ' ({0} skipped)',
   'of': ' of {0}',
-  'json_in_settings_you_can_take_a_manual_copy_and_': '(JSON)” in Settings you can take a manual copy, and whenever you want ',
-  'if_it_s_a_401_403_check_your_client_id': '(If it\'s a 401/403, check your Client ID)',
-  'a_hive_database_no_server_of_ours_has_this_data_': '(a Hive database). No server of ours has this data, and ',
+  'json_in_settings_you_can_take_a_manual_copy_and_':
+      '(JSON)” in Settings you can take a manual copy, and whenever you want ',
+  'if_it_s_a_401_403_check_your_client_id':
+      '(If it\'s a 401/403, check your Client ID)',
+  'a_hive_database_no_server_of_ours_has_this_data_':
+      'No server of ours has this data, and ',
   'xp_shafaq': '+{0} XP • +{1} Shafaq',
-  'anilist_jikan_and_myanimelist_apis_to_fetch_anim': 'AniList, Jikan, and MyAnimeList APIs to fetch anime info (titles, images, episodes, air times). These requests ',
-  'ovas_and_spin_offs_and_groups_them_all_under_one': 'OVAs and spin-offs and groups them all under one "franchise" ',
-  'third_party_data_collection_sdks_in_the_app': 'third-party data-collection SDKs in the app.',
+  'anilist_jikan_and_myanimelist_apis_to_fetch_anim':
+      'AniList, Jikan, and MyAnimeList APIs to fetch anime info (titles, images, episodes, air times). These requests ',
+  'ovas_and_spin_offs_and_groups_them_all_under_one':
+      'OVAs and spin-offs, grouping them all under one "franchise" ',
+  'third_party_data_collection_sdks_in_the_app':
+      'third-party data-collection SDKs in the app.',
   'xp_to': '{0} XP to {1}',
   'titles_imported': '{0} titles imported{1}.',
   'of_2': '{0} of {1}',
@@ -54,23 +54,30 @@ const kEn = <String, String>{
   'remove_from_this_franchise': 'Remove "{0}" from this franchise?',
   'was_added_to_the_franchise': '"{0}" was added to the franchise.',
   'str_2': '?',
-  'aurora_needs_no_account_sign_in_email_or_phone_n': 'Aurora needs no account, sign-in, email, or phone number, and creates no ',
-  'aurora_is_built_to_keep_your_data_with_you': 'Aurora is built to keep your data with you.',
-  'aurora_is_an_anime_tracker_log_your_watch_status': 'Aurora is an anime tracker: log your watch status, ',
+  'aurora_needs_no_account_sign_in_email_or_phone_n':
+      'Aurora needs no account, sign-in, email, or phone number, and creates no ',
+  'aurora_is_built_to_keep_your_data_with_you':
+      'Aurora is built to keep your data with you.',
+  'aurora_is_an_anime_tracker_log_your_watch_status':
+      'Aurora is an anime tracker: log your watch status, ',
   'last_watched_episode': 'Last watched episode: {0}',
-  'public_url_and_that_link_registered_on_the_app_s': 'public URL, and that link registered on the app\'s ',
+  'public_url_and_that_link_registered_on_the_app_s':
+      'public URL, and that link registered on the app\'s ',
   'watch_stats': 'Watch stats',
-  '4_page_onboarding_tutorial_to_get_started_with_t': '4-page onboarding tutorial to get started with the app',
+  '4_page_onboarding_tutorial_to_get_started_with_t':
+      '4-page onboarding tutorial to get started with the app',
   'underrated': 'Underrated',
   'no_internet_connection': 'No internet connection.',
   'entries_with_a_status': 'Entries with a status',
   'optional': 'Optional',
   'continue_watching': 'Continue Watching',
   'read_more': 'Read More',
-  'internet_access_is_only_for_public_content': 'Internet access is only for public content',
+  'internet_access_is_only_for_public_content':
+      'Internet access is only for public content',
   'send_test_notification': 'Send test notification',
   'out_of_your': 'Out of your {0}, ',
-  'you_watched_anime_from_different_genres': 'You watched anime from {0} different genres',
+  'you_watched_anime_from_different_genres':
+      'You watched anime from {0} different genres',
   'picked_from_for_variety': 'Picked from "{0}" for variety.',
   'from_settings': 'from Settings.',
   'via_jikan': 'Via Jikan',
@@ -86,7 +93,8 @@ const kEn = <String, String>{
   'spin_off': 'Spin-off',
   'announced': 'Announced',
   'test_notification_sent': 'Test notification sent.',
-  'newly_aired_episodes_from_anime_you_follow': 'Newly aired episodes from anime you follow',
+  'newly_aired_episodes_from_anime_you_follow':
+      'Newly aired episodes from anime you follow',
   'new_episode_notifications': 'New episode notifications',
   'notifications': 'Notifications',
   'add': 'Add',
@@ -107,8 +115,10 @@ const kEn = <String, String>{
   'sample_anime_2': 'Sample anime 2',
   'underrated_anime': 'Underrated Anime',
   'trending_anime': 'Trending Anime',
-  'open_airing_anime_to_add_them_to_the_calendar': 'Open airing anime to add them to the calendar.',
-  'anilist_is_searched_first_if_nothing_is_found_ma': 'AniList is searched first; if nothing is found, MAL and Jikan are checked too.',
+  'open_airing_anime_to_add_them_to_the_calendar':
+      'Open airing anime to add them to the calendar.',
+  'anilist_is_searched_first_if_nothing_is_found_ma':
+      'AniList is searched first; if nothing is found, MAL and Jikan are checked too.',
   'enter_your_username_first': 'Enter your username first',
   'you_gave_your_first_score': 'You gave your first score',
   'you_opened_your_first_card_pack': 'You opened your first card pack',
@@ -119,32 +129,45 @@ const kEn = <String, String>{
   'the_app_connects_to_the_public': 'The app connects to the public ',
   'play_store_page': 'Play Store page.',
   'achievements': 'Achievements',
-  'achievements_are_stored_only_in_this_phone_s_int': 'achievements — are stored only in this phone\'s internal storage ',
-  'if_you_already_have_a_list_on_anilist_or_myanime': 'If you already have a list on AniList or MyAnimeList, enter your username ',
-  'if_an_anime_from_this_franchise_is_missing_searc': 'If an anime from this franchise is missing, search for it here and add it.',
+  'achievements_are_stored_only_in_this_phone_s_int':
+      'achievements are stored only in this phone\'s internal storage (a Hive database). ',
+  'if_you_already_have_a_list_on_anilist_or_myanime':
+      'If you already have a list on AniList or MyAnimeList, enter your username ',
+  'if_an_anime_from_this_franchise_is_missing_searc':
+      'If an anime from this franchise is missing, search for it here and add it.',
   'if_you_liked_this': 'If you liked this...',
   'import_from_anilist_mal': 'Import from AniList / MAL',
   'import_again': 'Import again',
   'import_list': 'Import list',
-  'import_your_list_from_anilist_and_mal_1_10_score': 'Import your list from AniList and MAL, 1–10 scores per franchise, daily streaks, and a stats page',
+  'import_your_list_from_anilist_and_mal_1_10_score':
+      'Import your list from AniList and MAL, 1–10 scores per franchise, daily streaks, and a stats page',
   'this_anime_wasn_t_found_on_anilist': 'This anime wasn\'t found on AniList.',
-  'this_anime_wasn_t_found_on_anilist_or_any_other_': 'This anime wasn\'t found on AniList or any other source.',
+  'this_anime_wasn_t_found_on_anilist_or_any_other_':
+      'This anime wasn\'t found on AniList or any other source.',
   'this_file_is_not_an_aurora_export': 'This file is not an Aurora export.',
-  'these_caches_only_speed_things_up_and_are_rebuil': 'These caches only speed things up and are rebuilt automatically. Your list data and ',
+  'these_caches_only_speed_things_up_and_are_rebuil':
+      'These caches only speed things up and are rebuilt automatically. Your list data and ',
   'no_results_with_these_filters': 'No results with these filters',
-  'earn_xp_by_watching_and_level_up_from_beginner_t': 'Earn XP by watching and level up from Beginner to Expert; ',
-  'deleting_the_app_erases_all_data_permanently': 'Deleting the app erases all data permanently.',
-  'double_tap_any_episode_to_add_a_note': 'Double-tap any episode to add a note.',
-  'will_be_replaced_with_the_clipboard_content': 'will be replaced with the clipboard content.',
-  'you_can_wipe_everything_from_the_phone_by_cleari': 'you can wipe everything from the phone by clearing the cache or uninstalling the app. ',
-  'daily_weekly_missions_and_around_a_hundred_achie': 'daily/weekly missions and around a hundred achievements await you.',
+  'earn_xp_by_watching_and_level_up_from_beginner_t':
+      'Earn XP by watching and level up from Beginner to Expert; ',
+  'deleting_the_app_erases_all_data_permanently':
+      'Deleting the app erases all data permanently.',
+  'double_tap_any_episode_to_add_a_note':
+      'Double-tap any episode to add a note.',
+  'will_be_replaced_with_the_clipboard_content':
+      'will be replaced with the clipboard content.',
+  'you_can_wipe_everything_from_the_phone_by_cleari':
+      'you can wipe everything from the phone by clearing the cache or uninstalling the app. ',
+  'daily_weekly_missions_and_around_a_hundred_achie':
+      'daily/weekly missions and around a hundred achievements await you.',
   'open_shafaq': 'Open ({0} Shafaq)',
   'opening_pack': 'Opening pack',
   'open_pack_shafaq': 'Open pack ({0} Shafaq)',
   'opener': 'Opener {0}',
   'restore': 'Restore',
   'restore_latest_automatic_backup': 'Restore latest automatic backup',
-  'restore_failed_current_data_is_untouched': 'Restore failed; current data is untouched.',
+  'restore_failed_current_data_is_untouched':
+      'Restore failed; current data is untouched.',
   'restore_the_automatic_backup': 'Restore the automatic backup?',
   'back': 'Back',
   'back_to_suggested': 'Back to Suggested',
@@ -152,22 +175,29 @@ const kEn = <String, String>{
   'restore_from_clipboard': 'Restore from clipboard',
   'restore_from_clipboard_2': 'Restore from clipboard?',
   'restore_completed_successfully': 'Restore completed successfully.',
-  'restore_failed_your_current_data_was_left_untouc': 'Restore failed; your current data was left untouched.',
+  'restore_failed_your_current_data_was_left_untouc':
+      'Restore failed; your current data was left untouched.',
   'gamified_like_a_game': 'Gamified, like a game',
   'ok': 'OK',
   'section_is_invalid': 'Section {0} is invalid',
   'no_sections_to_display': 'No sections to display.',
   'spoiler_free': 'Spoiler-free',
-  'nothing_leaves_your_phone_without_your_own_actio': 'nothing leaves your phone without your own action.',
+  'nothing_leaves_your_phone_without_your_own_actio':
+      'nothing leaves your phone without your own action.',
   'no_ads_no_tracking': 'No ads, no tracking',
   'no_account_needed': 'No account needed',
-  'is_enough_to_move_to_another_phone_automatic_bac': 'is enough to move to another phone. Automatic backups stay inside the app ',
-  'drag_the_handle_on_the_left_of_each_row_to_reord': 'Drag the handle on the left of each row to reorder.',
-  'long_press_an_episode_to_mark_all_episodes_up_to': 'Long-press an episode to mark all episodes up to it as watched.',
+  'is_enough_to_move_to_another_phone_automatic_bac':
+      'is enough to move to another phone. Automatic backups stay inside the app ',
+  'drag_the_handle_on_the_left_of_each_row_to_reord':
+      'Drag the handle on the left of each row to reorder.',
+  'long_press_an_episode_to_mark_all_episodes_up_to':
+      'Long-press an episode to mark all episodes up to it as watched.',
   'top': 'Top',
-  'daily_check_for_newly_aired_episodes_of_your_ani': 'Daily check for newly aired episodes of your anime',
+  'daily_check_for_newly_aired_episodes_of_your_ani':
+      'Daily check for newly aired episodes of your anime',
   'suggested_plan': 'Suggested plan',
-  'no_plan_created_you_need_at_least_one_anime_with': 'No plan created. You need at least one anime with the Watching or On Hold status.',
+  'no_plan_created_you_need_at_least_one_anime_with':
+      'No plan created. You need at least one anime with the Watching or On Hold status.',
   'watch_plan': 'Watch plan',
   'go_to_page': 'Go to page',
   'build': 'Build',
@@ -175,10 +205,12 @@ const kEn = <String, String>{
   'shafaq_pack': 'Shafaq pack',
   'card_pack': 'Card pack',
   'next': 'Next',
-  'notes_all_in_english_fully_offline_on_your_own_p': 'notes — all in English, fully offline on your own phone.',
+  'notes_all_in_english_fully_offline_on_your_own_p':
+      'notes — in your own language, fully offline on your own phone.',
   'welcome_to_aurora': 'Welcome to Aurora',
   'you_scored_titles': 'You scored {0} titles',
-  'you_gave_1_10_scores_to_franchises': 'You gave 1–10 scores to {0} franchises',
+  'you_gave_1_10_scores_to_franchises':
+      'You gave 1–10 scores to {0} franchises',
   'you_ve_reached_the_end_of_the_list': 'You\'ve reached the end of the list',
   'you_reached_the_highest_level': 'You reached the highest level!',
   'you_reached_level': 'You reached level {0}',
@@ -189,19 +221,25 @@ const kEn = <String, String>{
   'suggestion_history_cleared': 'Suggestion history cleared.',
   'what_s_new': 'What\'s new',
   'what_s_new_in': 'What\'s new in {0}',
-  'discover_tab_trends_top_100_series_and_movies_to': 'Discover tab: trends, top 100 series and movies, top 10 of the week, underrated picks, and the seasonal chart',
+  'discover_tab_trends_top_100_series_and_movies_to':
+      'Discover tab: trends, top 100 series and movies, underrated picks, and the seasonal chart',
   'watch_order_suggested_custom': 'Watch Order (Suggested / Custom)',
   'your_custom_order': 'Your Custom Order',
   'suggested_order': 'Suggested Order',
   'trending': 'Trending',
-  'cached_images_will_be_deleted_and_re_downloaded_': 'Cached images will be deleted and re-downloaded as needed. ',
-  'too_many_requests_to_anilist_try_again_in_a_few_': 'Too many requests to AniList. Try again in a few minutes.',
-  'too_many_requests_to_jikan_try_again_in_a_few_mi': 'Too many requests to Jikan. Try again in a few minutes.',
-  'too_many_requests_to_myanimelist_try_again_in_a_': 'Too many requests to MyAnimeList. Try again in a few minutes.',
+  'cached_images_will_be_deleted_and_re_downloaded_':
+      'Cached images will be deleted and re-downloaded as needed. ',
+  'too_many_requests_to_anilist_try_again_in_a_few_':
+      'Too many requests to AniList. Try again in a few minutes.',
+  'too_many_requests_to_jikan_try_again_in_a_few_mi':
+      'Too many requests to Jikan. Try again in a few minutes.',
+  'too_many_requests_to_myanimelist_try_again_in_a_':
+      'Too many requests to MyAnimeList. Try again in a few minutes.',
   'episodes_to': 'Episodes: {0} to {1}+',
   'unknown_count': 'Unknown count',
   'entries': 'Entries: {0}',
-  'later_changes_are_lost_before_restoring_a_backup': 'later changes are lost. Before restoring, a backup of the current state ',
+  'later_changes_are_lost_before_restoring_a_backup':
+      'later changes are lost. Before restoring, a backup of the current state ',
   'weekly_airing_calendar': 'Weekly airing calendar',
   'retry': 'Retry',
   'watch': 'Watch',
@@ -219,8 +257,10 @@ const kEn = <String, String>{
   'search_a_persian_or_english_title': 'Search a Persian or English title...',
   'search_2': 'Search',
   'search_with_these_filters': 'Search with these filters',
-  'search_failed_check_your_internet_connection': 'Search failed. Check your internet connection.',
-  'like_a_tree_whose_branches_are_each_a_title_with': '— like a tree whose branches are each a title, with the whole collection\'s ',
+  'search_failed_check_your_internet_connection':
+      'Search failed. Check your internet connection.',
+  'like_a_tree_whose_branches_are_each_a_title_with':
+      '— like a tree whose branches are each a title, with the whole collection\'s ',
   'friday': 'Friday',
   'rewards': 'Rewards',
   'rewards_collection': 'Rewards & collection',
@@ -229,8 +269,10 @@ const kEn = <String, String>{
   'cache': 'Cache',
   'spoiler_free_mode': 'Spoiler-free mode',
   'approx_size': 'Approx. size: {0}',
-  'sizes_are_approximate_clearing_cache_never_delet': 'Sizes are approximate. Clearing cache never deletes personal data.',
-  'around_100_achievements_and_daily_weekly_mission': 'Around 100 achievements and daily & weekly missions',
+  'sizes_are_approximate_clearing_cache_never_delet':
+      'Sizes are approximate. Clearing cache never deletes personal data.',
+  'around_100_achievements_and_daily_weekly_mission':
+      'Around 100 achievements and daily & weekly missions',
   'delete': 'Delete',
   'remove_from_list': 'Remove from List',
   'remove_score': 'Remove Score',
@@ -241,8 +283,10 @@ const kEn = <String, String>{
   'attack_on_titan': 'Attack on Titan',
   'memory_keeper': 'Memory Keeper',
   'spy_family': 'Spy × Family',
-  'the_full_export_includes_statuses_notes_scores_c': 'The full export includes statuses, notes, scores, coins and cards, and ',
-  'full_export_copied_save_it_in_a_text_file': 'Full export copied — save it in a text file.',
+  'the_full_export_includes_statuses_notes_scores_c':
+      'The full export includes statuses, notes, scores, coins and cards, and ',
+  'full_export_copied_save_it_in_a_text_file':
+      'Full export copied — save it in a text file.',
   'anilist_error_code': 'AniList error (code {0}).',
   'restore_error': 'Restore error: {0}',
   'error': 'Error: {0}',
@@ -250,17 +294,20 @@ const kEn = <String, String>{
   'summary': 'Summary',
   'synopsis': 'Synopsis',
   'no_summary_available': 'No summary available.',
-  'story_summaries_of_franchises_you_haven_t_starte': 'Story summaries of franchises you haven\'t started and the covers of ',
+  'story_summaries_of_franchises_you_haven_t_starte':
+      'Story summaries of franchises you haven\'t started and the covers of ',
   'your_data_on_your_phone': 'Your data, on your phone',
   'main_story': 'Main Story',
   'side_story': 'Side Story',
   'judge': 'Judge {0}',
-  'there_are_no_ads_ad_trackers_user_behavior_analy': 'There are no ads, ad trackers, user-behavior analytics, or ',
+  'there_are_no_ads_ad_trackers_user_behavior_analy':
+      'There are no ads, ad trackers, user-behavior analytics, or ',
   'picking': 'Picking...',
   'opening': 'Opening…',
   'watching': 'Watching',
   'searching': 'Searching...',
-  'loading_franchise_info_it_may_take_a_few_seconds': 'Loading franchise info...\nIt may take a few seconds the first time.',
+  'loading_franchise_info_it_may_take_a_few_seconds':
+      'Loading franchise info...\nIt may take a few seconds the first time.',
   'fetching_airing_schedule': 'Fetching airing schedule...',
   'fetching_mal_list': 'Fetching MAL list...',
   'fetching_list': 'Fetching list...',
@@ -276,7 +323,8 @@ const kEn = <String, String>{
   'claim_reward': 'Claim reward',
   'claimed': 'Claimed',
   'couldn_t_load_tap_to_retry': 'Couldn\'t load.\nTap to retry',
-  'notification_permission_not_granted_enable_it_in': 'Notification permission not granted — enable it in your phone settings first.',
+  'notification_permission_not_granted_enable_it_in':
+      'Notification permission not granted — enable it in your phone settings first.',
   'categories': 'Categories',
   'manual': 'Manual',
   'sequel': 'Sequel',
@@ -287,9 +335,11 @@ const kEn = <String, String>{
   '250_club': '250 Club',
   '2500_club': '2500 Club',
   'monday': 'Monday',
-  'current_data_statuses_notes_scores_coins_and_car': 'Current data (statuses, notes, scores, coins and cards) ',
+  'current_data_statuses_notes_scores_coins_and_car':
+      'Current data (statuses, notes, scores, coins and cards) ',
   'my_data': 'My data',
-  'full_data_for_this_anime_wasn_t_found_try_anothe': 'Full data for this anime wasn\'t found; try another one.',
+  'full_data_for_this_anime_wasn_t_found_try_anothe':
+      'Full data for this anime wasn\'t found; try another one.',
   'genre_taste': '{0}-Genre Taste',
   'save': 'Save',
   'saved': 'Saved',
@@ -305,8 +355,10 @@ const kEn = <String, String>{
   'time_remaining': 'Time remaining',
   'watch_time': 'Watch time',
   'time_watched': 'Time watched',
-  'the_daily_check_schedule_is_approximate_and_the_': 'The daily check schedule is approximate, and the OS may shift it ',
-  'no_tree_structure_for_this_franchise': 'No tree structure for this franchise.',
+  'the_daily_check_schedule_is_approximate_and_the_':
+      'The daily check schedule is approximate, and the OS may shift it ',
+  'no_tree_structure_for_this_franchise':
+      'No tree structure for this franchise.',
   '00': '{0}:00',
   'daily_check_time': 'Daily check time',
   'release_year_to': 'Release year: {0} to {1}',
@@ -315,20 +367,25 @@ const kEn = <String, String>{
   'tv_series_2': 'TV Series',
   'fast_complete': 'Fast & complete',
   'my_level': 'My level',
-  'user_levels_from_beginner_to_expert_based_on_xp': 'User levels from Beginner to Expert based on XP',
+  'user_levels_from_beginner_to_expert_based_on_xp':
+      'User levels from Beginner to Expert based on XP',
   '3_day_streak': '3-Day Streak',
   'tuesday': 'Tuesday',
   'trifecta': 'Trifecta',
   'coin': 'Coin',
-  'not_enough_coins_or_the_pool_is_empty': 'Not enough coins or the pool is empty.',
-  'collect_shafaq_coins_and_spend_them_on_collectib': 'collect "Shafaq" coins and spend them on collectible character card packs; ',
-  'shafaq_coins_and_the_character_collectible_card_': 'Shafaq coins and the character collectible card pack shop',
+  'not_enough_coins_or_the_pool_is_empty':
+      'Not enough coins or the pool is empty.',
+  'collect_shafaq_coins_and_spend_them_on_collectib':
+      'collect "Shafaq" coins and spend them on collectible character card packs; ',
+  'shafaq_coins_and_the_character_collectible_card_':
+      'Shafaq coins and the character collectible card pack shop',
   'system': 'System',
   'movie': 'Movie',
   'movies': 'Movies',
   'first_draw': 'First Draw',
   'character': 'Character',
-  'no_characters_found_add_a_few_anime_to_your_list': 'No characters found; add a few anime to your list first.',
+  'no_characters_found_add_a_few_anime_to_your_list':
+      'No characters found; add a few anime to your list first.',
   'start_import': 'Start import',
   'start': 'Start!',
   'starting': 'Starting...',
@@ -337,8 +394,10 @@ const kEn = <String, String>{
   'demon_slayer': 'Demon Slayer',
   '100_day_streak': '100-Day Streak',
   '100_club': '100 Club',
-  'the_what_s_new_screen_shown_after_every_update': 'The “What\'s new” screen shown after every update',
-  'privacy_policy_screen_and_cache_management_secti': 'Privacy policy screen and cache management section in Settings',
+  'the_what_s_new_screen_shown_after_every_update':
+      'The “What\'s new” screen shown after every update',
+  'privacy_policy_screen_and_cache_management_secti':
+      'Privacy policy screen and cache management section in Settings',
   'essential': 'Essential',
   'appearance': 'Appearance',
   'common': 'Common',
@@ -352,12 +411,15 @@ const kEn = <String, String>{
   'next_season_2': 'Next season',
   'this_season': 'This season',
   'seasons_with_watched_episodes': 'Seasons with watched episodes',
-  'unwatched_seasons_are_blurred_so_nothing_gets_sp': 'unwatched seasons are blurred so nothing gets spoiled.',
+  'unwatched_seasons_are_blurred_so_nothing_gets_sp':
+      'unwatched seasons are blurred so nothing gets spoiled.',
   'last_26_weeks_of_activity': 'Last 26 weeks of activity',
-  'send_only_the_anime_id_no_personal_data_watch_li': 'send only the anime ID; no personal data, watch list, or ',
+  'send_only_the_anime_id_no_personal_data_watch_li':
+      'send only the anime ID; no personal data, watch list, or ',
   'essentials_only': 'Essentials Only ({0})',
   'rare': 'Rare',
-  'try_changing_the_media_type_filter_or_hide_compl': 'Try changing the media-type filter or “Hide completed”.',
+  'try_changing_the_media_type_filter_or_hide_compl':
+      'Try changing the media-type filter or “Hide completed”.',
   'advanced_filters': 'Advanced filters',
   'movie_2': 'Movie',
   'movies_2': 'Movies',
@@ -370,8 +432,10 @@ const kEn = <String, String>{
   'episodes_3': 'Episodes',
   'episodes_4': 'Episodes {0}–{1} ',
   'new_episodes': 'New Episodes',
-  'mark_episodes_watched_score_franchises_and_write': 'mark episodes watched, score franchises and write ',
-  'watched_episodes_and_rewards_will_stay_untouched': 'watched episodes, and rewards will stay untouched.',
+  'mark_episodes_watched_score_franchises_and_write':
+      'mark episodes watched, score franchises and write ',
+  'watched_episodes_and_rewards_will_stay_untouched':
+      'watched episodes, and rewards will stay untouched.',
   'str_3': 'ك',
   'level': 'Level',
   'level_2': 'Level {0}',
@@ -379,7 +443,8 @@ const kEn = <String, String>{
   'this_user_s_list_is_empty': 'This user\'s list is empty.',
   'my_list': 'My List',
   'bring_your_list': 'Bring your list',
-  'you_imported_your_list_from_mal_or_anilist': 'You imported your list from MAL or AniList',
+  'you_imported_your_list_from_mal_or_anilist':
+      'You imported your list from MAL or AniList',
   'mission': 'Mission',
   'mission_2': 'Mission {0}',
   'missions': 'Missions',
@@ -404,14 +469,18 @@ const kEn = <String, String>{
   'the_importer': 'The Importer',
   'no_results_match_these_filters': 'No results match these filters.',
   'no_results_found': 'No results found.',
-  'to_import_it_all_into_aurora_at_once_it_s_also_a': 'to import it all into Aurora at once. It\'s also available later ',
+  'to_import_it_all_into_aurora_at_once_it_s_also_a':
+      'to import it all into Aurora at once. It\'s also available later ',
   'plan_to_watch': 'Plan to Watch',
-  'your_list_data_and_progress_will_stay_untouched': 'Your list data and progress will stay untouched.',
-  'and_are_deleted_when_the_app_is_removed': 'and are deleted when the app is removed.',
+  'your_list_data_and_progress_will_stay_untouched':
+      'Your list data and progress will stay untouched.',
+  'and_are_deleted_when_the_app_is_removed':
+      'and are deleted when the app is removed.',
   'type_an_anime_title': 'Type an anime title',
   'anime_name': 'Anime name...',
   'unknown': 'Unknown',
-  'no_results_on_anilist_mal_or_jikan_persian_searc': 'No results on AniList, MAL or Jikan.\nPersian search only works for anime with a Persian title — try the English name.',
+  'no_results_on_anilist_mal_or_jikan_persian_searc':
+      'No results on AniList, MAL or Jikan.\nPersian search only works for anime with a Persian title — try the English name.',
   'alternative': 'Alternative',
   'version': 'Version {0}',
   'app_version': 'App version',
@@ -420,41 +489,51 @@ const kEn = <String, String>{
   'show_summary': 'Show Summary',
   'my_score_for_this_franchise': 'My Score for This Franchise',
   'rater': 'Rater {0}',
-  'scores_notes_xp_shafaq_coins_cards_missions_and': 'scores, notes, XP, Shafaq coins, cards, missions, and ',
+  'scores_notes_xp_shafaq_coins_cards_missions_and':
+      'scores, notes, XP, Shafaq coins, cards, missions, and ',
   'title_type': 'Title type',
   'writer': 'Writer {0}',
-  'publishing_note_to_publish_on_google_play_this_p': 'Publishing note: to publish on Google Play, this policy must also be published at a ',
+  'publishing_note_to_publish_on_google_play_this_p':
+      'Publishing note: to publish on Google Play, this policy must also be published at a ',
   '50_club': '50 Club',
-  'husbando': 'husbando',
+  'husbando': 'Husbando',
   'husbando_2': 'Husbando!',
-  'most_anime_aren_t_just_one_season_aurora_finds_r': 'Most anime aren\'t just one season. Aurora finds related seasons, movies, ',
-  'watch_at_least_one_episode_a_day_to_keep_your_st': 'Watch at least one episode a day to keep your streak alive',
+  'most_anime_aren_t_just_one_season_aurora_finds_r':
+      'Most anime aren\'t just one season. Aurora finds related seasons, movies, ',
+  'watch_at_least_one_episode_a_day_to_keep_your_st':
+      'Watch at least one episode a day to keep your streak alive',
   '1000_club': '1000 Club',
   'weekly_streak': 'Weekly Streak',
   'is_taken_as_well': 'is taken as well.',
   'all': 'All',
   'mark_all_as_watched': 'Mark All as Watched',
-  'all_aurora_data_your_watch_list_statuses_watched': 'All Aurora data — your watch list, statuses, watched episodes, ',
+  'all_aurora_data_your_watch_list_statuses_watched':
+      'All Aurora data — your watch list, statuses, watched episodes, ',
   'all_caches_cleared': 'All caches cleared.',
-  'all_image_and_api_caches_will_be_cleared_your_li': 'All image and API caches will be cleared. Your list data, statuses, ',
+  'all_image_and_api_caches_will_be_cleared_your_li':
+      'All image and API caches will be cleared. Your list data, statuses, ',
   'no_titles_logged_yet': 'No titles logged yet.',
   'no_search_performed_yet': 'No search performed yet.',
   'no_episodes_started_yet': 'No episodes started yet',
   'nothing_logged_yet': 'Nothing logged yet',
   'no_cards_yet_open_a_pack': 'No cards yet — open a pack!',
-  'and_there_must_be_an_anime_outside_your_list_in_': 'and there must be an anime outside your list in Discover.',
-  'open_a_franchise_page_and_set_a_status_for_each_': 'Open a franchise page and set a status for each season or movie to see it here.',
+  'and_there_must_be_an_anime_outside_your_list_in_':
+      ', and there must be an anime outside your list in Discover.',
+  'open_a_franchise_page_and_set_a_status_for_each_':
+      'Open a franchise page and set a status for each season or movie to see it here.',
   'parent_story': 'Parent Story',
-  'waifu': 'waifu',
+  'waifu': 'Waifu',
   'waifu_2': 'Waifu!',
   'statuses': 'Statuses',
-  'statuses_and_watched_episodes_revert_to_the_last': 'Statuses and watched episodes revert to the last backup, and ',
+  'statuses_and_watched_episodes_revert_to_the_last':
+      'Statuses and watched episodes revert to the last backup, and ',
   'edit': 'Edit',
   'special': 'Special',
   'str_4': 'ي',
   'str_5': '.',
   'anilist_returned_an_empty_response': 'AniList returned an empty response.',
-  'the_server_took_too_long_to_respond_try_again': 'The server took too long to respond. Try again.',
+  'the_server_took_too_long_to_respond_try_again':
+      'The server took too long to respond. Try again.',
   '500_club': '500 Club',
   'clear': 'Clear',
   'clear_suggestion_history': 'Clear suggestion history',
@@ -467,9 +546,11 @@ const kEn = <String, String>{
   'replay_tutorial': 'Replay tutorial',
   'most_watched_franchises': 'Most-watched franchises',
   'profile': 'Profile',
-  'online_profile_for_you_importing_from_anilist_ma': 'online profile for you. Importing from AniList / MAL only uses a ',
+  'online_profile_for_you_importing_from_anilist_ma':
+      'online profile for you. Importing from AniList / MAL only uses a ',
   'backup_restored': 'Backup restored.',
-  'automatic_backups_stay_inside_the_app_with_copy_': 'Automatic backups stay inside the app. With “Copy full data export ',
+  'automatic_backups_stay_inside_the_app_with_copy_':
+      'Automatic backups stay inside the app. With “Copy full data export ',
   'no_automatic_backup_exists': 'No automatic backup exists.',
   'backup_is_invalid': 'Backup is invalid',
   'automatic_backups': 'Automatic backups',
@@ -479,20 +560,24 @@ const kEn = <String, String>{
   '5000_club': '5000 Club',
   'progress_will_stay_untouched': 'progress will stay untouched.',
   'your_progress': 'Your Progress',
-  'no_suggestion_found_to_get_one_you_need_to_be_on': 'No suggestion found. To get one, you need to be online ',
+  'no_suggestion_found_to_get_one_you_need_to_be_on':
+      'No suggestion found. To get one, you need to be online ',
   'prequel': 'Prequel',
   'default_group_by_status': 'Default (Group by Status)',
   'seasonal_chart': 'Seasonal Chart',
   'how_much_time_do_you_have': 'How much time do you have?',
-  'by_a_few_hours_on_ios_timing_is_entirely_up_to_t': 'by a few hours. On iOS, timing is entirely up to the system.',
+  'by_a_few_hours_on_ios_timing_is_entirely_up_to_t':
+      'by a few hours. On iOS, timing is entirely up to the system.',
   'wednesday': 'Wednesday',
   'nothing_found': 'Nothing found.',
   'genres': 'Genres',
   'str_6': 'ک',
-  'user_not_found_or_their_list_is_private': 'User not found or their list is private.',
+  'user_not_found_or_their_list_is_private':
+      'User not found or their list is private.',
   'card': 'Card',
   'cards': 'Cards',
-  'duplicate_cards_turned_into_shafaq': 'Duplicate cards turned into {0} Shafaq',
+  'duplicate_cards_turned_into_shafaq':
+      'Duplicate cards turned into {0} Shafaq',
   'library': 'Library',
   'api_cache': 'API cache',
   'api_cache_cleared': 'API cache cleared.',
@@ -523,7 +608,8 @@ const kEn = <String, String>{
   'you_pulled_a_husbando_card': 'You pulled a husbando card',
   'you_pulled_a_waifu_card': 'You pulled a waifu card',
   'username': 'Username',
-  'public_username_and_no_password_is_ever_asked_fo': 'public username, and no password is ever asked for or stored.',
+  'public_username_and_no_password_is_ever_asked_fo':
+      'public username, and no password is ever asked for or stored.',
   'sunday': 'Sunday',
   'another_one': 'Another one',
   '0': '0',
@@ -539,7 +625,8 @@ const kEn = <String, String>{
   'watch_3_anime_episodes': 'Watch 3 anime episodes',
   'you_completed_3_missions': 'You completed 3 missions',
   '3_cards': '3 cards',
-  '3_random_character_cards_from_your_library_s_ani': '3 random character cards from your library\'s anime',
+  '3_random_character_cards_from_your_library_s_ani':
+      '3 random character cards from anime in your library',
   '4': '4',
   '5': '5',
   '6': '6',
@@ -548,14 +635,18 @@ const kEn = <String, String>{
   '9': '9',
   'new_episodes_2': '• {0}: {1} new episodes',
   'rating_5_xp': '• Rating: 5 XP\n',
-  'to_avoid_api_rate_limits_each_import_brings_in_a': '• To avoid API rate limits, each import brings in at most 60 titles (AniList) or 40 titles (MAL).',
-  'watched_episode_counts_carry_over_too': '• Watched episode counts carry over too.\n',
+  'to_avoid_api_rate_limits_each_import_brings_in_a':
+      '• To avoid API rate limits, each import brings in at most 60 titles (AniList) or 40 titles (MAL).',
+  'watched_episode_counts_carry_over_too':
+      '• Watched episode counts carry over too.\n',
   'completing_a_franchise_50_xp': '• Completing a franchise: 50 XP\n',
   'daily_check_in_5_xp_and_20_shafaq': '• Daily check-in: 5 XP and 20 Shafaq',
   'your_list_must_be_public': '• Your list must be public.\n',
   'writing_a_note_5_xp': '• Writing a note: 5 XP\n',
-  'each_watched_episode_10_xp_and_5_shafaq': '• Each watched episode: 10 XP and 5 Shafaq\n',
-  'statuses_map_as_follows_watching_completed_on_ho': '• Statuses map as follows: Watching, Completed, On Hold, Dropped, Plan to Watch.\n',
+  'each_watched_episode_10_xp_and_5_shafaq':
+      '• Each watched episode: 10 XP and 5 Shafaq\n',
+  'statuses_map_as_follows_watching_completed_on_ho':
+      '• Statuses map as follows: Watching, Completed, On Hold, Dropped, Plan to Watch.\n',
   'language': 'Language',
   'offline_mode_showing_saved_data': 'Offline mode — showing saved data',
   'pool_mix': 'Pool mix',
@@ -573,13 +664,19 @@ const kEn = <String, String>{
 const kFa = <String, String>{
   'skipped': ' ({0} مورد رد شد)',
   'of': ' از {0}',
-  'json_in_settings_you_can_take_a_manual_copy_and_': '(JSON)» در تنظیمات می‌توانی یک نسخه‌ی دستی بگیری و هر وقت خواستی ',
-  'if_it_s_a_401_403_check_your_client_id': '(اگر 401/403 است، Client ID را بررسی کن)',
-  'a_hive_database_no_server_of_ours_has_this_data_': '(پایگاه داده‌ی Hive). هیچ سروری از ما این داده‌ها را ندارد و ',
+  'json_in_settings_you_can_take_a_manual_copy_and_':
+      '(JSON)» تو تنظیمات می‌تونی یه نسخه‌ی دستی بگیری و هر وقت خواستی ',
+  'if_it_s_a_401_403_check_your_client_id':
+      '(اگه 401/403‌ه، Client ID رو بررسی کن)',
+  'a_hive_database_no_server_of_ours_has_this_data_':
+      '(پایگاه داده‌ی Hive). هیچ سروری از ما این داده‌ها رو نداره و ',
   'xp_shafaq': '+{0} XP  •  +{1} شفق',
-  'anilist_jikan_and_myanimelist_apis_to_fetch_anim': 'APIهای عمومی AniList، Jikan و MyAnimeList وصل می‌شود. این درخواست‌ها ',
-  'ovas_and_spin_offs_and_groups_them_all_under_one': 'OVAها و اسپین‌آف‌های مرتبط را پیدا می‌کند و همه را زیر یک «فرنچایز» ',
-  'third_party_data_collection_sdks_in_the_app': 'SDK شخص ثالث برای جمع‌آوری داده وجود ندارد.',
+  'anilist_jikan_and_myanimelist_apis_to_fetch_anim':
+      'APIهای عمومی AniList، Jikan و MyAnimeList وصل می‌شه. این درخواست‌ها ',
+  'ovas_and_spin_offs_and_groups_them_all_under_one':
+      'OVAها و اسپین‌آف‌های مرتبط رو پیدا می‌کنه و همه رو زیر یه «فرنچایز» ',
+  'third_party_data_collection_sdks_in_the_app':
+      'SDK شخص ثالث برای جمع‌آوری داده وجود نداره.',
   'xp_to': '{0} XP تا {1}',
   'titles_imported': '{0} اثر وارد شد{1}.',
   'of_2': '{0} از {1}',
@@ -600,7 +697,7 @@ const kFa = <String, String>{
   'h': '{0} ساعت',
   'you_watched_hours_of_anime': '{0} ساعت انیمه دیدی',
   'h_m': '{0} ساعت و {1} دقیقه',
-  'characters_in_the_pool': '{0} شخصیت در استخر',
+  'characters_in_the_pool': '{0} شخصیت تو استخر',
   'shafaq': '{0} شفق',
   'you_have_shafaq': '{0} شفق داری',
   'you_started_franchises': '{0} فرنچایز رو شروع کردی',
@@ -617,28 +714,34 @@ const kFa = <String, String>{
   'kb': '{0} کیلوبایت',
   'you_wrote_notes': '{0} یادداشت نوشتی',
   'str': '{0}٪',
-  'remove_from_this_franchise': '«{0}» از این فرنچایز حذف شود؟',
+  'remove_from_this_franchise': '«{0}» از این فرنچایز حذف شه؟',
   'was_added_to_the_franchise': '«{0}» به فرنچایز اضافه شد.',
   'str_2': '؟',
-  'aurora_needs_no_account_sign_in_email_or_phone_n': 'آئورورا حساب کاربری، ورود، ایمیل یا شماره تلفن نمی‌خواهد و هیچ ',
-  'aurora_is_built_to_keep_your_data_with_you': 'آئورورا طوری ساخته شده که داده‌ات پیش خودت بماند.',
-  'aurora_is_an_anime_tracker_log_your_watch_status': 'آئورورا یک دنبال‌کننده‌ی انیمه است: وضعیت تماشایت را ثبت کن، ',
+  'aurora_needs_no_account_sign_in_email_or_phone_n':
+      'آئورورا حساب کاربری، ورود، ایمیل یا شماره تلفن نمی‌خواهد و هیچ ',
+  'aurora_is_built_to_keep_your_data_with_you':
+      'آئورورا طوری ساخته شده که داده‌ات پیش خودت بموند.',
+  'aurora_is_an_anime_tracker_log_your_watch_status':
+      'آئورورا یه دنبال‌کننده‌ی انیمه‌ست: وضعیت تماشات رو ثبت کن، ',
   'last_watched_episode': 'آخرین قسمت دیده‌شده: {0}',
-  'public_url_and_that_link_registered_on_the_app_s': 'آدرس اینترنتی عمومی (URL) هم منتشر شود و همان لینک در صفحه‌ی ',
+  'public_url_and_that_link_registered_on_the_app_s':
+      'آدرس اینترنتی عمومی (URL) هم منتشر شه و همون لینک تو صفحه‌ی ',
   'watch_stats': 'آمار تماشا',
-  '4_page_onboarding_tutorial_to_get_started_with_t': 'آموزش اولیه‌ی ۴ صفحه‌ای برای شروع کار با اپ',
+  '4_page_onboarding_tutorial_to_get_started_with_t':
+      'آموزش اولیه‌ی ۴ صفحه‌ای برای شروع کار با اپ',
   'underrated': 'آندرریتد',
   'no_internet_connection': 'اتصال اینترنت برقرار نیست.',
   'entries_with_a_status': 'اثرهای دارای وضعیت',
   'optional': 'اختیاری',
   'continue_watching': 'ادامه تماشا',
   'read_more': 'ادامه مطلب',
-  'internet_access_is_only_for_public_content': 'ارتباط با اینترنت فقط برای محتوای عمومی',
+  'internet_access_is_only_for_public_content':
+      'ارتباط با اینترنت فقط برای محتوای عمومی',
   'send_test_notification': 'ارسال اعلان آزمایشی',
   'out_of_your': 'از {0} زمانی که داری، ',
   'you_watched_anime_from_different_genres': 'از {0} ژانر مختلف انیمه دیدی',
   'picked_from_for_variety': 'از «{0}» برای تنوع انتخاب شد.',
-  'from_settings': 'از بخش تنظیمات در دسترس است.',
+  'from_settings': 'از بخش تنظیمات در دسترسه.',
   'via_jikan': 'از طریق Jikan',
   'import_from_where': 'از کجا وارد کنم؟',
   'own_cards_of_3_different_rarities': 'از ۳ کمیابی مختلف کارت داری',
@@ -652,12 +755,13 @@ const kFa = <String, String>{
   'spin_off': 'اسپین‌آف',
   'announced': 'اعلام‌شده',
   'test_notification_sent': 'اعلان آزمایشی ارسال شد.',
-  'newly_aired_episodes_from_anime_you_follow': 'اعلان قسمت‌های تازه پخش‌شده انیمه‌های دنبال‌شده',
+  'newly_aired_episodes_from_anime_you_follow':
+      'اعلان قسمت‌های تازه پخش‌شده انیمه‌های دنبال‌شده',
   'new_episode_notifications': 'اعلان قسمت‌های جدید',
   'notifications': 'اعلان‌ها',
   'add': 'افزودن',
   'add_anime_manually': 'افزودن دستی انیمه',
-  'legendary_pull': 'افسانه به دست شد',
+  'legendary_pull': 'شانس افسانه‌ای',
   'legendary': 'افسانه‌ای',
   'adaptation': 'اقتباس',
   'score': 'امتیاز',
@@ -673,8 +777,10 @@ const kFa = <String, String>{
   'sample_anime_2': 'انیمه نمونه ۲',
   'underrated_anime': 'انیمه‌های آندرریتد',
   'trending_anime': 'انیمه‌های ترند',
-  'open_airing_anime_to_add_them_to_the_calendar': 'انیمه‌های در حال پخش را باز کن تا به تقویم اضافه شوند.',
-  'anilist_is_searched_first_if_nothing_is_found_ma': 'اول AniList جست‌وجو می‌شود؛ اگر چیزی پیدا نشود، MAL و Jikan هم بررسی می‌شوند.',
+  'open_airing_anime_to_add_them_to_the_calendar':
+      'انیمه‌های در حال پخش رو باز کن تا به تقویم اضافه شن.',
+  'anilist_is_searched_first_if_nothing_is_found_ma':
+      'اول AniList جست‌وجو می‌شه؛ اگه چیزی پیدا نشه، MAL و Jikan هم بررسی می‌شن.',
   'enter_your_username_first': 'اول یوزرنیمت رو بنویس',
   'you_gave_your_first_score': 'اولین امتیازت رو دادی',
   'you_opened_your_first_card_pack': 'اولین بسته کارت رو باز کردی',
@@ -682,35 +788,49 @@ const kFa = <String, String>{
   'you_got_your_first_card': 'اولین کارتت رو گرفتی',
   'you_wrote_your_first_note': 'اولین یادداشتت رو نوشتی',
   'firsts': 'اولین‌ها',
-  'the_app_connects_to_the_public': 'اپ برای گرفتن اطلاعات انیمه‌ها (عنوان، تصویر، قسمت‌ها، زمان پخش) به ',
-  'play_store_page': 'اپ در پلی‌استور ثبت شود.',
+  'the_app_connects_to_the_public':
+      'اپ برای گرفتن اطلاعات انیمه‌ها (عنوان، تصویر، قسمت‌ها، زمان پخش) به ',
+  'play_store_page': 'اپ تو پلی‌استور ثبت شه.',
   'achievements': 'اچیومنت‌ها',
-  'achievements_are_stored_only_in_this_phone_s_int': 'اچیومنت‌ها — فقط داخل حافظه‌ی داخلی همین گوشی ذخیره می‌شود ',
-  'if_you_already_have_a_list_on_anilist_or_myanime': 'اگر قبلاً در AniList یا MyAnimeList لیست داری، با وارد کردن یوزرنیم ',
-  'if_an_anime_from_this_franchise_is_missing_searc': 'اگه انیمه‌ای از این مجموعه جا افتاده، این‌جا سرچش کن و اضافه‌اش کن.',
+  'achievements_are_stored_only_in_this_phone_s_int':
+      'اچیومنت‌ها — فقط داخل حافظه‌ی داخلی همین گوشی ذخیره می‌شه ',
+  'if_you_already_have_a_list_on_anilist_or_myanime':
+      'اگه قبلاً تو AniList یا MyAnimeList لیست داری، با وارد کردن یوزرنیم ',
+  'if_an_anime_from_this_franchise_is_missing_searc':
+      'اگه انیمه‌ای از این مجموعه جا افتاده، این‌جا سرچش کن و اضافه‌ش کن.',
   'if_you_liked_this': 'اگه اینو دوست داشتی...',
   'import_from_anilist_mal': 'ایمپورت از AniList / MAL',
   'import_again': 'ایمپورت دوباره',
   'import_list': 'ایمپورت لیست',
-  'import_your_list_from_anilist_and_mal_1_10_score': 'ایمپورت لیست از AniList و MAL، نمره‌ی ۱ تا ۱۰ برای هر فرنچایز، استریک روزانه و صفحه‌ی آمار',
-  'this_anime_wasn_t_found_on_anilist': 'این انیمه در AniList پیدا نشد.',
-  'this_anime_wasn_t_found_on_anilist_or_any_other_': 'این انیمه نه در AniList و نه در منابع دیگر پیدا نشد.',
+  'import_your_list_from_anilist_and_mal_1_10_score':
+      'ایمپورت لیست از AniList و MAL، نمره‌ی ۱ تا ۱۰ برای هر فرنچایز، استریک روزانه و صفحه‌ی آمار',
+  'this_anime_wasn_t_found_on_anilist': 'این انیمه تو AniList پیدا نشد.',
+  'this_anime_wasn_t_found_on_anilist_or_any_other_':
+      'این انیمه نه تو AniList و نه تو منابع دیگه پیدا نشد.',
   'this_file_is_not_an_aurora_export': 'این فایل، خروجی Aurora نیست.',
-  'these_caches_only_speed_things_up_and_are_rebuil': 'این کش‌ها فقط برای سرعت‌اند و دوباره ساخته می‌شوند. داده‌ی لیست و ',
+  'these_caches_only_speed_things_up_and_are_rebuil':
+      'این کش‌ها فقط برای سرعت‌ان و دوباره ساخته می‌شن. داده‌ی لیست و ',
   'no_results_with_these_filters': 'با این فیلترها چیزی پیدا نشد',
-  'earn_xp_by_watching_and_level_up_from_beginner_t': 'با تماشا کردن XP می‌گیری و از سطح Beginner تا Expert بالا می‌روی؛ ',
-  'deleting_the_app_erases_all_data_permanently': 'با حذف اپ، تمام داده‌ها برای همیشه از بین می‌رود.',
-  'double_tap_any_episode_to_add_a_note': 'با دو بار ضربه زدن روی هر قسمت می‌توانی برایش یادداشت بنویسی.',
-  'will_be_replaced_with_the_clipboard_content': 'با محتوای کلیپ‌بورد جایگزین می‌شود.',
-  'you_can_wipe_everything_from_the_phone_by_cleari': 'با پاک کردن کش یا حذف نصب اپ، همه‌ی داده‌ها را از گوشی پاک کنی. ',
-  'daily_weekly_missions_and_around_a_hundred_achie': 'باز می‌کنی؛ مأموریت‌های روزانه/هفتگی و حدود صد اچیومنت هم در انتظارت است.',
+  'earn_xp_by_watching_and_level_up_from_beginner_t':
+      'با تماشا کردن XP می‌گیری و از سطح Beginner تا Expert بالا می‌روی؛ ',
+  'deleting_the_app_erases_all_data_permanently':
+      'با حذف اپ، تمام داده‌ها برای همیشه از بین می‌ره.',
+  'double_tap_any_episode_to_add_a_note':
+      'با دو بار ضربه زدن روی هر قسمت می‌تونی براش یادداشت بنویسی.',
+  'will_be_replaced_with_the_clipboard_content':
+      'با محتوای کلیپ‌بورد جایگزین می‌شه.',
+  'you_can_wipe_everything_from_the_phone_by_cleari':
+      'با پاک کردن کش یا حذف نصب اپ، همه‌ی داده‌ها رو از گوشی پاک کنی. ',
+  'daily_weekly_missions_and_around_a_hundred_achie':
+      'باز می‌کنی؛ مأموریت‌های روزانه/هفتگی و حدود صد اچیومنت هم در انتظارته.',
   'open_shafaq': 'باز کردن ({0} شفق)',
   'opening_pack': 'باز کردن بسته',
   'open_pack_shafaq': 'باز کردن بسته ({0} شفق)',
   'opener': 'بازکننده {0}',
   'restore': 'بازگردانی',
   'restore_latest_automatic_backup': 'بازگردانی آخرین پشتیبان خودکار',
-  'restore_failed_current_data_is_untouched': 'بازگردانی ناموفق بود؛ دیتای فعلی دست‌نخورده ماند.',
+  'restore_failed_current_data_is_untouched':
+      'بازگردانی ناموفق بود؛ دیتای فعلی دست‌نخورده موند.',
   'restore_the_automatic_backup': 'بازگردانی پشتیبان خودکار؟',
   'back': 'بازگشت',
   'back_to_suggested': 'بازگشت به پیشنهادی',
@@ -718,22 +838,29 @@ const kFa = <String, String>{
   'restore_from_clipboard': 'بازیابی از کلیپ‌بورد',
   'restore_from_clipboard_2': 'بازیابی از کلیپ‌بورد؟',
   'restore_completed_successfully': 'بازیابی با موفقیت انجام شد.',
-  'restore_failed_your_current_data_was_left_untouc': 'بازیابی ناموفق بود؛ دیتای فعلی دست‌نخورده ماند.',
-  'gamified_like_a_game': 'بازی‌وار، مثل یک بازی',
+  'restore_failed_your_current_data_was_left_untouc':
+      'بازیابی ناموفق بود؛ دیتای فعلی دست‌نخورده موند.',
+  'gamified_like_a_game': 'بازی‌وار، مثل یه بازی',
   'ok': 'باشه',
   'section_is_invalid': 'بخش {0} معتبر نیست',
   'no_sections_to_display': 'بخشی برای نمایش پیدا نشد.',
   'spoiler_free': 'بدون اسپویل',
-  'nothing_leaves_your_phone_without_your_own_actio': 'بدون اقدام خودت، هیچ‌چیز از گوشی خارج نمی‌شود.',
+  'nothing_leaves_your_phone_without_your_own_actio':
+      'بدون اقدام خودت، هیچ‌چیز از گوشی خارج نمی‌شه.',
   'no_ads_no_tracking': 'بدون تبلیغات و بدون ردیابی',
   'no_account_needed': 'بدون حساب کاربری',
-  'is_enough_to_move_to_another_phone_automatic_bac': 'برای انتقال به گوشی دیگر کافی است. پشتیبان خودکار فقط داخل خود اپ ',
-  'drag_the_handle_on_the_left_of_each_row_to_reord': 'برای تغییر ترتیب، دستگیرهٔ سمت چپ هر ردیف را بکش.',
-  'long_press_an_episode_to_mark_all_episodes_up_to': 'برای علامت‌گذاری همه‌ی قسمت‌ها تا یک قسمت، روی آن قسمت نگه دار. ',
+  'is_enough_to_move_to_another_phone_automatic_bac':
+      'برای انتقال به گوشی دیگه کافیه. پشتیبان خودکار فقط داخل خود اپ ',
+  'drag_the_handle_on_the_left_of_each_row_to_reord':
+      'برای تغییر ترتیب، دستگیرهٔ سمت چپ هر ردیف رو بکش.',
+  'long_press_an_episode_to_mark_all_episodes_up_to':
+      'برای علامت‌گذاری همه‌ی قسمت‌ها تا یه قسمت، روی اون قسمت نگه دار. ',
   'top': 'برترین‌ها',
-  'daily_check_for_newly_aired_episodes_of_your_ani': 'بررسی روزانه قسمت‌های تازه پخش‌شده انیمه‌هایت',
+  'daily_check_for_newly_aired_episodes_of_your_ani':
+      'بررسی روزانه قسمت‌های تازه پخش‌شده انیمه‌هات',
   'suggested_plan': 'برنامهٔ پیشنهادی',
-  'no_plan_created_you_need_at_least_one_anime_with': 'برنامه‌ای ساخته نشد. باید حداقل یک انیمه با وضعیت «در حال تماشا» یا «متوقف‌شده» داشته باشی.',
+  'no_plan_created_you_need_at_least_one_anime_with':
+      'برنامه‌ای ساخته نشد. باید حداقل یه انیمه با وضعیت «در حال تماشا» یا «متوقف‌شده» داشته باشی.',
   'watch_plan': 'برنامه‌ریزی تماشا',
   'go_to_page': 'برو به صفحه',
   'build': 'بساز',
@@ -741,7 +868,8 @@ const kFa = <String, String>{
   'shafaq_pack': 'بسته شفق',
   'card_pack': 'بسته کارت',
   'next': 'بعدی',
-  'notes_all_in_english_fully_offline_on_your_own_p': 'بنویس — همه‌چیز فارسی، راست‌چین و کاملاً آفلاین روی گوشی خودت.',
+  'notes_all_in_english_fully_offline_on_your_own_p':
+      'بنویس — به زبان خودت، کاملاً آفلاین روی گوشی خودت.',
   'welcome_to_aurora': 'به Aurora خوش آمدی',
   'you_scored_titles': 'به {0} اثر امتیاز دادی',
   'you_gave_1_10_scores_to_franchises': 'به {0} فرنچایز نمره ۱ تا ۱۰ دادی',
@@ -755,19 +883,25 @@ const kFa = <String, String>{
   'suggestion_history_cleared': 'تاریخچه پاک شد.',
   'what_s_new': 'تازه‌های نسخه',
   'what_s_new_in': 'تازه‌های نسخه‌ی {0}',
-  'discover_tab_trends_top_100_series_and_movies_to': 'تب «کشف»: ترندها، ۱۰۰ انیمه‌ی برتر سریالی و سینمایی، ۱۰ برتر هفته، آندرریتدها و چارت فصلی',
+  'discover_tab_trends_top_100_series_and_movies_to':
+      'تب «کشف»: ترندها، ۱۰۰ انیمه‌ی برتر سریالی و سینمایی، آندرریتدها و چارت فصلی',
   'watch_order_suggested_custom': 'ترتیب تماشا (پیشنهادی / شخصی)',
   'your_custom_order': 'ترتیب شخصی شما',
   'suggested_order': 'ترتیب پیشنهادی',
   'trending': 'ترند',
-  'cached_images_will_be_deleted_and_re_downloaded_': 'تصاویر ذخیره‌شده‌ی موقت پاک می‌شوند و در صورت نیاز دوباره دانلود ',
-  'too_many_requests_to_anilist_try_again_in_a_few_': 'تعداد درخواست‌ها به AniList زیاد شد. چند دقیقه بعد دوباره تلاش کن.',
-  'too_many_requests_to_jikan_try_again_in_a_few_mi': 'تعداد درخواست‌ها به Jikan زیاد شد. چند دقیقه بعد دوباره تلاش کن.',
-  'too_many_requests_to_myanimelist_try_again_in_a_': 'تعداد درخواست‌ها به MyAnimeList زیاد شد. چند دقیقه بعد دوباره تلاش کن.',
+  'cached_images_will_be_deleted_and_re_downloaded_':
+      'تصاویر ذخیره‌شده‌ی موقت پاک می‌شن و در صورت نیاز دوباره دانلود ',
+  'too_many_requests_to_anilist_try_again_in_a_few_':
+      'تعداد درخواست‌ها به AniList زیاد شد. چند دقیقه بعد دوباره تلاش کن.',
+  'too_many_requests_to_jikan_try_again_in_a_few_mi':
+      'تعداد درخواست‌ها به Jikan زیاد شد. چند دقیقه بعد دوباره تلاش کن.',
+  'too_many_requests_to_myanimelist_try_again_in_a_':
+      'تعداد درخواست‌ها به MyAnimeList زیاد شد. چند دقیقه بعد دوباره تلاش کن.',
   'episodes_to': 'تعداد قسمت: {0} تا {1}+',
   'unknown_count': 'تعداد نامشخص',
   'entries': 'تعداد ورودی: {0}',
-  'later_changes_are_lost_before_restoring_a_backup': 'تغییرهای بعد از آن از بین می‌رود. قبل از بازگردانی، از وضعیت فعلی ',
+  'later_changes_are_lost_before_restoring_a_backup':
+      'تغییرهای بعد از اون از بین می‌ره. قبل از بازگردانی، از وضعیت فعلی ',
   'weekly_airing_calendar': 'تقویم پخش هفتگی',
   'retry': 'تلاش مجدد',
   'watch': 'تماشا',
@@ -785,8 +919,10 @@ const kFa = <String, String>{
   'search_a_persian_or_english_title': 'جستجوی نام فارسی یا انگلیسی...',
   'search_2': 'جست‌وجو',
   'search_with_these_filters': 'جست‌وجو با این فیلترها',
-  'search_failed_check_your_internet_connection': 'جست‌وجو ناموفق بود؛ اتصال اینترنت را بررسی کن.',
-  'like_a_tree_whose_branches_are_each_a_title_with': 'جمع می‌کند؛ مثل یک درخت که هر شاخه‌اش یک اثر است و پیشرفت کل مجموعه ',
+  'search_failed_check_your_internet_connection':
+      'جست‌وجو ناموفق بود؛ اتصال اینترنت رو بررسی کن.',
+  'like_a_tree_whose_branches_are_each_a_title_with':
+      'جمع می‌کنه؛ مثل یه درخت که هر شاخه‌ش یه اثره و پیشرفت کل مجموعه ',
   'friday': 'جمعه',
   'rewards': 'جوایز',
   'rewards_collection': 'جوایز و کلکسیون',
@@ -795,8 +931,10 @@ const kFa = <String, String>{
   'cache': 'حافظه‌ی کش',
   'spoiler_free_mode': 'حالت بدون اسپویل',
   'approx_size': 'حجم تقریبی: {0}',
-  'sizes_are_approximate_clearing_cache_never_delet': 'حجم‌ها تقریبی‌اند. پاک‌سازی کش هیچ داده‌ی شخصی را حذف نمی‌کند.',
-  'around_100_achievements_and_daily_weekly_mission': 'حدود صد اچیومنت و مأموریت‌های روزانه و هفتگی',
+  'sizes_are_approximate_clearing_cache_never_delet':
+      'حجم‌ها تقریبی‌اند. پاک‌سازی کش هیچ داده‌ی شخصی رو حذف نمی‌کنه.',
+  'around_100_achievements_and_daily_weekly_mission':
+      'حدود صد اچیومنت و مأموریت‌های روزانه و هفتگی',
   'delete': 'حذف',
   'remove_from_list': 'حذف از لیست',
   'remove_score': 'حذف نمره',
@@ -807,26 +945,31 @@ const kFa = <String, String>{
   'attack_on_titan': 'حمله به تایتان',
   'memory_keeper': 'خاطره‌نویس',
   'spy_family': 'خانواده جاسوس',
-  'the_full_export_includes_statuses_notes_scores_c': 'خروجی کامل شامل وضعیت‌ها، یادداشت‌ها، امتیازها، سکه و کارت‌هاست و ',
-  'full_export_copied_save_it_in_a_text_file': 'خروجی کامل کپی شد؛ آن را در یک فایل متنی ذخیره کن.',
+  'the_full_export_includes_statuses_notes_scores_c':
+      'خروجی کامل شامل وضعیت‌ها، یادداشت‌ها، امتیازها، سکه و کارت‌هاست و ',
+  'full_export_copied_save_it_in_a_text_file':
+      'خروجی کامل کپی شد؛ اون رو تو یه فایل متنی ذخیره کن.',
   'anilist_error_code': 'خطا از سمت AniList (کد {0}).',
-  'restore_error': 'خطا در بازیابی: {0}',
+  'restore_error': 'خطا تو بازیابی: {0}',
   'error': 'خطا: {0}',
   'something_went_wrong': 'خطای غیرمنتظره رخ داد.',
   'summary': 'خلاصه',
   'synopsis': 'خلاصه داستان',
   'no_summary_available': 'خلاصه‌ای موجود نیست.',
-  'story_summaries_of_franchises_you_haven_t_starte': 'خلاصه‌ی داستان مجموعه‌هایی که هنوز شروع نکرده‌ای و کاور ',
+  'story_summaries_of_franchises_you_haven_t_starte':
+      'خلاصه‌ی داستان مجموعه‌هایی که هنوز شروع نکرده‌ای و کاور ',
   'your_data_on_your_phone': 'داده‌های تو، روی گوشی تو',
   'main_story': 'داستان اصلی',
   'side_story': 'داستان فرعی',
   'judge': 'داور {0}',
-  'there_are_no_ads_ad_trackers_user_behavior_analy': 'در اپ تبلیغات، ردیاب تبلیغاتی، تحلیل رفتار کاربر (آنالیتیکس) یا ',
+  'there_are_no_ads_ad_trackers_user_behavior_analy':
+      'تو اپ تبلیغات، ردیاب تبلیغاتی، تحلیل رفتار کاربر (آنالیتیکس) یا ',
   'picking': 'در حال انتخاب...',
   'opening': 'در حال باز کردن...',
   'watching': 'در حال تماشا',
   'searching': 'در حال جستجو...',
-  'loading_franchise_info_it_may_take_a_few_seconds': 'در حال دریافت اطلاعات مجموعه...\nبار اول ممکن است چند ثانیه طول بکشد.',
+  'loading_franchise_info_it_may_take_a_few_seconds':
+      'در حال دریافت اطلاعات مجموعه...\nبار اول ممکنه چند ثانیه طول بکشه.',
   'fetching_airing_schedule': 'در حال دریافت برنامه پخش...',
   'fetching_mal_list': 'در حال دریافت لیست MAL...',
   'fetching_list': 'در حال دریافت لیست...',
@@ -841,8 +984,9 @@ const kFa = <String, String>{
   'couldn_t_fetch_data_from': 'دریافت اطلاعات از {0} ناموفق بود.',
   'claim_reward': 'دریافت جایزه',
   'claimed': 'دریافت شد',
-  'couldn_t_load_tap_to_retry': 'دریافت نشد\nلمس کن تا دوباره تلاش شود',
-  'notification_permission_not_granted_enable_it_in': 'دسترسی اعلان داده نشد؛ اول از تنظیمات گوشی فعالش کن.',
+  'couldn_t_load_tap_to_retry': 'دریافت نشد\nلمس کن تا دوباره تلاش شه',
+  'notification_permission_not_granted_enable_it_in':
+      'دسترسی اعلان داده نشد؛ اول از تنظیمات گوشی فعالش کن.',
   'categories': 'دسته‌بندی',
   'manual': 'دستی',
   'sequel': 'دنباله',
@@ -850,17 +994,19 @@ const kFa = <String, String>{
   '2_day_streak': 'دو روزه',
   '2_month_streak': 'دو ماهه',
   '2_week_streak': 'دو هفته‌ای',
-  '250_club': 'دو و نیم قرن',
-  '2500_club': 'دو و نیم هزارتایی',
+  '250_club': 'دویست‌وپنجاه‌تایی',
+  '2500_club': 'دوهزاروپانصدتایی',
   'monday': 'دوشنبه',
-  'current_data_statuses_notes_scores_coins_and_car': 'دیتای فعلی (وضعیت‌ها، یادداشت‌ها، امتیازها، سکه و کارت‌ها) ',
+  'current_data_statuses_notes_scores_coins_and_car':
+      'دیتای فعلی (وضعیت‌ها، یادداشت‌ها، امتیازها، سکه و کارت‌ها) ',
   'my_data': 'دیتای من',
-  'full_data_for_this_anime_wasn_t_found_try_anothe': 'دیتای کامل این انیمه پیدا نشد؛ یکی دیگر را امتحان کن.',
+  'full_data_for_this_anime_wasn_t_found_try_anothe':
+      'دیتای کامل این انیمه پیدا نشد؛ یکی دیگه رو امتحان کن.',
   'genre_taste': 'ذائقه {0} ژانره',
   'save': 'ذخیره',
   'saved': 'ذخیره شد',
   'save_note': 'ذخیره یادداشت',
-  'progress_visible_in_one_place': 'را یک‌جا می‌بینی.',
+  'progress_visible_in_one_place': 'رو یه‌جا می‌بینی.',
   'help_info': 'راهنما و اطلاعات',
   'ways_to_earn_xp': 'راه‌های گرفتن XP',
   'skip': 'رد کردن',
@@ -871,8 +1017,10 @@ const kFa = <String, String>{
   'time_remaining': 'زمان باقی‌مانده',
   'watch_time': 'زمان تماشا',
   'time_watched': 'زمان تماشا شده',
-  'the_daily_check_schedule_is_approximate_and_the_': 'زمان‌بندی بررسی روزانه تقریبی است و سیستم‌عامل ممکن است آن را ',
-  'no_tree_structure_for_this_franchise': 'ساختار درختی برای این مجموعه موجود نیست.',
+  'the_daily_check_schedule_is_approximate_and_the_':
+      'زمان‌بندی بررسی روزانه تقریبیه و سیستم‌عامل ممکنه اون رو ',
+  'no_tree_structure_for_this_franchise':
+      'ساختار درختی برای این مجموعه موجود نیست.',
   '00': 'ساعت {0}',
   'daily_check_time': 'ساعت بررسی روزانه',
   'release_year_to': 'سال انتشار: {0} تا {1}',
@@ -881,36 +1029,42 @@ const kFa = <String, String>{
   'tv_series_2': 'سریال‌ها',
   'fast_complete': 'سریع و کامل',
   'my_level': 'سطح من',
-  'user_levels_from_beginner_to_expert_based_on_xp': 'سطوح کاربری از Beginner تا Expert بر اساس XP',
+  'user_levels_from_beginner_to_expert_based_on_xp':
+      'سطوح کاربری از Beginner تا Expert بر اساس XP',
   '3_day_streak': 'سه روزه',
   'tuesday': 'سه‌شنبه',
   'trifecta': 'سه‌گانه',
   'coin': 'سکه',
-  'not_enough_coins_or_the_pool_is_empty': 'سکه کافی نیست یا استخر خالی است.',
-  'collect_shafaq_coins_and_spend_them_on_collectib': 'سکه‌ی «شفق» جمع می‌کنی و با آن بسته‌ی کارت‌های کلکسیونی شخصیت‌ها را ',
-  'shafaq_coins_and_the_character_collectible_card_': 'سکه‌ی «شفق» و فروشگاه بسته‌ی کارت‌های کلکسیونی شخصیت‌ها',
+  'not_enough_coins_or_the_pool_is_empty': 'سکه کافی نیست یا استخر خالیه.',
+  'collect_shafaq_coins_and_spend_them_on_collectib':
+      'سکه‌ی «شفق» جمع می‌کنی و با اون بسته‌ی کارت‌های کلکسیونی شخصیت‌ها رو ',
+  'shafaq_coins_and_the_character_collectible_card_':
+      'سکه‌ی «شفق» و فروشگاه بسته‌ی کارت‌های کلکسیونی شخصیت‌ها',
   'system': 'سیستم',
   'movie': 'سینمایی',
   'movies': 'سینمایی‌ها',
   'first_draw': 'شانس اول',
   'character': 'شخصیت',
-  'no_characters_found_add_a_few_anime_to_your_list': 'شخصیتی پیدا نشد؛ اول چند انیمه به لیستت اضافه کن.',
+  'no_characters_found_add_a_few_anime_to_your_list':
+      'شخصیتی پیدا نشد؛ اول چند انیمه به لیستت اضافه کن.',
   'start_import': 'شروع ایمپورت',
   'start': 'شروع!',
   'starting': 'شروع...',
-  'user_id_is_sent_with_them': 'شناسه‌ی کاربری همراه آن‌ها ارسال نمی‌شود.',
+  'user_id_is_sent_with_them': 'شناسه‌ی کاربری همراه اون‌ها ارسال نمی‌شه.',
   'saturday': 'شنبه',
   'demon_slayer': 'شیطان‌کش',
   '100_day_streak': 'صد روزه',
   '100_club': 'صدتایی',
-  'the_what_s_new_screen_shown_after_every_update': 'صفحه‌ی «تازه‌های نسخه» که بعد از هر به‌روزرسانی نمایش داده می‌شود',
-  'privacy_policy_screen_and_cache_management_secti': 'صفحه‌ی سیاست حریم خصوصی و بخش مدیریت حافظه‌ی کش در تنظیمات',
+  'the_what_s_new_screen_shown_after_every_update':
+      'صفحه‌ی «تازه‌های نسخه» که بعد از هر به‌روزرسانی نمایش داده می‌شه',
+  'privacy_policy_screen_and_cache_management_secti':
+      'صفحه‌ی سیاست حریم خصوصی و بخش مدیریت حافظه‌ی کش تو تنظیمات',
   'essential': 'ضروری',
   'appearance': 'ظاهر',
   'common': 'عادی',
   'title_a_z': 'عنوان (الفبا)',
   'episode_titan': 'غول قسمت‌ها',
-  'file_is_corrupted': 'فایل خراب است: {0}',
+  'file_is_corrupted': 'فایل خرابه: {0}',
   'franchise': 'فرنچایز',
   'frieren': 'فریرن',
   'seasonal': 'فصل',
@@ -918,12 +1072,15 @@ const kFa = <String, String>{
   'next_season_2': 'فصل بعد',
   'this_season': 'فصل جاری',
   'seasons_with_watched_episodes': 'فصل‌های دارای قسمت دیده‌شده',
-  'unwatched_seasons_are_blurred_so_nothing_gets_sp': 'فصل‌هایی که ندیده‌ای تار می‌شود تا چیزی لو نرود.',
+  'unwatched_seasons_are_blurred_so_nothing_gets_sp':
+      'فصل‌هایی که ندیده‌ای تار می‌شه تا چیزی لو نره.',
   'last_26_weeks_of_activity': 'فعالیت ۲۶ هفته اخیر',
-  'send_only_the_anime_id_no_personal_data_watch_li': 'فقط شناسه‌ی انیمه را می‌فرستند؛ هیچ داده‌ی شخصی، لیست تماشا یا ',
+  'send_only_the_anime_id_no_personal_data_watch_li':
+      'فقط شناسه‌ی انیمه رو می‌فرستند؛ هیچ داده‌ی شخصی، لیست تماشا یا ',
   'essentials_only': 'فقط ضروری‌ها ({0})',
   'rare': 'فوق کمیاب',
-  'try_changing_the_media_type_filter_or_hide_compl': 'فیلتر نوع اثر یا «مخفی کردن تکمیل‌شده‌ها» را تغییر بده.',
+  'try_changing_the_media_type_filter_or_hide_compl':
+      'فیلتر نوع اثر یا «مخفی کردن تکمیل‌شده‌ها» رو تغییر بده.',
   'advanced_filters': 'فیلتر پیشرفته',
   'movie_2': 'فیلم',
   'movies_2': 'فیلم‌ها',
@@ -936,16 +1093,19 @@ const kFa = <String, String>{
   'episodes_3': 'قسمت‌ها',
   'episodes_4': 'قسمت‌های {0} تا {1} ',
   'new_episodes': 'قسمت‌های جدید',
-  'mark_episodes_watched_score_franchises_and_write': 'قسمت‌های دیده‌شده را علامت بزن، به فرنچایزها نمره بده و یادداشت ',
-  'watched_episodes_and_rewards_will_stay_untouched': 'قسمت‌های دیده‌شده و جوایزت دست‌نخورده می‌ماند.',
-  'str_3': 'ك',
+  'mark_episodes_watched_score_franchises_and_write':
+      'قسمت‌های دیده‌شده رو علامت بزن، به فرنچایزها نمره بده و یادداشت ',
+  'watched_episodes_and_rewards_will_stay_untouched':
+      'قسمت‌های دیده‌شده و جوایزت دست‌نخورده می‌مونه.',
+  'str_3': 'ک',
   'level': 'لول',
   'level_2': 'لول {0}',
   'list': 'لیست',
-  'this_user_s_list_is_empty': 'لیست این کاربر خالی است.',
+  'this_user_s_list_is_empty': 'لیست این کاربر خالیه.',
   'my_list': 'لیست من',
-  'bring_your_list': 'لیستت را بیاور',
-  'you_imported_your_list_from_mal_or_anilist': 'لیستت رو از MAL یا AniList وارد کردی',
+  'bring_your_list': 'لیستت رو بیاور',
+  'you_imported_your_list_from_mal_or_anilist':
+      'لیستت رو از MAL یا AniList وارد کردی',
   'mission': 'مأموریت',
   'mission_2': 'مأموریت {0}',
   'missions': 'مأموریت‌ها',
@@ -970,14 +1130,18 @@ const kFa = <String, String>{
   'the_importer': 'مهاجر',
   'no_results_match_these_filters': 'موردی با این فیلترها پیدا نشد.',
   'no_results_found': 'موردی پیدا نشد.',
-  'to_import_it_all_into_aurora_at_once_it_s_also_a': 'می‌توانی همه‌اش را یک‌جا وارد آئورورا کنی. بعداً هم هر وقت خواستی ',
+  'to_import_it_all_into_aurora_at_once_it_s_also_a':
+      'می‌تونی همه‌ش رو یه‌جا وارد آئورورا کنی. بعداً هم هر وقت خواستی ',
   'plan_to_watch': 'می‌خوام ببینم',
-  'your_list_data_and_progress_will_stay_untouched': 'می‌شوند. داده‌ی لیست و پیشرفت تو دست‌نخورده می‌ماند.',
-  'and_are_deleted_when_the_app_is_removed': 'می‌ماند و با حذف اپ از بین می‌رود.',
-  'type_an_anime_title': 'نام انیمه را تایپ کن',
+  'your_list_data_and_progress_will_stay_untouched':
+      'می‌شن. داده‌ی لیست و پیشرفت تو دست‌نخورده می‌مونه.',
+  'and_are_deleted_when_the_app_is_removed':
+      'می‌مونه و با حذف اپ از بین می‌ره.',
+  'type_an_anime_title': 'نام انیمه رو تایپ کن',
   'anime_name': 'نام انیمه...',
   'unknown': 'نامشخص',
-  'no_results_on_anilist_mal_or_jikan_persian_searc': 'نتیجه‌ای در AniList، MAL و Jikan پیدا نشد.\nنام فارسی فقط برای انیمه‌هایی کار می‌کند که نام فارسی دارند؛ نام انگلیسی را امتحان کن.',
+  'no_results_on_anilist_mal_or_jikan_persian_searc':
+      'نتیجه‌ای تو AniList، MAL و Jikan پیدا نشد.\nنام فارسی فقط برای انیمه‌هایی کار می‌کنه که نام فارسی دارن؛ نام انگلیسی رو امتحان کن.',
   'alternative': 'نسخه جایگزین',
   'version': 'نسخه‌ی {0}',
   'app_version': 'نسخه‌ی اپ',
@@ -986,41 +1150,51 @@ const kFa = <String, String>{
   'show_summary': 'نمایش خلاصه',
   'my_score_for_this_franchise': 'نمره من به این مجموعه',
   'rater': 'نمره‌دهنده {0}',
-  'scores_notes_xp_shafaq_coins_cards_missions_and': 'نمره‌ها، یادداشت‌ها، XP، سکه‌های «شفق»، کارت‌ها، مأموریت‌ها و ',
+  'scores_notes_xp_shafaq_coins_cards_missions_and':
+      'نمره‌ها، یادداشت‌ها، XP، سکه‌های «شفق»، کارت‌ها، مأموریت‌ها و ',
   'title_type': 'نوع اثر',
   'writer': 'نویسنده {0}',
-  'publishing_note_to_publish_on_google_play_this_p': 'نکته برای انتشار: برای انتشار در گوگل‌پلی، این سیاست باید در یک ',
-  '50_club': 'نیم‌قرن',
+  'publishing_note_to_publish_on_google_play_this_p':
+      'نکته برای انتشار: برای انتشار تو گوگل‌پلی، این سیاست باید تو یه ',
+  '50_club': 'پنجاه‌تایی',
   'husbando': 'هازبندو',
   'husbando_2': 'هازبندو!',
-  'most_anime_aren_t_just_one_season_aurora_finds_r': 'هر انیمه معمولاً فقط یک فصل نیست. آئورورا فصل‌ها، فیلم‌های سینمایی، ',
-  'watch_at_least_one_episode_a_day_to_keep_your_st': 'هر روز حداقل یک قسمت ببین تا استریکت ادامه پیدا کنه',
+  'most_anime_aren_t_just_one_season_aurora_finds_r':
+      'هر انیمه معمولاً فقط یه فصل نیست. آئورورا فصل‌ها، فیلم‌های سینمایی، ',
+  'watch_at_least_one_episode_a_day_to_keep_your_st':
+      'هر روز حداقل یه قسمت ببین تا استریکت ادامه پیدا کنه',
   '1000_club': 'هزارتایی',
   'weekly_streak': 'هفته‌ای',
-  'is_taken_as_well': 'هم یک پشتیبان گرفته می‌شود.',
+  'is_taken_as_well': 'هم یه پشتیبان گرفته می‌شه.',
   'all': 'همه',
-  'mark_all_as_watched': 'همه را دیده‌ام',
-  'all_aurora_data_your_watch_list_statuses_watched': 'همه‌ی داده‌های آئورورا — لیست تماشا، وضعیت‌ها، قسمت‌های دیده‌شده، ',
+  'mark_all_as_watched': 'همه رو دیدم',
+  'all_aurora_data_your_watch_list_statuses_watched':
+      'همه‌ی داده‌های آئورورا — لیست تماشا، وضعیت‌ها، قسمت‌های دیده‌شده، ',
   'all_caches_cleared': 'همه‌ی کش‌ها پاک شدند.',
-  'all_image_and_api_caches_will_be_cleared_your_li': 'همه‌ی کش‌های تصاویر و API پاک می‌شوند. داده‌ی لیست، وضعیت‌ها، ',
-  'no_titles_logged_yet': 'هنوز اثری ثبت نشده است.',
+  'all_image_and_api_caches_will_be_cleared_your_li':
+      'همه‌ی کش‌های تصاویر و API پاک می‌شن. داده‌ی لیست، وضعیت‌ها، ',
+  'no_titles_logged_yet': 'هنوز اثری ثبت نشده.',
   'no_search_performed_yet': 'هنوز جست‌وجویی انجام نشده.',
   'no_episodes_started_yet': 'هنوز قسمتی شروع نشده',
   'nothing_logged_yet': 'هنوز چیزی ثبت نکرده‌ای',
   'no_cards_yet_open_a_pack': 'هنوز کارتی نداری؛ یه بسته باز کن!',
-  'and_there_must_be_an_anime_outside_your_list_in_': 'و انیمه‌ای بیرون از لیستت در بخش کشف پیدا شود.',
-  'open_a_franchise_page_and_set_a_status_for_each_': 'وارد صفحه یک مجموعه شو و وضعیت هر فصل یا فیلم را انتخاب کن تا اینجا ببینی.',
+  'and_there_must_be_an_anime_outside_your_list_in_':
+      'و انیمه‌ای بیرون از لیستت تو بخش کشف باشه.',
+  'open_a_franchise_page_and_set_a_status_for_each_':
+      'وارد صفحه یه مجموعه شو و وضعیت هر فصل یا فیلم رو انتخاب کن تا اینجا ببینی.',
   'parent_story': 'والد',
   'waifu': 'وایفو',
   'waifu_2': 'وایفو!',
   'statuses': 'وضعیت آثار',
-  'statuses_and_watched_episodes_revert_to_the_last': 'وضعیت‌ها و قسمت‌های دیده‌شده به حالت آخرین پشتیبان برمی‌گردد و ',
+  'statuses_and_watched_episodes_revert_to_the_last':
+      'وضعیت‌ها و قسمت‌های دیده‌شده به حالت آخرین پشتیبان برمی‌گرده و ',
   'edit': 'ویرایش',
   'special': 'ویژه',
-  'str_4': 'ي',
+  'str_4': 'ی',
   'str_5': '٫',
   'anilist_returned_an_empty_response': 'پاسخ AniList خالی بود.',
-  'the_server_took_too_long_to_respond_try_again': 'پاسخ سرور دیر رسید. دوباره تلاش کن.',
+  'the_server_took_too_long_to_respond_try_again':
+      'پاسخ سرور دیر رسید. دوباره تلاش کن.',
   '500_club': 'پانصدتایی',
   'clear': 'پاک کردن',
   'clear_suggestion_history': 'پاک کردن تاریخچهٔ پیشنهادها',
@@ -1033,29 +1207,33 @@ const kFa = <String, String>{
   'replay_tutorial': 'پخش مجدد آموزش',
   'most_watched_franchises': 'پرتماشاترین فرنچایزها',
   'profile': 'پروفایل',
-  'online_profile_for_you_importing_from_anilist_ma': 'پروفایل آنلاینی برایت نمی‌سازد. ایمپورت از AniList / MAL فقط با ',
+  'online_profile_for_you_importing_from_anilist_ma':
+      'پروفایل آنلاینی برات نمی‌سازه. ایمپورت از AniList / MAL فقط با ',
   'backup_restored': 'پشتیبان بازگردانی شد.',
-  'automatic_backups_stay_inside_the_app_with_copy_': 'پشتیبان خودکار فقط داخل خود اپ نگه‌داری می‌شود. با «کپی خروجی دیتا ',
-  'no_automatic_backup_exists': 'پشتیبان خودکاری وجود ندارد.',
+  'automatic_backups_stay_inside_the_app_with_copy_':
+      'پشتیبان خودکار فقط داخل خود اپ نگه‌داری می‌شه. با «کپی خروجی دیتا ',
+  'no_automatic_backup_exists': 'پشتیبان خودکاری وجود نداره.',
   'backup_is_invalid': 'پشتیبان معتبر نیست',
   'automatic_backups': 'پشتیبان‌های خودکار',
   'backup_transfer': 'پشتیبان‌گیری و انتقال',
   'backup_and_data_deletion': 'پشتیبان‌گیری و حذف داده',
   'thursday': 'پنجشنبه',
   '5000_club': 'پنج‌هزارتایی',
-  'progress_will_stay_untouched': 'پیشرفت تو دست‌نخورده می‌ماند.',
+  'progress_will_stay_untouched': 'پیشرفت تو دست‌نخورده می‌مونه.',
   'your_progress': 'پیشرفت شما',
-  'no_suggestion_found_to_get_one_you_need_to_be_on': 'پیشنهادی پیدا نشد. برای پیشنهاد باید به اینترنت وصل باشی ',
+  'no_suggestion_found_to_get_one_you_need_to_be_on':
+      'پیشنهادی پیدا نشد. برای پیشنهاد باید به اینترنت وصل باشی ',
   'prequel': 'پیش‌درآمد',
   'default_group_by_status': 'پیش‌فرض (گروه‌بندی وضعیت)',
   'seasonal_chart': 'چارت فصلی',
   'how_much_time_do_you_have': 'چقدر وقت داری؟',
-  'by_a_few_hours_on_ios_timing_is_entirely_up_to_t': 'چند ساعت جابه‌جا کند. در iOS زمان اجرا کاملاً با سیستم است.',
+  'by_a_few_hours_on_ios_timing_is_entirely_up_to_t':
+      'چند ساعت جابه‌جا کنه. تو iOS زمان اجرا کاملاً با سیستمه.',
   'wednesday': 'چهارشنبه',
   'nothing_found': 'چیزی پیدا نشد.',
   'genres': 'ژانرها',
   'str_6': 'ک',
-  'user_not_found_or_their_list_is_private': 'کاربر پیدا نشد یا لیستش خصوصی است.',
+  'user_not_found_or_their_list_is_private': 'کاربر پیدا نشد یا لیستش خصوصیه.',
   'card': 'کارت',
   'cards': 'کارت‌ها',
   'duplicate_cards_turned_into_shafaq': 'کارت‌های تکراری به {0} شفق تبدیل شدند',
@@ -1072,7 +1250,7 @@ const kFa = <String, String>{
   'collection': 'کلکسیون {0}',
   'my_collection': 'کلکسیون من',
   'collector': 'کلکسیونر',
-  'clipboard_is_empty': 'کلیپ‌بورد خالی است.',
+  'clipboard_is_empty': 'کلیپ‌بورد خالیه.',
   'less': 'کمتر',
   'uncommon': 'کمیاب',
   'export_copy_failed': 'کپی خروجی ناموفق بود.',
@@ -1089,7 +1267,8 @@ const kFa = <String, String>{
   'you_pulled_a_husbando_card': 'یه کارت هازبندو گرفتی',
   'you_pulled_a_waifu_card': 'یه کارت وایفو گرفتی',
   'username': 'یوزرنیم',
-  'public_username_and_no_password_is_ever_asked_fo': 'یوزرنیم عمومی انجام می‌شود و رمز عبوری از تو گرفته یا ذخیره نمی‌شود.',
+  'public_username_and_no_password_is_ever_asked_fo':
+      'یوزرنیم عمومی انجام می‌شه و رمز عبوری از تو گرفته یا ذخیره نمی‌شه.',
   'sunday': 'یکشنبه',
   'another_one': 'یکی دیگه',
   '0': '۰',
@@ -1105,7 +1284,8 @@ const kFa = <String, String>{
   'watch_3_anime_episodes': '۳ قسمت انیمه ببین',
   'you_completed_3_missions': '۳ مأموریت رو کامل کردی',
   '3_cards': '۳ کارت',
-  '3_random_character_cards_from_your_library_s_ani': '۳ کارت تصادفی از شخصیت‌های انیمه‌های کتابخانه‌ات',
+  '3_random_character_cards_from_your_library_s_ani':
+      '۳ کارت تصادفی از شخصیت‌های انیمه‌های کتابخانه‌ات',
   '4': '۴',
   '5': '۵',
   '6': '۶',
@@ -1114,24 +1294,29 @@ const kFa = <String, String>{
   '9': '۹',
   'new_episodes_2': '• {0}: {1} قسمت جدید',
   'rating_5_xp': '• امتیاز دادن: ۵ XP\n',
-  'to_avoid_api_rate_limits_each_import_brings_in_a': '• برای جلوگیری از محدودیت API، حداکثر ۶۰ اثر (AniList) یا ۴۰ اثر (MAL) در هر ایمپورت وارد می‌شود.',
-  'watched_episode_counts_carry_over_too': '• تعداد قسمت‌های دیده‌شده هم منتقل می‌شود.\n',
+  'to_avoid_api_rate_limits_each_import_brings_in_a':
+      '• برای جلوگیری از محدودیت API، حداکثر ۶۰ اثر (AniList) یا ۴۰ اثر (MAL) تو هر ایمپورت وارد می‌شه.',
+  'watched_episode_counts_carry_over_too':
+      '• تعداد قسمت‌های دیده‌شده هم منتقل می‌شه.\n',
   'completing_a_franchise_50_xp': '• تکمیل فرنچایز: ۵۰ XP\n',
   'daily_check_in_5_xp_and_20_shafaq': '• سر زدن روزانه: ۵ XP و ۲۰ شفق',
-  'your_list_must_be_public': '• لیست باید عمومی باشد.\n',
+  'your_list_must_be_public': '• لیست باید عمومی باشه.\n',
   'writing_a_note_5_xp': '• نوشتن یادداشت: ۵ XP\n',
-  'each_watched_episode_10_xp_and_5_shafaq': '• هر قسمت دیده‌شده: ۱۰ XP و ۵ شفق\n',
-  'statuses_map_as_follows_watching_completed_on_ho': '• وضعیت‌ها این‌طور نگاشت می‌شوند: در حال تماشا، تماشا شده، متوقف شده، رها شده، می‌خوام ببینم.\n',
+  'each_watched_episode_10_xp_and_5_shafaq':
+      '• هر قسمت دیده‌شده: ۱۰ XP و ۵ شفق\n',
+  'statuses_map_as_follows_watching_completed_on_ho':
+      '• وضعیت‌ها این‌طور نگاشت می‌شن: در حال تماشا، تماشا شده، متوقف شده، رها شده، می‌خوام ببینم.\n',
   'language': 'زبان',
-  'offline_mode_showing_saved_data': 'حالت آفلاین — داده‌های ذخیره‌شده نمایش داده می‌شود',
+  'offline_mode_showing_saved_data':
+      'حالت آفلاین — داده‌های ذخیره‌شده نمایش داده می‌شه',
   'pool_mix': 'ترکیب استخر',
   'clear_pool_cache': 'پاک‌سازی کش استخر',
   'pool_cache_cleared':
-      'کش استخر پاک شد؛ با باز کردن بسته‌ی بعدی از نو ساخته می‌شود.',
+      'کش استخر پاک شد؛ با باز کردن بسته‌ی بعدی از نو ساخته می‌شه.',
   'select': 'انتخاب',
   'selected_count': '{0} انتخاب شده',
   'delete_selected': 'حذف انتخاب‌شده‌ها',
-  'delete_n_franchises': '{0} فرنچایز از «لیست من» حذف شود؟',
+  'delete_n_franchises': '{0} فرنچایز از «لیست من» حذف شه؟',
   'franchises_removed': '{0} فرنچایز از «لیست من» حذف شد.',
   'cancel_selection': 'لغو انتخاب',
 };

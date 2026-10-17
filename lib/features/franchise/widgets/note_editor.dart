@@ -6,10 +6,6 @@ import '../../../core/widgets/section_title.dart';
 import '../../../data/providers.dart';
 import '../../../core/i18n/lang.dart';
 
-/// یادداشت شخصی کاربر درباره یک فرنچایز.
-///
-/// اگر یادداشتی ذخیره شده باشد، پیش‌نمایش جمع‌شده با دکمه ویرایش نشان
-/// داده می‌شود؛ در غیر این صورت مستقیماً کادر ویرایش باز است.
 class NoteEditor extends ConsumerStatefulWidget {
   const NoteEditor({super.key, required this.franchiseId});
 
@@ -42,7 +38,9 @@ class _NoteEditorState extends ConsumerState<NoteEditor> {
   Future<void> _save() async {
     final text = _controller.text.trim();
     final had = _hasNote;
-    await ref.read(userExtrasProvider).saveNote(widget.franchiseId, _controller.text);
+    await ref
+        .read(userExtrasProvider)
+        .saveNote(widget.franchiseId, _controller.text);
     if (!mounted) return;
     setState(() {
       _hasNote = text.isNotEmpty;
@@ -54,7 +52,7 @@ class _NoteEditorState extends ConsumerState<NoteEditor> {
     if (mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar( SnackBar(content: Text(tr('saved'))));
+      ).showSnackBar(SnackBar(content: Text(tr('saved'))));
     }
   }
 
@@ -63,7 +61,7 @@ class _NoteEditorState extends ConsumerState<NoteEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-         SectionTitle(tr('my_note')),
+        SectionTitle(tr('my_note')),
         const SizedBox(height: 10),
         if (_hasNote && !_editing)
           Container(
@@ -120,7 +118,7 @@ class _NoteEditorState extends ConsumerState<NoteEditor> {
               FilledButton.icon(
                 onPressed: _save,
                 icon: const Icon(Icons.save_rounded, size: 18),
-                label:  Text(tr('save_note')),
+                label: Text(tr('save_note')),
               ),
             ],
           ),

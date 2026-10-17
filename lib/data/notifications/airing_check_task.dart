@@ -5,19 +5,19 @@ import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../models/watch_status.dart';
+import '../remote/anilist_client.dart';
+import '../remote/api_gateway.dart';
 import 'notification_content.dart';
 
-/// نام یکتای تسک دوره‌ای بررسی قسمت‌های جدید (برای register/cancel).
 const String airingCheckUniqueName = 'aurora-daily-check';
 
-/// نام تسکی که workmanager به [callbackDispatcher] تحویل می‌دهد.
 const String airingCheckTaskName = 'dailyAiringCheck';
 
-/// نقطه ورود ایزولیت پس‌زمینه workmanager.
-///
-/// حتماً top-level بماند و pragma حفظ شود تا در tree-shaking حذف نشود.
-/// این تابع از ایزولیت جدا اجرا می‌شود: به هیچ provider/stateای از اپ
-/// دسترسی ندارد و همه‌چیز را مستقیم از Hive می‌خواند.
+const String _marksBoxName = 'airing_marks';
+
+const int _maxFreshFetches = 15;
+
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
@@ -30,10 +30,6 @@ void callbackDispatcher() {
   });
 }
 
-/// ثبت (یا بازثبت) بررسی روزانه در ساعت ترجیحی کاربر.
-///
-/// چون WorkManager زمان دقیق را تضمین نمی‌کند، [initialDelay] طوری حساب
-/// می‌شود که اولین اجرا نزدیک ساعت انتخابی باشد؛ اجراهای بعدی هر ۲۴ ساعت.
 Future<void> scheduleDailyAiringCheck(int hour) async {
   try {
     await Workmanager().cancelByUniqueName(airingCheckUniqueName);
@@ -47,51 +43,71 @@ Future<void> scheduleDailyAiringCheck(int hour) async {
   } catch (_) {}
 }
 
-/// لغو بررسی روزانه (وقتی کاربر اعلان را خاموش می‌کند).
 Future<void> cancelDailyAiringCheck() async {
   try {
     await Workmanager().cancelByUniqueName(airingCheckUniqueName);
   } catch (_) {}
 }
 
-/// فاصله تا نزدیک‌ترین وقوع بعدی ساعت [hour] (۰ تا ۲۳) در امروز/فردا.
 Duration delayUntilNextHour(int hour) {
   final h = hour.clamp(0, 23);
   final now = DateTime.now();
   var next = DateTime(now.year, now.month, now.day, h);
   if (!next.isAfter(now)) {
-    next = next.add(const Duration(days: 1));
+    next = DateTime(now.year, now.month, now.day + 1, h);
   }
   return next.difference(now);
 }
 
-/// منطق بررسی در ایزولیت پس‌زمینه:
-/// ۱. Hive را با مسیر documents همین اپ باز می‌کند (بدون Hive.initFlutter).
-/// ۲. اگر اعلان خاموش است، بی‌صدا تمام می‌شود.
-/// ۳. کش فرنچایزها (`f:*` داخل franchise_cache) را می‌خواند و برای هر entry
-///    تعداد قسمت‌های پخش‌شده را با همان منطق [Entry.airedEpisodes] حساب می‌کند.
-/// ۴. قسمت‌های دیده‌شده را از episode_progress (رشته CSV) کم می‌کند.
-/// ۵. فقط برای entryهایی اعلان می‌دهد که از آخرین اعلان، قسمت تازه‌تری
-///    پخش کرده باشند (کلید `notif_aired:<entryId>` داخل app_meta).
-/// ۶. پلاگین اعلان را داخل همین ایزولیت init می‌کند و اعلان خلاصه را می‌فرستد.
+class _Candidate {
+  _Candidate({
+    required this.id,
+    required this.title,
+    required this.anilistId,
+    required this.status,
+    required this.episodes,
+    required this.nextEpisode,
+    required this.nextAiringAt,
+  });
+
+  final String id;
+  final String title;
+  final int anilistId;
+  String? status;
+  int episodes;
+  int? nextEpisode;
+  int? nextAiringAt;
+}
+
 Future<void> _runAiringCheck() async {
   final dir = await getApplicationDocumentsDirectory();
   Hive.init(dir.path);
+  try {
+    await _check();
+  } finally {
+    try {
+      await Hive.close();
+    } catch (_) {}
+  }
+}
 
+Future<void> _check() async {
   final meta = await Hive.openBox<String>('app_meta');
   if (!NotificationPrefs.isEnabled(meta)) return;
 
+  final statusBox = await Hive.openBox<String>('watch_status');
   final franchiseBox = await Hive.openBox<String>('franchise_cache');
   final progressBox = await Hive.openBox<String>('episode_progress');
+  final marks = await Hive.openBox<String>(_marksBoxName);
 
-  final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-  final fresh = <NewEpisodeNotifItem>[];
+  final watchingKey = WatchStatus.watching.storageKey;
 
+  final candidates = <String, _Candidate>{};
   for (final key in franchiseBox.keys) {
     final k = key.toString();
     if (!k.startsWith('f:')) continue;
 
-    Map<String, dynamic>? data;
+    Map<String, dynamic> data;
     try {
       final raw = franchiseBox.get(k);
       if (raw == null) continue;
@@ -104,46 +120,62 @@ Future<void> _runAiringCheck() async {
     final entries = data['entries'] as List? ?? const [];
 
     for (final e in entries) {
-      Map<String, dynamic> m;
       try {
-        m = (e as Map).cast<String, dynamic>();
+        final m = (e as Map).cast<String, dynamic>();
+        final id = m['id'] as String?;
+        if (id == null || id.isEmpty) continue;
+        if (candidates.containsKey(id)) continue;
+        if (statusBox.get(id) != watchingKey) continue;
+        final title = m['title'] as String?;
+        candidates[id] = _Candidate(
+          id: id,
+          title: (title == null || title.isEmpty) ? franchiseTitle : title,
+          anilistId: (m['anilistId'] as num?)?.toInt() ?? 0,
+          status: m['status'] as String?,
+          episodes: (m['episodes'] as num?)?.toInt() ?? 0,
+          nextEpisode: (m['nextEpisode'] as num?)?.toInt(),
+          nextAiringAt: (m['nextAiringAt'] as num?)?.toInt(),
+        );
       } catch (_) {
         continue;
       }
-      final id = m['id'] as String?;
-      if (id == null || id.isEmpty) continue;
-
-      final aired = _airedOf(
-        status: m['status'] as String?,
-        episodes: (m['episodes'] as num?)?.toInt() ?? 0,
-        nextEpisode: (m['nextEpisode'] as num?)?.toInt(),
-        nextAiringAt: (m['nextAiringAt'] as num?)?.toInt(),
-        nowSec: nowSec,
-      );
-      if (aired == null || aired <= 0) continue;
-
-      final watched = _watchedSet(progressBox.get(id));
-      final watchedAired = watched.where((n) => n >= 1 && n <= aired).length;
-      final unwatched = aired - watchedAired;
-      if (unwatched <= 0) continue;
-
-      final lastKey = '${NotificationPrefs.lastAiredPrefix}$id';
-      final lastAired = int.tryParse(meta.get(lastKey) ?? '') ?? 0;
-      if (aired <= lastAired) continue; // قبلاً برای همین قسمت‌ها اعلان رفته
-
-      final title = m['title'] as String?;
-      fresh.add(
-        NewEpisodeNotifItem(
-          entryId: id,
-          titleFa: (title == null || title.isEmpty) ? franchiseTitle : title,
-          newCount: unwatched,
-          latestEpisode: aired,
-        ),
-      );
-      try {
-        await meta.put(lastKey, '$aired');
-      } catch (_) {}
     }
+  }
+  if (candidates.isEmpty) return;
+
+  await _refreshFromNetwork(candidates.values.toList());
+
+  final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+  final fresh = <NewEpisodeNotifItem>[];
+  final pendingMarks = <String, String>{};
+
+  for (final c in candidates.values) {
+    final aired = _airedOf(
+      status: c.status,
+      episodes: c.episodes,
+      nextEpisode: c.nextEpisode,
+      nextAiringAt: c.nextAiringAt,
+      nowSec: nowSec,
+    );
+    if (aired == null || aired <= 0) continue;
+
+    final watched = _watchedSet(progressBox.get(c.id));
+    final watchedAired = watched.where((n) => n >= 1 && n <= aired).length;
+    final unwatched = aired - watchedAired;
+    if (unwatched <= 0) continue;
+
+    final lastAired = int.tryParse(marks.get(c.id) ?? '') ?? 0;
+    if (aired <= lastAired) continue;
+
+    fresh.add(
+      NewEpisodeNotifItem(
+        entryId: c.id,
+        titleFa: c.title,
+        newCount: unwatched,
+        latestEpisode: aired,
+      ),
+    );
+    pendingMarks[c.id] = '$aired';
   }
 
   if (fresh.isEmpty) return;
@@ -154,6 +186,10 @@ Future<void> _runAiringCheck() async {
       .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin
       >();
+  if (android != null) {
+    final enabled = await android.areNotificationsEnabled();
+    if (enabled == false) return;
+  }
   await android?.createNotificationChannel(airingChannel);
 
   final total = fresh.fold<int>(0, (sum, e) => sum + e.newCount);
@@ -165,14 +201,44 @@ Future<void> _runAiringCheck() async {
     payload: notifPayloadCalendar,
   );
 
-  // عمداً Hive.close صدا زده نمی‌شود تا تسک‌های بعدی همین ایزولیت
-  // (در صورت reuse توسط workmanager) به مشکل نخورند.
+  try {
+    await marks.putAll(pendingMarks);
+  } catch (_) {}
 }
 
-/// معادل [Entry.airedEpisodes] برای خواندن مستقیم از JSON کش.
-///
-/// تفاوت آگاهانه: اگر nextAiringAt بیش از ۷ روز گذشته باشد (کش قدیمی)،
-/// null برمی‌گرداند تا اعلان اشتباه برای دیتای کهنه فرستاده نشود.
+Future<void> _refreshFromNetwork(List<_Candidate> candidates) async {
+  final targets = candidates
+      .where(
+        (c) =>
+            c.anilistId > 0 &&
+            (c.status == null ||
+                c.status == 'RELEASING' ||
+                c.status == 'HIATUS' ||
+                c.status == 'NOT_YET_RELEASED'),
+      )
+      .take(_maxFreshFetches)
+      .toList();
+  if (targets.isEmpty) return;
+
+  final client = AniListClient(ApiGateway());
+  var failures = 0;
+  for (final c in targets) {
+    try {
+      final media = await client.fetchMedia(c.anilistId);
+      c.status = media['status'] as String? ?? c.status;
+      final eps = media['episodes'] as int?;
+      if (eps != null && eps > 0) c.episodes = eps;
+      final next = media['nextAiringEpisode'] as Map?;
+      c.nextEpisode = next?['episode'] as int?;
+      c.nextAiringAt = next?['airingAt'] as int?;
+      failures = 0;
+    } catch (_) {
+      failures++;
+      if (failures >= 2) break;
+    }
+  }
+}
+
 int? _airedOf({
   required String? status,
   required int episodes,
@@ -196,7 +262,7 @@ int? _airedOf({
         final airMs = nextAiringAt * 1000;
         if (nowMs >= airMs) {
           if (nowMs - airMs > const Duration(days: 7).inMilliseconds) {
-            return null; // کش قدیمی؛ قابل اعتماد نیست
+            return null;
           }
           result = nextEpisode;
         }
@@ -208,7 +274,6 @@ int? _airedOf({
   return result;
 }
 
-/// پارس رشته CSV قسمت‌های دیده‌شده داخل باکس episode_progress.
 Set<int> _watchedSet(String? raw) {
   if (raw == null || raw.isEmpty) return const {};
   return raw.split(',').map(int.tryParse).whereType<int>().toSet();

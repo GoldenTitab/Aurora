@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/i18n/lang.dart';
 import 'core_providers.dart';
 
-// ─── Step 10: تم (روشن/تیره/سیستمی) و رنگ اصلی ─────────────────────────────
-
 class ThemeModeNotifier extends Notifier<ThemeMode> {
   @override
   ThemeMode build() => ref.read(userExtrasProvider).themeMode();
@@ -20,7 +18,6 @@ final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
   ThemeModeNotifier.new,
 );
 
-/// زبان اپ (fa/en) — با Lang.current همگام است تا tr() همه‌جا کار کند.
 class LangNotifier extends Notifier<String> {
   @override
   String build() {

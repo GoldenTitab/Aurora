@@ -6,7 +6,6 @@ class JikanClient {
   JikanClient(this._gw);
   final ApiGateway _gw;
 
-  /// جزئیات کامل یک انیمه از Jikan (برای ساخت فرنچایز تک‌عضوی از نتایج MAL).
   Future<Map<String, dynamic>?> fetchAnime(int malId) async {
     try {
       final res = await _gw.get(
@@ -25,7 +24,8 @@ class JikanClient {
     }
   }
 
-  Future<double?> fetchScore(int malId) async {    try {
+  Future<double?> fetchScore(int malId) async {
+    try {
       final res = await _gw.get(
         ApiHost.jikan,
         Uri.parse('https://api.jikan.moe/v4/anime/$malId'),
@@ -41,8 +41,6 @@ class JikanClient {
     }
   }
 
-  /// جست‌وجوی انیمه در Jikan (بدون نیاز به احراز هویت).
-  /// خروجی: لیست dataهای خام Jikan.
   Future<List<Map<String, dynamic>>> search(
     String query, {
     int limit = 20,
@@ -67,8 +65,6 @@ class JikanClient {
     }
   }
 
-  /// لیست انیمه‌های یک کاربر در MAL (برای ایمپورت).
-  /// خروجی null یعنی کاربر پیدا نشد یا لیست خصوصی است.
   Future<List<Map<String, dynamic>>?> fetchUserList(
     String username,
     String status,
@@ -94,8 +90,6 @@ class JikanClient {
     }
   }
 
-  /// روابط یک انیمه از Jikan (endpoint /full شامل relations است).
-  /// خروجی: لیست (relation, malId).
   Future<List<({String relation, int malId})>> relations(int malId) async {
     try {
       final res = await _gw.get(
