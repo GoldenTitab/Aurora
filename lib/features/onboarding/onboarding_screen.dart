@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/storage/migrations.dart';
 import '../settings/whats_new_screen.dart';
+import '../../core/i18n/lang.dart';
 
 /// صفحه‌ی آموزش اولیه (۴ صفحه، راست‌چین).
 /// با پایان یا رد شدن، کلید `onboarding_done` در باکس meta ذخیره می‌شود.
@@ -31,39 +32,39 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _controller = PageController();
   int _page = 0;
 
-  static const _pages = <_PageData>[
+  static final _pages = <_PageData>[
     _PageData(
       icon: Icons.auto_awesome_rounded,
-      title: 'به Aurora خوش آمدی',
+      title: tr('welcome_to_aurora'),
       body:
-          'آئورورا یک دنبال‌کننده‌ی انیمه است: وضعیت تماشایت را ثبت کن، '
-          'قسمت‌های دیده‌شده را علامت بزن، به فرنچایزها نمره بده و یادداشت '
-          'بنویس — همه‌چیز فارسی، راست‌چین و کاملاً آفلاین روی گوشی خودت.',
+          tr('aurora_is_an_anime_tracker_log_your_watch_status') +
+          tr('mark_episodes_watched_score_franchises_and_write') +
+          tr('notes_all_in_english_fully_offline_on_your_own_p'),
     ),
     _PageData(
       icon: Icons.account_tree_rounded,
-      title: 'مفهوم فرنچایز',
+      title: tr('the_franchise_concept'),
       body:
-          'هر انیمه معمولاً فقط یک فصل نیست. آئورورا فصل‌ها، فیلم‌های سینمایی، '
-          'OVAها و اسپین‌آف‌های مرتبط را پیدا می‌کند و همه را زیر یک «فرنچایز» '
-          'جمع می‌کند؛ مثل یک درخت که هر شاخه‌اش یک اثر است و پیشرفت کل مجموعه '
-          'را یک‌جا می‌بینی.',
+          tr('most_anime_aren_t_just_one_season_aurora_finds_r') +
+          tr('ovas_and_spin_offs_and_groups_them_all_under_one') +
+          tr('like_a_tree_whose_branches_are_each_a_title_with') +
+          tr('progress_visible_in_one_place'),
     ),
     _PageData(
       icon: Icons.download_rounded,
-      title: 'لیستت را بیاور',
+      title: tr('bring_your_list'),
       body:
-          'اگر قبلاً در AniList یا MyAnimeList لیست داری، با وارد کردن یوزرنیم '
-          'می‌توانی همه‌اش را یک‌جا وارد آئورورا کنی. بعداً هم هر وقت خواستی '
-          'از بخش تنظیمات در دسترس است.',
+          tr('if_you_already_have_a_list_on_anilist_or_myanime') +
+          tr('to_import_it_all_into_aurora_at_once_it_s_also_a') +
+          tr('from_settings'),
     ),
     _PageData(
       icon: Icons.emoji_events_rounded,
-      title: 'بازی‌وار، مثل یک بازی',
+      title: tr('gamified_like_a_game'),
       body:
-          'با تماشا کردن XP می‌گیری و از سطح Beginner تا Expert بالا می‌روی؛ '
-          'سکه‌ی «شفق» جمع می‌کنی و با آن بسته‌ی کارت‌های کلکسیونی شخصیت‌ها را '
-          'باز می‌کنی؛ مأموریت‌های روزانه/هفتگی و حدود صد اچیومنت هم در انتظارت است.',
+          tr('earn_xp_by_watching_and_level_up_from_beginner_t') +
+          tr('collect_shafaq_coins_and_spend_them_on_collectib') +
+          tr('daily_weekly_missions_and_around_a_hundred_achie'),
     ),
   ];
 
@@ -111,7 +112,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               alignment: Alignment.centerLeft,
               child: TextButton(
                 onPressed: _finish,
-                child: const Text('رد کردن'),
+                child:  Text(tr('skip')),
               ),
             ),
             Expanded(
@@ -148,7 +149,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: _next,
-                  child: Text(last ? 'شروع!' : 'بعدی'),
+                  child: Text(last ? tr('start') : tr('next')),
                 ),
               ),
             ),
@@ -202,7 +203,7 @@ class _OnboardingPage extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () => context.push('/import'),
               icon: const Icon(Icons.download_rounded),
-              label: const Text('ایمپورت از AniList / MAL'),
+              label:  Text(tr('import_from_anilist_mal')),
             ),
           ],
         ],

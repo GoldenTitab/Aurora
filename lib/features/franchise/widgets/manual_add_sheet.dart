@@ -9,6 +9,7 @@ import '../../../data/models/anime_card_data.dart';
 import '../../../data/models/franchise.dart';
 import '../../../data/providers.dart';
 import '../../../data/remote/api_exception.dart';
+import '../../../core/i18n/lang.dart';
 
 /// شیت «افزودن دستی انیمه»: وقتی API یک انیمه را در فرنچایز جا انداخته،
 /// کاربر این‌جا سرچش می‌کند و دستی به فرنچایز اضافه‌اش می‌کند.
@@ -81,8 +82,8 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
       if (entry == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('دیتای کامل این انیمه پیدا نشد؛ یکی دیگر را امتحان کن.'),
+             SnackBar(
+              content: Text(tr('full_data_for_this_anime_wasn_t_found_try_anothe')),
             ),
           );
         }
@@ -93,7 +94,7 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
       if (mounted) {
         setState(() => _added.add(key));
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('«${entry.title}» به فرنچایز اضافه شد.')),
+          SnackBar(content: Text(tr('was_added_to_the_franchise', [entry.title]))),
         );
       }
     } catch (e) {
@@ -123,9 +124,9 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
           children: [
             Row(
               children: [
-                const Expanded(
+                 Expanded(
                   child: Text(
-                    'افزودن دستی انیمه',
+                    tr('add_anime_manually'),
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 17,
@@ -134,12 +135,12 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('تمام'),
+                  child:  Text(tr('done')),
                 ),
               ],
             ),
             Text(
-              'اگه انیمه‌ای از این مجموعه جا افتاده، این‌جا سرچش کن و اضافه‌اش کن.',
+              tr('if_an_anime_from_this_franchise_is_missing_searc'),
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondaryOf(context),
@@ -154,7 +155,7 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
                     textInputAction: TextInputAction.search,
                     onSubmitted: (_) => _search(),
                     decoration: InputDecoration(
-                      hintText: 'نام انیمه...',
+                      hintText: tr('anime_name'),
                       prefixIcon: const Icon(Icons.search_rounded),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -169,7 +170,7 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
                 const SizedBox(width: 8),
                 FilledButton(
                   onPressed: _searching ? null : _search,
-                  child: const Text('جست‌وجو'),
+                  child:  Text(tr('search_2')),
                 ),
               ],
             ),
@@ -190,7 +191,7 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
                       : _results == null
                           ? Center(
                               child: Text(
-                                'هنوز جست‌وجویی انجام نشده.',
+                                tr('no_search_performed_yet'),
                                 style: TextStyle(
                                   color:
                                       AppColors.textSecondaryOf(context),
@@ -198,8 +199,8 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
                               ),
                             )
                           : _results!.isEmpty
-                              ? const Center(
-                                  child: Text('چیزی پیدا نشد.'),
+                              ?  Center(
+                                  child: Text(tr('nothing_found')),
                                 )
                               : ListView.separated(
                                   shrinkWrap: true,
@@ -254,7 +255,7 @@ class _ResultRow extends StatelessWidget {
             child: SizedBox(
               width: 44,
               height: 64,
-              child: CoverImage(url: d.cover),
+              child: CoverImage(url: d.cover, cacheWidth: 140),
             ),
           ),
           const SizedBox(width: 10),
@@ -298,7 +299,7 @@ class _ResultRow extends StatelessWidget {
           else
             OutlinedButton(
               onPressed: onAdd,
-              child: const Text('افزودن'),
+              child:  Text(tr('add')),
             ),
         ],
       ),

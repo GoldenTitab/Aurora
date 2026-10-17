@@ -1,56 +1,57 @@
 import 'package:flutter/material.dart';
 
+import '../../core/i18n/lang.dart';
 import '../../core/theme/app_colors.dart';
 
 /// سیاست حریم خصوصی — اپ کاملاً local-first است.
 class PrivacyScreen extends StatelessWidget {
   const PrivacyScreen({super.key});
 
-  static const _sections = <(String, String)>[
+  static List<(String, String)> get _sections => <(String, String)>[
     (
-      'داده‌های تو، روی گوشی تو',
-      'همه‌ی داده‌های آئورورا — لیست تماشا، وضعیت‌ها، قسمت‌های دیده‌شده، '
-          'نمره‌ها، یادداشت‌ها، XP، سکه‌های «شفق»، کارت‌ها، مأموریت‌ها و '
-          'اچیومنت‌ها — فقط داخل حافظه‌ی داخلی همین گوشی ذخیره می‌شود '
-          '(پایگاه داده‌ی Hive). هیچ سروری از ما این داده‌ها را ندارد و '
-          'بدون اقدام خودت، هیچ‌چیز از گوشی خارج نمی‌شود.',
+      tr('your_data_on_your_phone'),
+      tr('all_aurora_data_your_watch_list_statuses_watched') +
+          tr('scores_notes_xp_shafaq_coins_cards_missions_and') +
+          tr('achievements_are_stored_only_in_this_phone_s_int') +
+          tr('a_hive_database_no_server_of_ours_has_this_data_') +
+          tr('nothing_leaves_your_phone_without_your_own_actio'),
     ),
     (
-      'ارتباط با اینترنت فقط برای محتوای عمومی',
-      'اپ برای گرفتن اطلاعات انیمه‌ها (عنوان، تصویر، قسمت‌ها، زمان پخش) به '
-          'APIهای عمومی AniList، Jikan و MyAnimeList وصل می‌شود. این درخواست‌ها '
-          'فقط شناسه‌ی انیمه را می‌فرستند؛ هیچ داده‌ی شخصی، لیست تماشا یا '
-          'شناسه‌ی کاربری همراه آن‌ها ارسال نمی‌شود.',
+      tr('internet_access_is_only_for_public_content'),
+      tr('the_app_connects_to_the_public') +
+          tr('anilist_jikan_and_myanimelist_apis_to_fetch_anim') +
+          tr('send_only_the_anime_id_no_personal_data_watch_li') +
+          tr('user_id_is_sent_with_them'),
     ),
     (
-      'بدون حساب کاربری',
-      'آئورورا حساب کاربری، ورود، ایمیل یا شماره تلفن نمی‌خواهد و هیچ '
-          'پروفایل آنلاینی برایت نمی‌سازد. ایمپورت از AniList / MAL فقط با '
-          'یوزرنیم عمومی انجام می‌شود و رمز عبوری از تو گرفته یا ذخیره نمی‌شود.',
+      tr('no_account_needed'),
+      tr('aurora_needs_no_account_sign_in_email_or_phone_n') +
+          tr('online_profile_for_you_importing_from_anilist_ma') +
+          tr('public_username_and_no_password_is_ever_asked_fo'),
     ),
     (
-      'بدون تبلیغات و بدون ردیابی',
-      'در اپ تبلیغات، ردیاب تبلیغاتی، تحلیل رفتار کاربر (آنالیتیکس) یا '
-          'SDK شخص ثالث برای جمع‌آوری داده وجود ندارد.',
+      tr('no_ads_no_tracking'),
+      tr('there_are_no_ads_ad_trackers_user_behavior_analy') +
+          tr('third_party_data_collection_sdks_in_the_app'),
     ),
     (
-      'پشتیبان‌گیری و حذف داده',
-      'پشتیبان خودکار فقط داخل خود اپ نگه‌داری می‌شود. با «کپی خروجی دیتا '
-          '(JSON)» در تنظیمات می‌توانی یک نسخه‌ی دستی بگیری و هر وقت خواستی '
-          'با پاک کردن کش یا حذف نصب اپ، همه‌ی داده‌ها را از گوشی پاک کنی. '
-          'با حذف اپ، تمام داده‌ها برای همیشه از بین می‌رود.',
+      tr('backup_and_data_deletion'),
+      tr('automatic_backups_stay_inside_the_app_with_copy_') +
+          tr('json_in_settings_you_can_take_a_manual_copy_and_') +
+          tr('you_can_wipe_everything_from_the_phone_by_cleari') +
+          tr('deleting_the_app_erases_all_data_permanently'),
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('حریم خصوصی')),
+      appBar: AppBar(title: Text(tr('privacy'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          const Text(
-            'آئورورا طوری ساخته شده که داده‌ات پیش خودت بماند.',
+          Text(
+            tr('aurora_is_built_to_keep_your_data_with_you'),
             style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 16,
@@ -90,9 +91,9 @@ class PrivacyScreen extends StatelessWidget {
             ),
           ],
           Text(
-            'نکته برای انتشار: برای انتشار در گوگل‌پلی، این سیاست باید در یک '
-            'آدرس اینترنتی عمومی (URL) هم منتشر شود و همان لینک در صفحه‌ی '
-            'اپ در پلی‌استور ثبت شود.',
+            tr('publishing_note_to_publish_on_google_play_this_p') +
+            tr('public_url_and_that_link_registered_on_the_app_s') +
+            tr('play_store_page'),
             style: TextStyle(
               color: AppColors.textSecondaryOf(context),
               fontSize: 12,

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import '../../core/i18n/lang.dart';
 import '../models/anime_card_data.dart';
 
 /// یک پیشنهاد از بیرون «لیست من».
@@ -51,11 +52,9 @@ class SuggestionEngine {
       var score = (c.data.score * 4).round();
       // وزن بخش منبع: ترندها و برترین‌های هفته تازه‌ترند.
       switch (c.sourceFa) {
-        case 'ترند':
+        case 'trending':
           score += 15;
-        case 'هفته':
-          score += 10;
-        case 'فصل':
+        case 'seasonal':
           score += 5;
       }
       score += _rng.nextInt(15);
@@ -74,10 +73,15 @@ class SuggestionEngine {
 
   String _reason(_Candidate c) {
     final d = c.data;
+    // sourceFa شناسه‌ی پایدار i18n است؛ فقط هنگام نمایش ترجمه می‌شود.
+    final src = tr(c.sourceFa);
     if (d.score >= 8.5) {
-      return 'امتیاز بالای ${d.score.toStringAsFixed(1)} از «${c.sourceFa}».';
+      return tr('high_score_of_from', [
+        d.score.toStringAsFixed(1),
+        src,
+      ]);
     }
-    return 'از «${c.sourceFa}» برای تنوع انتخاب شد.';
+    return tr('picked_from_for_variety', [src]);
   }
 }
 

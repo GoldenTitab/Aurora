@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
+import '../../core/i18n/lang.dart';
 
 class Boxes {
   static const watchStatus = 'watch_status';
@@ -128,9 +129,9 @@ class Migrations {
       Map<String, String> read(String key) {
         final raw = m[key];
         if (raw == null) return const {};
-        if (raw is! Map) throw FormatException('بخش $key معتبر نیست');
+        if (raw is! Map) throw FormatException(tr('section_is_invalid', [key]));
         return raw.map((k, v) {
-          if (v is! String) throw FormatException('بخش $key معتبر نیست');
+          if (v is! String) throw FormatException(tr('section_is_invalid', [key]));
           return MapEntry(k.toString(), v);
         });
       }
@@ -216,9 +217,9 @@ class Migrations {
 
     Map<String, String> read(String key) {
       final raw = b[key];
-      if (raw is! Map) throw const FormatException('پشتیبان معتبر نیست');
+      if (raw is! Map) throw  FormatException(tr('backup_is_invalid'));
       return raw.map((k, v) {
-        if (v is! String) throw const FormatException('پشتیبان معتبر نیست');
+        if (v is! String) throw  FormatException(tr('backup_is_invalid'));
         return MapEntry(k.toString(), v);
       });
     }

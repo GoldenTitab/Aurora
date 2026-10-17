@@ -8,6 +8,7 @@ import '../../../core/utils/text_utils.dart';
 import '../../../data/models/franchise.dart';
 import '../../../data/providers.dart';
 import '../../../data/services/watch_order_service.dart';
+import '../../../core/i18n/lang.dart';
 
 class WatchOrderView extends ConsumerStatefulWidget {
   const WatchOrderView({super.key, required this.franchise});
@@ -110,7 +111,7 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
           child: Row(
             children: [
               Text(
-                _isCustom ? 'ترتیب شخصی شما' : 'ترتیب پیشنهادی',
+                _isCustom ? tr('your_custom_order') : tr('suggested_order'),
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 15,
@@ -121,7 +122,7 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
                 TextButton.icon(
                   onPressed: _reset,
                   icon: const Icon(Icons.restore_rounded, size: 18),
-                  label: const Text('بازگشت به پیشنهادی'),
+                  label:  Text(tr('back_to_suggested')),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primaryTextOf(context),
                     visualDensity: VisualDensity.compact,
@@ -133,7 +134,7 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'برای تغییر ترتیب، دستگیرهٔ سمت چپ هر ردیف را بکش.',
+            tr('drag_the_handle_on_the_left_of_each_row_to_reord'),
             style: TextStyle(
               fontSize: 12,
               color: AppColors.textSecondaryOf(context).withValues(alpha: 0.9),
@@ -147,13 +148,13 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
             spacing: 8,
             children: [
               ChoiceChip(
-                label: const Text('همه'),
+                label:  Text(tr('all')),
                 selected: _showOptional,
                 onSelected: (_) => setState(() => _showOptional = true),
               ),
               ChoiceChip(
                 label: Text(
-                  'فقط ضروری‌ها (${toFa(items.where((i) => i.isEssential).length)})',
+                  tr('essentials_only', [toFa(items.where((i) => i.isEssential).length)]),
                 ),
                 selected: !_showOptional,
                 onSelected: (_) => setState(() => _showOptional = false),
@@ -213,7 +214,7 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
                       runSpacing: 4,
                       children: [
                         _chip(
-                          item.isEssential ? 'ضروری' : 'اختیاری',
+                          item.isEssential ? tr('essential') : tr('optional'),
                           item.isEssential
                               ? const Color(0xFF22C55E)
                               : const Color(0xFFF59E0B),
@@ -226,7 +227,7 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
                           ),
                         if (e.episodes > 0)
                           _chip(
-                            '${toFa(e.episodes)} قسمت',
+                            tr('episodes', [toFa(e.episodes)]),
                             AppColors.textSecondaryOf(context),
                           ),
                       ],

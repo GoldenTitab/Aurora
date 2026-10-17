@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/constants/app_config.dart';
 import 'api_gateway.dart';
+import '../../core/i18n/lang.dart';
 
 class MalClient {
   MalClient(this._gw, {String? clientId})
@@ -94,8 +95,7 @@ class MalClient {
       if (res.statusCode != 200) {
         if (kDebugMode) {
           debugPrint(
-            'MAL API: status ${res.statusCode} for anime $malId '
-            '(اگر 401/403 است، Client ID را بررسی کن)',
+            'MAL API: status ${res.statusCode} for anime $malId ${tr('if_it_s_a_401_403_check_your_client_id')}',
           );
         }
         return null;

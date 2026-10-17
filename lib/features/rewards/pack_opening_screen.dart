@@ -8,6 +8,7 @@ import '../../core/widgets/cover_image.dart';
 import '../../data/gamification/card_pool.dart';
 import '../../data/models/collectible_card.dart';
 import '../../data/providers.dart';
+import '../../core/i18n/lang.dart';
 
 /// صفحه باز کردن بسته کارت با نمایش مرحله‌ای.
 class PackOpeningScreen extends ConsumerStatefulWidget {
@@ -34,7 +35,7 @@ class _PackOpeningScreenState extends ConsumerState<PackOpeningScreen> {
     if (!mounted) return;
     setState(() => _opening = false);
     if (r == null) {
-      setState(() => _error = 'سکه کافی نیست یا استخر خالی است.');
+      setState(() => _error = tr('not_enough_coins_or_the_pool_is_empty'));
       return;
     }
     setState(() => _result = r);
@@ -49,7 +50,7 @@ class _PackOpeningScreenState extends ConsumerState<PackOpeningScreen> {
   Widget build(BuildContext context) {
     final eco = ref.watch(economyProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('باز کردن بسته')),
+      appBar: AppBar(title:  Text(tr('opening_pack'))),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
@@ -64,7 +65,7 @@ class _PackOpeningScreenState extends ConsumerState<PackOpeningScreen> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${toFa(eco.coins)} شفق داری',
+                  tr('you_have_shafaq', [toFa(eco.coins)]),
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     color: AppColors.starTextOf(context),
@@ -101,8 +102,8 @@ class _PackOpeningScreenState extends ConsumerState<PackOpeningScreen> {
                       : const Icon(Icons.card_giftcard_rounded),
                   label: Text(
                     _opening
-                        ? 'در حال باز کردن...'
-                        : 'باز کردن بسته (${toFa(packPriceCoins)} شفق)',
+                        ? tr('opening')
+                        : tr('open_pack_shafaq', [toFa(packPriceCoins)]),
                   ),
                 ),
               ),
@@ -130,7 +131,7 @@ class _PackOpeningScreenState extends ConsumerState<PackOpeningScreen> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Text(
-                      'کارت‌های تکراری به ${toFa(_result!.coinsFromDuplicates)} شفق تبدیل شدند',
+                      tr('duplicate_cards_turned_into_shafaq', [toFa(_result!.coinsFromDuplicates)]),
                       style: TextStyle(
                         color: AppColors.starTextOf(context),
                         fontWeight: FontWeight.w700,
@@ -144,7 +145,7 @@ class _PackOpeningScreenState extends ConsumerState<PackOpeningScreen> {
                     onPressed: _opening || eco.coins < packPriceCoins ? null : _open,
                     icon: const Icon(Icons.refresh_rounded),
                     label:
-                        Text('یه بسته دیگه (${toFa(packPriceCoins)} شفق)'),
+                        Text(tr('another_pack_shafaq', [toFa(packPriceCoins)])),
                   ),
                 ),
               ],
@@ -187,7 +188,7 @@ class _PackArt extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Column(
+            child:  Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
@@ -197,7 +198,7 @@ class _PackArt extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  'بسته شفق',
+                  tr('shafaq_pack'),
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
@@ -205,7 +206,7 @@ class _PackArt extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '۳ کارت',
+                  tr('3_cards'),
                   style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
@@ -232,7 +233,7 @@ class _HiddenCard extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            '؟',
+            tr('str_2'),
             style: TextStyle(
               fontSize: 40,
               fontWeight: FontWeight.w900,
@@ -283,7 +284,7 @@ class _RevealedCard extends StatelessWidget {
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(14),
                     ),
-                    child: CoverImage(url: card.image),
+                    child: CoverImage(url: card.image, cacheWidth: 460),
                   ),
                 ),
                 Padding(
@@ -323,7 +324,7 @@ class _RevealedCard extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            'تکراری → +${toFa(card.rarity.duplicateCoins)} شفق',
+                            tr('duplicate_shafaq', [toFa(card.rarity.duplicateCoins)]),
                             style: TextStyle(
                               fontSize: 10,
                               color: AppColors.starTextOf(context),

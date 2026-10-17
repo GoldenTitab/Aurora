@@ -1,3 +1,4 @@
+import '../../core/i18n/lang.dart';
 // آمار تماشای کتابخانه (داشبورد آماری).
 
 class FranchiseStat {
@@ -47,12 +48,12 @@ class LibraryStats {
 
   /// قالب‌بندی «X ساعت» یا «Y روز و Z ساعت».
   static String formatMinutes(int minutes) {
-    if (minutes < 60) return '$minutes دقیقه';
+    if (minutes < 60) return tr('min', [minutes]);
     final h = minutes ~/ 60;
-    if (h < 24) return '$h ساعت';
+    if (h < 24) return tr('h', [h]);
     final d = h ~/ 24;
     final rh = h % 24;
-    if (rh == 0) return '$d روز';
-    return '$d روز و $rh ساعت';
+    if (rh == 0) return tr('d', [d]);
+    return tr('d_h', [d, rh]);
   }
 }

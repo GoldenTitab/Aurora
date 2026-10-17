@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import '../../core/i18n/lang.dart';
 
 class ApiException implements Exception {
   final String message;
@@ -13,10 +14,10 @@ class ApiException implements Exception {
 String friendlyError(Object error) {
   if (error is ApiException) return error.message;
   if (error is IOException || error is http.ClientException) {
-    return 'اتصال اینترنت برقرار نیست.';
+    return tr('no_internet_connection');
   }
   if (error is TimeoutException) {
-    return 'پاسخ سرور دیر رسید. دوباره تلاش کن.';
+    return tr('the_server_took_too_long_to_respond_try_again');
   }
-  return 'خطای غیرمنتظره رخ داد.';
+  return tr('something_went_wrong');
 }

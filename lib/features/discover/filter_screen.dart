@@ -10,6 +10,7 @@ import '../../core/widgets/state_views.dart';
 import '../../data/models/anime_card_data.dart';
 import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
+import '../../core/i18n/lang.dart';
 
 const List<String> anilistGenres = [
   'Action',
@@ -35,13 +36,14 @@ const List<String> anilistGenres = [
   'Suspense',
 ];
 
-const Map<String, String> formatOptions = {
-  '': 'همه',
-  'TV': 'سریال',
-  'MOVIE': 'سینمایی',
+/// گزینه‌های فرمت (کلید → برچسب نمایشی به زبان فعلی).
+Map<String, String> get formatOptions => {
+  '': tr('all'),
+  'TV': tr('tv_series'),
+  'MOVIE': tr('movie'),
   'OVA': 'OVA',
   'ONA': 'ONA',
-  'SPECIAL': 'ویژه',
+  'SPECIAL': tr('special'),
 };
 
 /// فیلتر ترکیبی پیشرفته: ژانر + امتیاز + سال + قسمت + فرمت + استودیو.
@@ -157,7 +159,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('فیلتر پیشرفته')),
+      appBar: AppBar(title:  Text(tr('advanced_filters'))),
       body: CustomScrollView(
         controller: _scroll,
         slivers: [
@@ -179,7 +181,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                 padding: EdgeInsets.symmetric(vertical: 48),
                 child: Center(
                   child: Text(
-                    'موردی با این فیلترها پیدا نشد.',
+                    tr('no_results_match_these_filters'),
                     style: TextStyle(color: AppColors.textSecondaryOf(context)),
                   ),
                 ),
@@ -229,7 +231,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionTitle('ژانرها'),
+           SectionTitle(tr('genres')),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -251,7 +253,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
           ),
           const SizedBox(height: 16),
           SectionTitle(
-              'امتیاز: ${toFa(_score.start.round())} تا ${toFa(_score.end.round())}'),
+              tr('score_to', [toFa(_score.start.round()), toFa(_score.end.round())])),
           RangeSlider(
             values: _score,
             min: 0,
@@ -264,7 +266,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             onChanged: (v) => setState(() => _score = v),
           ),
           SectionTitle(
-              'سال انتشار: ${toFa(_year.start.round())} تا ${toFa(_year.end.round())}'),
+              tr('release_year_to', [toFa(_year.start.round()), toFa(_year.end.round())])),
           RangeSlider(
             values: _year,
             min: 1970,
@@ -277,7 +279,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             onChanged: (v) => setState(() => _year = v),
           ),
           SectionTitle(
-              'تعداد قسمت: ${toFa(_episodes.start.round())} تا ${toFa(_episodes.end.round())}+'),
+              tr('episodes_to', [toFa(_episodes.start.round()), toFa(_episodes.end.round())])),
           RangeSlider(
             values: _episodes,
             min: 1,
@@ -290,7 +292,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             onChanged: (v) => setState(() => _episodes = v),
           ),
           const SizedBox(height: 8),
-          const SectionTitle('نوع اثر'),
+           SectionTitle(tr('title_type')),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -305,13 +307,13 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          const SectionTitle('استودیو (اختیاری)'),
+           SectionTitle(tr('studio_optional')),
           const SizedBox(height: 10),
           TextField(
             controller: _studioCtrl,
             textDirection: TextDirection.ltr,
             decoration: InputDecoration(
-              hintText: 'مثلا: MAPPA',
+              hintText: tr('e_g_mappa'),
               hintStyle: TextStyle(color: AppColors.textSecondaryOf(context)),
               filled: true,
               fillColor: AppColors.surfaceOf(context),
@@ -335,7 +337,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             child: FilledButton.icon(
               onPressed: _search,
               icon: const Icon(Icons.search_rounded),
-              label: const Text('جست‌وجو با این فیلترها'),
+              label:  Text(tr('search_with_these_filters')),
             ),
           ),
           const SizedBox(height: 8),

@@ -10,6 +10,7 @@ import '../../core/widgets/section_title.dart';
 import '../../data/models/library_stats.dart';
 import '../../data/models/watch_status.dart';
 import '../../data/providers.dart';
+import '../../core/i18n/lang.dart';
 
 /// صفحه داشبورد آمار تماشا.
 class StatsScreen extends ConsumerWidget {
@@ -20,30 +21,30 @@ class StatsScreen extends ConsumerWidget {
     final stats = ref.watch(libraryStatsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('آمار تماشا')),
+      appBar: AppBar(title:  Text(tr('watch_stats'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          const Padding(
+           Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
-            child: SectionTitle('وضعیت آثار'),
+            child: SectionTitle(tr('statuses')),
           ),
           _StatusGrid(stats: stats),
-          const Padding(
+           Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
-            child: SectionTitle('زمان تماشا'),
+            child: SectionTitle(tr('watch_time')),
           ),
           _TimeCards(stats: stats),
-          const Padding(
+           Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
-            child: SectionTitle('استریک و فعالیت'),
+            child: SectionTitle(tr('streak_activity')),
           ),
           const _StreakCard(),
           const SizedBox(height: 12),
           const _Heatmap(),
-          const Padding(
+           Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
-            child: SectionTitle('پرتماشاترین فرنچایزها'),
+            child: SectionTitle(tr('most_watched_franchises')),
           ),
           _TopFranchises(stats: stats),
         ],
@@ -124,18 +125,18 @@ class _TimeCards extends StatelessWidget {
       children: [
         Expanded(
           child: _TimeCard(
-            label: 'زمان تماشا شده',
+            label: tr('time_watched'),
             value: toFa(
               LibraryStats.formatMinutes(stats.totalWatchedMinutes),
             ),
-            sub: '${toFa(stats.totalWatchedEpisodes)} قسمت دیده شده',
+            sub: tr('episodes_watched', [toFa(stats.totalWatchedEpisodes)]),
             accent: AppColors.completed,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _TimeCard(
-            label: 'زمان باقی‌مانده',
+            label: tr('time_remaining'),
             value: toFa(
               LibraryStats.formatMinutes(stats.totalRemainingMinutes),
             ),
@@ -241,14 +242,14 @@ class _StreakCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${toFa(streak)} روز متوالی',
+                  tr('days_in_a_row', [toFa(streak)]),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
                 Text(
-                  'هر روز حداقل یک قسمت ببین تا استریکت ادامه پیدا کنه',
+                  tr('watch_at_least_one_episode_a_day_to_keep_your_st'),
                   style: TextStyle(
                     color: AppColors.textSecondaryOf(context),
                     fontSize: 12,
@@ -287,8 +288,8 @@ class _Heatmap extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'فعالیت ۲۶ هفته اخیر',
+           Text(
+            tr('last_26_weeks_of_activity'),
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
           ),
           const SizedBox(height: 12),
@@ -322,7 +323,7 @@ class _Heatmap extends ConsumerWidget {
           Row(
             children: [
               Text(
-                'کمتر',
+                tr('less'),
                 style: TextStyle(
                   color: AppColors.textSecondaryOf(context),
                   fontSize: 10,
@@ -336,7 +337,7 @@ class _Heatmap extends ConsumerWidget {
               _LegendBox(level: 4),
               SizedBox(width: 6),
               Text(
-                'بیشتر',
+                tr('more'),
                 style: TextStyle(
                   color: AppColors.textSecondaryOf(context),
                   fontSize: 10,
@@ -408,7 +409,7 @@ class _TopFranchises extends StatelessWidget {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
         child: Text(
-          'هنوز اثری ثبت نشده است.',
+          tr('no_titles_logged_yet'),
           style: TextStyle(color: AppColors.textSecondaryOf(context)),
         ),
       );
@@ -451,7 +452,7 @@ class _FranchiseRow extends StatelessWidget {
               child: SizedBox(
                 width: 46,
                 height: 66,
-                child: CoverImage(url: stat.cover),
+                child: CoverImage(url: stat.cover, cacheWidth: 140),
               ),
             ),
             const SizedBox(width: 12),
@@ -470,7 +471,7 @@ class _FranchiseRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${toFa(stat.watchedEpisodes)} قسمت · ${toFa(LibraryStats.formatMinutes(stat.watchedMinutes))}',
+                    tr('episodes_2', [toFa(stat.watchedEpisodes), toFa(LibraryStats.formatMinutes(stat.watchedMinutes))]),
                     style: TextStyle(
                       color: AppColors.textSecondaryOf(context),
                       fontSize: 12,

@@ -3,7 +3,6 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:printing/printing.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/persian_numbers.dart';
@@ -15,13 +14,13 @@ import '../../data/models/entry.dart';
 import '../../data/models/franchise.dart';
 import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
-import '../../data/services/franchise_pdf.dart';
 import 'widgets/entry_tile.dart';
 import 'widgets/franchise_rating.dart';
 import 'widgets/franchise_tree_view.dart';
 import 'widgets/manual_add_sheet.dart';
 import 'widgets/note_editor.dart';
 import 'widgets/watch_order_view.dart';
+import '../../core/i18n/lang.dart';
 
 class FranchiseScreen extends ConsumerWidget {
   const FranchiseScreen.anilist({super.key, required this.anilistId})
@@ -61,20 +60,20 @@ class FranchiseScreen extends ConsumerWidget {
         loading: () => Scaffold(
           appBar: AppBar(
             leading: IconButton(
-              tooltip: 'بازگشت',
+              tooltip: tr('back'),
               icon: const Icon(Icons.arrow_back_rounded),
               onPressed: () => _back(context),
             ),
           ),
-          body: const LoadingView(
+          body:  LoadingView(
             message:
-                'در حال دریافت اطلاعات مجموعه...\nبار اول ممکن است چند ثانیه طول بکشد.',
+                tr('loading_franchise_info_it_may_take_a_few_seconds'),
           ),
         ),
         error: (e, _) => Scaffold(
           appBar: AppBar(
             leading: IconButton(
-              tooltip: 'بازگشت',
+              tooltip: tr('back'),
               icon: const Icon(Icons.arrow_back_rounded),
               onPressed: () => _back(context),
             ),
@@ -114,7 +113,6 @@ class _FranchiseBody extends ConsumerStatefulWidget {
 
 class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
   String _view = 'list';
-  bool _exporting = false;
 
   /// بازخوانی سبک بعد از افزودن/حذف دستی (بدون force تا ورودی‌های
   /// دستیِ ذخیره‌شده در meta ادغام شوند).
@@ -167,32 +165,6 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
     }
   }
 
-  /// خروجی PDF گزارش مجموعه و اشتراک‌گذاری آن.
-  Future<void> _exportPdf(Franchise f) async {
-    if (_exporting) return;
-    setState(() => _exporting = true);
-    try {
-      final bytes = await buildFranchisePdf(
-        f,
-        statuses: ref.read(watchStatusProvider),
-        episodes: ref.read(episodeProgressProvider),
-        extras: ref.read(userExtrasProvider),
-      );
-      await Printing.sharePdf(
-        bytes: bytes,
-        filename: 'aurora-${f.anilistId > 0 ? f.anilistId : f.id}.pdf',
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(friendlyError(e))));
-      }
-    } finally {
-      if (mounted) setState(() => _exporting = false);
-    }
-  }
-
   /// گروه‌بندی همه‌ی آثار بر اساس نوع (برای نمای «دسته‌بندی»).
   List<Widget> _entryTypeGroup(Franchise f, EntryType type) {
     final list = f.entries.where((e) => e.type == type).toList();
@@ -218,13 +190,13 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
   String _typeTitle(EntryType type) {
     switch (type) {
       case EntryType.series:
-        return 'سریال‌ها';
+        return tr('tv_series_2');
       case EntryType.movie:
-        return 'فیلم‌ها';
+        return tr('movies_2');
       case EntryType.ova:
         return 'OVA';
       case EntryType.special:
-        return 'ویژه';
+        return tr('special');
     }
   }
 
@@ -252,31 +224,16 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
             backgroundColor: AppColors.backgroundOf(context),
             surfaceTintColor: Colors.transparent,
             leading: IconButton(
-              tooltip: 'بازگشت',
+              tooltip: tr('back'),
               icon: const Icon(Icons.arrow_back_rounded),
               onPressed: widget.onBack,
             ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.add_rounded),
-                tooltip: 'افزودن دستی انیمه',
+                tooltip: tr('add_anime_manually'),
                 onPressed: () => _openManualAdd(),
               ),
-              if (_exporting)
-                const Padding(
-                  padding: EdgeInsets.all(14),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
-                  ),
-                )
-              else
-                IconButton(
-                  icon: const Icon(Icons.picture_as_pdf_outlined),
-                  tooltip: 'گزارش PDF',
-                  onPressed: () => _exportPdf(f),
-                ),
             ],
             title: Text(
               f.titleFa,
@@ -289,7 +246,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CoverImage(url: f.banner ?? f.cover),
+                  CoverImage(url: f.banner ?? f.cover, cacheWidth: 1080),
                   DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -315,7 +272,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
                     child: SizedBox(
                       width: 104,
                       height: 150,
-                      child: CoverImage(url: f.cover),
+                      child: CoverImage(url: f.cover, cacheWidth: 320),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -367,7 +324,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
                               ),
                             _InfoChip(
                               icon: Icons.video_library_outlined,
-                              text: '${toFa(f.totalEpisodes)} قسمت',
+                              text: tr('episodes', [toFa(f.totalEpisodes)]),
                             ),
                           ],
                         ),
@@ -420,7 +377,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SectionTitle('خلاصه داستان'),
+                   SectionTitle(tr('synopsis')),
                   const SizedBox(height: 10),
                   _SpoilerSynopsis(
                     synopsis: f.synopsis,
@@ -484,7 +441,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
                   );
                 },
                 icon: const Icon(Icons.reorder_rounded),
-                label: const Text('ترتیب تماشا (پیشنهادی / شخصی)'),
+                label:  Text(tr('watch_order_suggested_custom')),
               ),
             ),
           ),
@@ -494,21 +451,21 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Center(
                 child: SegmentedButton<String>(
-                  segments: const [
+                  segments:  [
                     ButtonSegment<String>(
                       value: 'list',
                       icon: Icon(Icons.list_rounded),
-                      label: Text('لیست'),
+                      label: Text(tr('list')),
                     ),
                     ButtonSegment<String>(
                       value: 'tree',
                       icon: Icon(Icons.account_tree_rounded),
-                      label: Text('درختی'),
+                      label: Text(tr('tree')),
                     ),
                     ButtonSegment<String>(
                       value: 'type',
                       icon: Icon(Icons.category_rounded),
-                      label: Text('دسته‌بندی'),
+                      label: Text(tr('categories')),
                     ),
                   ],
                   selected: {_view},
@@ -528,16 +485,25 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  for (final t in EntryType.values) ..._entryTypeGroup(f, t),
-                ]),
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) {
+                    final t = EntryType.values[i];
+                    final items = _entryTypeGroup(f, t);
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: items,
+                    );
+                  },
+                  childCount: EntryType.values.length,
+                ),
               ),
             )
           else ...[
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                child: SectionTitle('داستان اصلی', count: toFa(main.length)),
+                child: SectionTitle(tr('main_story'), count: toFa(main.length)),
               ),
             ),
             if (main.isEmpty)
@@ -545,7 +511,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
-                    'بخشی برای نمایش پیدا نشد.',
+                    tr('no_sections_to_display'),
                     style: TextStyle(color: AppColors.textSecondaryOf(context)),
                   ),
                 ),
@@ -573,7 +539,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                   child: SectionTitle(
-                    'محتوای مرتبط',
+                    tr('related_content'),
                     count: toFa(related.length),
                   ),
                 ),
@@ -652,13 +618,13 @@ class _ProgressCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text(
-                'پیشرفت شما',
+               Text(
+                tr('your_progress'),
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
               ),
               const Spacer(),
               Text(
-                '${toFa(progress.percent)}٪',
+                tr('str', [toFa(progress.percent)]),
                 style: TextStyle(
                   color: AppColors.primaryTextOf(context),
                   fontWeight: FontWeight.w900,
@@ -686,7 +652,7 @@ class _ProgressCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '${toFa(progress.done)} از ${toFa(progress.total)} قسمت از داستان اصلی دیده شده',
+            tr('of_main_story_episodes_watched', [toFa(progress.done), toFa(progress.total)]),
             style: TextStyle(
               color: AppColors.textSecondaryOf(context),
               fontSize: 13,
@@ -759,7 +725,7 @@ class _SpoilerSynopsisState extends State<_SpoilerSynopsis> {
                       ),
                       SizedBox(width: 8),
                       Text(
-                        'نمایش خلاصه',
+                        tr('show_summary'),
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
@@ -782,7 +748,7 @@ class _ExpandableTextState extends State<_ExpandableText> {
 
   @override
   Widget build(BuildContext context) {
-    final text = widget.text.isEmpty ? 'خلاصه‌ای موجود نیست.' : widget.text;
+    final text = widget.text.isEmpty ? tr('no_summary_available') : widget.text;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -805,7 +771,7 @@ class _ExpandableTextState extends State<_ExpandableText> {
           TextButton(
             style: TextButton.styleFrom(padding: EdgeInsets.zero),
             onPressed: () => setState(() => _expanded = !_expanded),
-            child: Text(_expanded ? 'کمتر' : 'ادامه مطلب'),
+            child: Text(_expanded ? tr('less') : tr('read_more')),
           ),
       ],
     );

@@ -5,6 +5,7 @@ import '../utils/persian_numbers.dart';
 import '../utils/text_utils.dart';
 import 'cover_image.dart';
 import 'score_badge.dart';
+import '../../core/i18n/lang.dart';
 
 class AnimeCard extends StatelessWidget {
   const AnimeCard({super.key, required this.data, required this.onTap});
@@ -28,7 +29,7 @@ class AnimeCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CoverImage(url: data.cover),
+                  CoverImage(url: data.cover, cacheWidth: 420),
                   Positioned(
                     top: 8,
                     right: 8,
@@ -150,7 +151,7 @@ class AnimeCardError extends StatelessWidget {
               Icon(Icons.refresh_rounded, color: AppColors.textSecondaryOf(context)),
               SizedBox(height: 8),
               Text(
-                'دریافت نشد\nلمس کن تا دوباره تلاش شود',
+                tr('couldn_t_load_tap_to_retry'),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.textSecondaryOf(context), fontSize: 12),
               ),

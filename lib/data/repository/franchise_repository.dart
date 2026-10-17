@@ -12,6 +12,7 @@ import '../remote/api_exception.dart';
 import '../remote/jikan_client.dart';
 import '../remote/mal_client.dart';
 import '../storage/migrations.dart';
+import '../../core/i18n/lang.dart';
 
 class _Item {
   final Map<String, dynamic> media;
@@ -117,8 +118,8 @@ class FranchiseRepository {
     // ۳) فرنچایز تک‌عضوی از Jikan
     final detail = await _jikan.fetchAnime(malId);
     if (detail == null) {
-      throw const ApiException(
-        'این انیمه نه در AniList و نه در منابع دیگر پیدا نشد.',
+      throw  ApiException(
+        tr('this_anime_wasn_t_found_on_anilist_or_any_other_'),
       );
     }
     final entry = Entry.fromJikanSearch(detail);
@@ -233,18 +234,13 @@ class FranchiseRepository {
       );
     }).toList();
 
-    final candidates = items.values.toList()
-      ..sort((a, b) => _dateKey(a.media).compareTo(_dateKey(b.media)));
-    Map<String, dynamic>? root;
-    for (final m in candidates) {
-      if (_mainFormats.contains(m.media['format'])) {
-        root = m.media;
-        break;
-      }
-    }
-    root ??= items[anyId]?.media ?? items.values.first.media;
-
-    final rootId = root['id'] as int;
+    // انتخاب ریشه به متد استاتیک pickRootId سپرده شده (تست‌پذیر).
+    final rootId = pickRootId(
+      {for (final e in items.entries) e.key: e.value.media},
+      _mainFormats,
+      anyId,
+    );
+    final root = items[rootId]?.media ?? items.values.first.media;
     final t = (root['title'] ?? {}) as Map;
     final titleEn =
         (t['english'] ?? t['romaji'] ?? t['native'] ?? '—') as String;
@@ -292,7 +288,7 @@ class FranchiseRepository {
     final extra = <({int malId, String rel})>[];
     try {
       for (final r in await _mal.related(rootMalId)) {
-        final norm = _mapExternalRelation(r.relation);
+        final norm = mapExternalRelation(r.relation);
         if (norm == null) continue;
         final rid = (r.node['id'] as num?)?.toInt();
         if (rid == null) continue;
@@ -301,7 +297,7 @@ class FranchiseRepository {
     } catch (_) {}
     try {
       for (final r in await _jikan.relations(rootMalId)) {
-        final norm = _mapExternalRelation(r.relation);
+        final norm = mapExternalRelation(r.relation);
         if (norm != null) extra.add((malId: r.malId, rel: norm));
       }
     } catch (_) {}
@@ -339,7 +335,9 @@ class FranchiseRepository {
   }
 
   /// نگاشت نام رابطه MAL/Jikan به نام استاندارد AniList.
-  static String? _mapExternalRelation(String raw) {
+  ///
+  /// public است تا مستقیم تست‌پذیر باشد (رگرسیون CHARACTER).
+  static String? mapExternalRelation(String raw) {
     final r = raw.trim().toLowerCase().replaceAll(RegExp(r'[_\s-]'), '');
     switch (r) {
       case 'sequel':
@@ -420,7 +418,34 @@ class FranchiseRepository {
     }
   }
 
-  static int _dateKey(Map<String, dynamic> m) {
+  /// انتخاب شناسه‌ی ریشه‌ی فرنچایز از بین مدیاهای جمع‌آوری‌شده.
+  ///
+  /// اولویت‌ها به ترتیب (دقیقاً همان semantics قبلی کد، فقط استخراج‌شده
+  /// برای تست‌پذیری — هیچ تغییری در رفتار ندارد):
+  /// ۱. قدیمی‌ترین آیتم با فرمت اصلی (مرتب‌سازی با [dateKey]).
+  /// ۲. وگرنه خودِ [anyId] (اگر در مپ باشد).
+  /// ۳. وگرنه اولین آیتم مپ.
+  ///
+  /// نکته: باگ One Piece/DBZ با حذف رابطه‌ی CHARACTER از
+  /// _relatedRelations حل شده (DBZ اصلاً وارد آیتم‌ها نمی‌شود)؛ این متد
+  /// فقط همان منطق قبلی را نگه می‌دارد.
+  ///
+  /// public و استاتیک است تا مستقیم تست‌پذیر باشد.
+  static int pickRootId(
+    Map<int, Map<String, dynamic>> mediaById,
+    Set<String> mainFormats,
+    int anyId,
+  ) {
+    final candidates = mediaById.entries.toList()
+      ..sort((a, b) => dateKey(a.value).compareTo(dateKey(b.value)));
+    for (final e in candidates) {
+      if (mainFormats.contains(e.value['format'])) return e.key;
+    }
+    if (mediaById.containsKey(anyId)) return anyId;
+    return mediaById.keys.first;
+  }
+
+  static int dateKey(Map<String, dynamic> m) {
     final d = m['startDate'] as Map?;
     final y = d?['year'] as int?;
     if (y == null) return 99999999;
@@ -430,7 +455,7 @@ class FranchiseRepository {
   }
 
   static int _compareByDate(_Item a, _Item b) {
-    final c = _dateKey(a.media).compareTo(_dateKey(b.media));
+    final c = dateKey(a.media).compareTo(dateKey(b.media));
     if (c != 0) return c;
     return (a.media['id'] as int).compareTo(b.media['id'] as int);
   }
@@ -478,42 +503,6 @@ class FranchiseRepository {
     return result;
   }
 
-  /// به‌روزرسانی سبک اطلاعات پخش (قسمت/زمان بعدی) در فرنچایزهای کش‌شده.
-  ///
-  /// ts دست نمی‌خورد تا منطق تازگی کش عوض نشود؛ فقط فیلدهای پخش
-  /// ورودی‌ها تازه می‌شوند (برای تقویم هفتگی و بنر قسمت‌های جدید).
-  Future<void> updateAiringInfo(
-    Map<int, ({int episode, int airingAt})> fresh,
-  ) async {
-    if (fresh.isEmpty) return;
-    for (final key in _box.keys.toList()) {
-      final k = key.toString();
-      if (!k.startsWith('f:')) continue;
-      final raw = _box.get(k);
-      final c = _decode(raw);
-      if (c == null) continue;
-      var changed = false;
-      final entries = <Entry>[];
-      for (final e in c.franchise.entries) {
-        final f2 = fresh[e.anilistId];
-        if (f2 != null &&
-            (e.nextEpisode != f2.episode || e.nextAiringAt != f2.airingAt)) {
-          changed = true;
-          entries.add(
-            e.copyWith(nextEpisode: f2.episode, nextAiringAt: f2.airingAt),
-          );
-        } else {
-          entries.add(e);
-        }
-      }
-      if (!changed) continue;
-      try {
-        final m = (jsonDecode(raw!) as Map).cast<String, dynamic>();
-        m['data'] = c.franchise.copyWith(entries: entries).toJson();
-        await _box.put(k, jsonEncode(m));
-      } catch (_) {}
-    }
-  }
 
   String? aliasOf(int anilistId) => _box.get('a:al-$anilistId');
 
@@ -605,32 +594,37 @@ class FranchiseRepository {
     }).toList();
   }
 
-  /// جست‌وجوی جهانی: AniList + Jikan + MAL به‌صورت موازی.
+  /// جست‌وجوی جهانی دو مرحله‌ای (برای سرعت درک‌شده):
+  /// مرحله ۱ فقط AniList است (سریع‌ترین و کامل‌ترین) و مرحله ۲
+  /// Jikan + MAL را برای پوشش موارد جامانده اضافه می‌کند.
   /// نتایج تکراری بر اساس malId/anilistId حذف و منبع هر نتیجه مشخص است.
   Future<List<AnimeCardData>> searchRemote(String query) async {
+    final p = await searchPrimary(query);
+    final out = [...p.items];
+    out.addAll((await searchSecondary(query, p.seenAni, p.seenMal)).items);
+    return out;
+  }
+
+  /// مرحله ۱ جست‌وجو: فقط AniList.
+  Future<
+    ({
+      List<AnimeCardData> items,
+      Set<int> seenAni,
+      Set<int> seenMal,
+      bool ok,
+    })
+  >
+  searchPrimary(String query) async {
     final out = <AnimeCardData>[];
     final seenAni = <int>{};
     final seenMal = <int>{};
-
-    Future<List<Map<String, dynamic>>> safe(
-      Future<List<Map<String, dynamic>>> f,
-    ) async {
-      try {
-        return await f;
-      } catch (_) {
-        return const [];
-      }
+    List<Map<String, dynamic>> raw;
+    try {
+      raw = await _ani.search(query);
+    } catch (_) {
+      return (items: out, seenAni: seenAni, seenMal: seenMal, ok: false);
     }
-
-    // هر سه منبع به‌صورت موازی (gateway برای هر هاست جداگانه صف‌بندی می‌کند)
-    final results = await Future.wait([
-      safe(_ani.search(query)),
-      safe(_jikan.search(query)),
-      safe(_mal.search(query)),
-    ]);
-
-    // ۱) AniList
-    for (final m in results[0]) {
+    for (final m in raw) {
       if (!_searchFormats.contains(m['format'])) continue;
       final id = m['id'] as int;
       if (!seenAni.add(id)) continue;
@@ -654,9 +648,37 @@ class FranchiseRepository {
         ),
       );
     }
+    return (items: out, seenAni: seenAni, seenMal: seenMal, ok: true);
+  }
 
-    // ۲) Jikan (بدون احراز هویت) — مواردی که AniList نداشت
-    for (final m in results[1]) {
+  /// مرحله ۲ جست‌وجو: Jikan + MAL (موازی با هم) برای مواردی که
+  /// مرحله ۱ نداشت.
+  Future<({List<AnimeCardData> items, bool ok})> searchSecondary(
+    String query,
+    Set<int> seenAni,
+    Set<int> seenMal,
+  ) async {
+    final out = <AnimeCardData>[];
+
+    Future<List<Map<String, dynamic>>> safe(
+      Future<List<Map<String, dynamic>>> f,
+    ) async {
+      try {
+        return await f;
+      } catch (_) {
+        return const [];
+      }
+    }
+
+    final results = await Future.wait([
+      safe(_jikan.search(query)),
+      safe(_mal.search(query)),
+    ]);
+    var ok = false;
+
+    // Jikan (بدون احراز هویت) — مواردی که AniList نداشت
+    if (results[0].isNotEmpty) ok = true;
+    for (final m in results[0]) {
       if (out.length >= 24) break;
       final malId = (m['mal_id'] as num?)?.toInt() ?? 0;
       if (malId == 0 || !seenMal.add(malId)) continue;
@@ -675,8 +697,9 @@ class FranchiseRepository {
       );
     }
 
-    // ۳) MAL مستقیم — مواردی که هیچ‌کدام نداشتند
-    for (final m in results[2]) {
+    // MAL مستقیم — مواردی که هیچ‌کدام نداشتند
+    if (results[1].isNotEmpty) ok = true;
+    for (final m in results[1]) {
       if (out.length >= 24) break;
       final malId = (m['id'] as num?)?.toInt() ?? 0;
       if (malId == 0 || !seenMal.add(malId)) continue;
@@ -695,6 +718,6 @@ class FranchiseRepository {
       );
     }
 
-    return out;
+    return (items: out, ok: ok);
   }
 }

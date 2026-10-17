@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/watch_status.dart';
+import '../../../core/i18n/lang.dart';
 
 class StatusDropdown extends StatelessWidget {
   const StatusDropdown({
@@ -40,7 +41,7 @@ class StatusDropdown extends StatelessWidget {
               ),
               SizedBox(width: 8),
               Text(
-                'ثبت وضعیت',
+                tr('set_status'),
                 style: TextStyle(color: AppColors.textSecondaryOf(context), fontSize: 13),
               ),
             ],
@@ -74,7 +75,7 @@ class StatusDropdown extends StatelessWidget {
                   ),
                   SizedBox(width: 8),
                   Text(
-                    'حذف از لیست',
+                    tr('remove_from_list'),
                     style: TextStyle(
                       fontSize: 13,
                       color: AppColors.textSecondaryOf(context),

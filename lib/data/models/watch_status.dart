@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/i18n/lang.dart';
 
 enum WatchStatus { watching, completed, planToWatch, onHold, dropped }
 
@@ -7,15 +8,15 @@ extension WatchStatusX on WatchStatus {
   String get labelFa {
     switch (this) {
       case WatchStatus.watching:
-        return 'در حال تماشا';
+        return tr('watching');
       case WatchStatus.completed:
-        return 'تماشا شده';
+        return tr('watched');
       case WatchStatus.planToWatch:
-        return 'می‌خوام ببینم';
+        return tr('plan_to_watch');
       case WatchStatus.onHold:
-        return 'متوقف شده';
+        return tr('on_hold');
       case WatchStatus.dropped:
-        return 'رها شده';
+        return tr('dropped');
     }
   }
 

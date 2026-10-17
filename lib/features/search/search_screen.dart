@@ -6,10 +6,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/anime_card.dart';
+import '../../core/widgets/offline_banner.dart';
 import '../../core/widgets/state_views.dart';
 import '../../data/models/anime_card_data.dart';
 import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
+import '../../core/i18n/lang.dart';
 
 /// باز کردن صفحه فرنچایز برای یک کارت؛ اگر کارت فقط MAL/Jikan باشد
 /// اول به AniList نگاشت می‌شود وگرنه فرنچایز تک‌عضوی ساخته می‌شود.
@@ -25,7 +27,7 @@ Future<void> openAnimeCard(
   if (d.malId <= 0) return;
   final messenger = ScaffoldMessenger.of(context);
   messenger.showSnackBar(
-    const SnackBar(content: Text('در حال یافتن اطلاعات کامل...')),
+     SnackBar(content: Text(tr('fetching_full_details'))),
   );
   try {
     final f = await ref
@@ -92,7 +94,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     final async = ref.watch(searchResultsProvider(_query));
     return async.when(
-      loading: () => const LoadingView(message: 'در حال جستجو...'),
+      loading: () =>  LoadingView(message: tr('searching')),
       error: (e, _) => ErrorView(
         message: friendlyError(e),
         onRetry: () => ref.invalidate(searchResultsProvider(_query)),
@@ -103,7 +105,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             child: Padding(
               padding: EdgeInsets.all(24),
               child: Text(
-                'نتیجه‌ای در AniList، MAL و Jikan پیدا نشد.\nنام فارسی فقط برای انیمه‌هایی کار می‌کند که نام فارسی دارند؛ نام انگلیسی را امتحان کن.',
+                tr('no_results_on_anilist_mal_or_jikan_persian_searc'),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.8),
               ),
@@ -138,44 +140,71 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         bottom: false,
         child: Column(
           children: [
+            // وقتی آفلاین هستیم بالای فیلد جست‌وجو بنر نشان داده می‌شود.
+            const OfflineBanner(),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-              child: TextField(
-                controller: _controller,
-                onChanged: _onChanged,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: 'جستجوی نام فارسی یا انگلیسی...',
-                  hintStyle: TextStyle(color: AppColors.textSecondaryOf(context)),
-                  prefixIcon: Icon(
-                    Icons.search_rounded,
-                    color: AppColors.textSecondaryOf(context),
-                  ),
-                  suffixIcon: _controller.text.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: 'پاک کردن',
-                          icon: Icon(
-                            Icons.close_rounded,
-                            color: AppColors.textSecondaryOf(context),
-                          ),
-                          onPressed: _clear,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      onChanged: _onChanged,
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: tr('search_a_persian_or_english_title'),
+                        hintStyle: TextStyle(
+                          color: AppColors.textSecondaryOf(context),
                         ),
-                  filled: true,
-                  fillColor: AppColors.surfaceOf(context),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(
-                      color: AppColors.primary,
-                      width: 1.5,
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: AppColors.textSecondaryOf(context),
+                        ),
+                        suffixIcon: _controller.text.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: tr('clear'),
+                                icon: Icon(
+                                  Icons.close_rounded,
+                                  color: AppColors.textSecondaryOf(context),
+                                ),
+                                onPressed: _clear,
+                              ),
+                        filled: true,
+                        fillColor: AppColors.surfaceOf(context),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceOf(context),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: IconButton(
+                      tooltip: tr('advanced_filters'),
+                      onPressed: () => context.push('/filter'),
+                      icon: Icon(
+                        Icons.tune_rounded,
+                        color: AppColors.primaryTextOf(context),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -220,13 +249,13 @@ class _SearchHint extends StatelessWidget {
               color: AppColors.primaryTextOf(context),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'نام انیمه را تایپ کن',
+             Text(
+              tr('type_an_anime_title'),
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
             ),
             const SizedBox(height: 6),
             Text(
-              'اول AniList جست‌وجو می‌شود؛ اگر چیزی پیدا نشود، MAL و Jikan هم بررسی می‌شوند.',
+              tr('anilist_is_searched_first_if_nothing_is_found_ma'),
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.7),
             ),

@@ -116,13 +116,29 @@ class CardPool {
           items.isEmpty) {
         return const [];
       }
-      return items.map((e) => (e as Map).cast<String, dynamic>()).toList();
+      return items
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
     } catch (_) {
       return const [];
     }
   }
 
   int poolSize() => _poolItems().length;
+
+  /// پاک‌سازی کش استخر؛ در باز کردن بعدیِ بسته، استخر از نو ساخته می‌شود.
+  Future<void> clearPool() => _cache.delete(_poolKey);
+
+  /// ترکیب استخر بر اساس درجه (برای شفافیت: کاربر ببیند استخرش
+  /// از هر درجه چند شخصیت دارد).
+  Map<CardRarity, int> rarityBreakdown() {
+    final out = <CardRarity, int>{};
+    for (final p in _poolItems()) {
+      final r = CardRarityX.fromKey(p['rarity'] as String? ?? '');
+      out[r] = (out[r] ?? 0) + 1;
+    }
+    return out;
+  }
 
   /// تاس درجه بر اساس وزن‌ها (مجموع ۱۰۰۰).
   CardRarity _rollRarity(Random rnd) {
@@ -202,12 +218,27 @@ class CardPool {
     var dupCoins = 0;
 
     for (var i = 0; i < packSize; i++) {
-      final tier = _rollRarity(rnd);
-      final p = _pickForTier(pool, tier, rnd, pickedIds);
+      var tier = _rollRarity(rnd);
+      // اگر درجه‌ی تاس‌آمده در استخر شخصیت نداشت، به‌جای سقوطِ بی‌صدا
+      // به درجه‌ی پایین‌تر، تاس را چند بار از نو می‌اندازیم تا توزیع
+      // واقعی کارت‌ها به وزن‌های مصوب نزدیک بماند.
+      Map<String, dynamic>? p;
+      for (var attempt = 0; attempt < 6; attempt++) {
+        final cand = _pickForTier(pool, tier, rnd, pickedIds);
+        if (cand == null) break;
+        final actual =
+            CardRarityX.fromKey(cand['rarity'] as String? ?? tier.name);
+        if (actual == tier || attempt == 5) {
+          p = cand;
+          break;
+        }
+        tier = _rollRarity(rnd);
+      }
       if (p == null) continue;
       final id = p['id'] as int;
       pickedIds.add(id);
-      final rarity = CardRarityX.fromKey(p['rarity'] as String? ?? tier.name);
+      final rarity =
+          CardRarityX.fromKey(p['rarity'] as String? ?? tier.name);
       final owned = _ownedCount(id);
       if (owned > 0) {
         dups.add(true);

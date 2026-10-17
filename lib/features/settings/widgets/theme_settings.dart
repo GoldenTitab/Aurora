@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/providers.dart';
+import '../../../core/i18n/lang.dart';
 
 /// بخش «ظاهر» در صفحه‌ی تنظیمات: انتخاب حالت روشن/تیره/سیستمی و رنگ اصلی.
 class ThemeSettings extends ConsumerWidget {
@@ -27,28 +28,28 @@ class ThemeSettings extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+         Padding(
           padding: EdgeInsets.only(top: 8, bottom: 12),
           child: Text(
-            'ظاهر',
+            tr('appearance'),
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
           ),
         ),
         SizedBox(
           width: double.infinity,
           child: SegmentedButton<ThemeMode>(
-            segments: const [
+            segments:  [
               ButtonSegment<ThemeMode>(
                 value: ThemeMode.system,
-                label: Text('سیستم'),
+                label: Text(tr('system')),
               ),
               ButtonSegment<ThemeMode>(
                 value: ThemeMode.light,
-                label: Text('روشن'),
+                label: Text(tr('light')),
               ),
               ButtonSegment<ThemeMode>(
                 value: ThemeMode.dark,
-                label: Text('تیره'),
+                label: Text(tr('dark')),
               ),
             ],
             selected: {mode},
@@ -56,10 +57,10 @@ class ThemeSettings extends ConsumerWidget {
                 ref.read(themeModeProvider.notifier).set(selection.first),
           ),
         ),
-        const Padding(
+         Padding(
           padding: EdgeInsets.only(top: 20, bottom: 12),
           child: Text(
-            'رنگ اصلی',
+            tr('primary_color'),
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
           ),
         ),

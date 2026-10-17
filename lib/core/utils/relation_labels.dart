@@ -1,25 +1,26 @@
+import '../../core/i18n/lang.dart';
 String relationLabelFa(String? relation) {
   switch (relation) {
     case 'SEQUEL':
-      return 'دنباله';
+      return tr('sequel');
     case 'PREQUEL':
-      return 'پیش‌درآمد';
+      return tr('prequel');
     case 'SIDE_STORY':
-      return 'داستان فرعی';
+      return tr('side_story');
     case 'SPIN_OFF':
-      return 'اسپین‌آف';
+      return tr('spin_off');
     case 'SUMMARY':
-      return 'خلاصه';
+      return tr('summary');
     case 'ALTERNATIVE':
-      return 'نسخه جایگزین';
+      return tr('alternative');
     case 'CHARACTER':
-      return 'شخصیت';
+      return tr('character');
     case 'OTHER':
-      return 'مرتبط';
+      return tr('related');
     case 'PARENT':
-      return 'والد';
+      return tr('parent_story');
     case 'ADAPTATION':
-      return 'اقتباس';
+      return tr('adaptation');
     default:
       return relation ?? '';
   }

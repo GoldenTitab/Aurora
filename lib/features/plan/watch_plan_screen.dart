@@ -10,6 +10,7 @@ import '../../core/utils/time_format.dart';
 import '../../core/widgets/cover_image.dart';
 import '../../data/models/watch_plan.dart';
 import '../../data/providers.dart';
+import '../../core/i18n/lang.dart';
 
 class WatchPlanScreen extends ConsumerStatefulWidget {
   const WatchPlanScreen({super.key});
@@ -27,12 +28,12 @@ class _WatchPlanScreenState extends ConsumerState<WatchPlanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('برنامه‌ریزی تماشا')),
+      appBar: AppBar(title:  Text(tr('watch_plan'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            'چقدر وقت داری؟',
+           Text(
+            tr('how_much_time_do_you_have'),
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
           ),
           const SizedBox(height: 10),
@@ -52,7 +53,7 @@ class _WatchPlanScreenState extends ConsumerState<WatchPlanScreen> {
           FilledButton.icon(
             onPressed: _build,
             icon: const Icon(Icons.auto_awesome_rounded),
-            label: const Text('بساز'),
+            label:  Text(tr('build')),
           ),
           const SizedBox(height: 20),
           if (_plan != null) _PlanCard(plan: _plan!),
@@ -62,11 +63,11 @@ class _WatchPlanScreenState extends ConsumerState<WatchPlanScreen> {
   }
 
   String _label(int m) {
-    if (m < 60) return '${toFa(m)} دقیقه';
+    if (m < 60) return tr('min', [toFa(m)]);
     final h = m ~/ 60;
     final rem = m % 60;
-    if (rem == 0) return '${toFa(h)} ساعت';
-    return '${toFa(h)} ساعت و ${toFa(rem)} دقیقه';
+    if (rem == 0) return tr('h', [toFa(h)]);
+    return tr('h_m', [toFa(h), toFa(rem)]);
   }
 
   void _build() {
@@ -91,7 +92,7 @@ class _PlanCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
         ),
         child: Text(
-          'برنامه‌ای ساخته نشد. باید حداقل یک انیمه با وضعیت «در حال تماشا» یا «متوقف‌شده» داشته باشی.',
+          tr('no_plan_created_you_need_at_least_one_anime_with'),
           style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.7),
         ),
       );
@@ -117,8 +118,8 @@ class _PlanCard extends StatelessWidget {
                     color: AppColors.primaryTextOf(context),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    'برنامهٔ پیشنهادی',
+                   Text(
+                    tr('suggested_plan'),
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 15,
@@ -136,8 +137,8 @@ class _PlanCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'از ${formatDurationFa(plan.requested)} زمانی که داری، '
-                '${formatDurationFa(plan.total)} برنامه چیده شد.',
+                tr('out_of_your', [formatDurationFa(plan.requested)]) +
+                tr('scheduled', [formatDurationFa(plan.total)]),
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondaryOf(context),
@@ -203,6 +204,7 @@ class _PlanItemCard extends StatelessWidget {
                     height: 56,
                     child: CoverImage(
                       url: item.entry.cover ?? item.franchise.cover,
+                      cacheWidth: 140,
                     ),
                   ),
                 ),
@@ -233,8 +235,7 @@ class _PlanItemCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'قسمت‌های ${toFa(item.startEpisode)} تا ${toFa(item.endEpisode)} '
-                        '· ${formatDurationFa(item.estimatedDuration)}',
+                        '${tr('episodes_4', [toFa(item.startEpisode), toFa(item.endEpisode)])}· ${formatDurationFa(item.estimatedDuration)}',
                         style: TextStyle(
                           fontSize: 11,
                           color: AppColors.primaryTextOf(context),

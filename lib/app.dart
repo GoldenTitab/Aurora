@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/i18n/lang.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'data/providers.dart';
@@ -12,16 +13,19 @@ class AuroraApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(themeModeProvider);
     final seed = ref.watch(seedColorProvider);
+    // تماشای زبان: با تغییر آن کل درخت بازسازی و tr() همه‌جا تازه می‌شود.
+    final lang = ref.watch(langProvider);
 
     return MaterialApp.router(
       title: 'Aurora',
       debugShowCheckedModeBanner: false,
+      locale: Locale(lang),
       theme: AppTheme.build(brightness: Brightness.light, seed: seed),
       darkTheme: AppTheme.build(brightness: Brightness.dark, seed: seed),
       themeMode: mode,
       routerConfig: appRouter,
       builder: (context, child) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Lang.isEn ? TextDirection.ltr : TextDirection.rtl,
         child: _WhatsNewGate(child: child!),
       ),
     );

@@ -8,6 +8,7 @@ import '../../core/widgets/state_views.dart';
 import '../../data/models/anime_card_data.dart';
 import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
+import '../../core/i18n/lang.dart';
 
 /// چارت فصلی: تب فصل جاری و فصل بعد.
 class SeasonalScreen extends ConsumerWidget {
@@ -19,11 +20,11 @@ class SeasonalScreen extends ConsumerWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('چارت فصلی'),
-          bottom: const TabBar(
+          title:  Text(tr('seasonal_chart')),
+          bottom:  TabBar(
             tabs: [
-              Tab(text: 'فصل جاری'),
-              Tab(text: 'فصل بعد'),
+              Tab(text: tr('this_season')),
+              Tab(text: tr('next_season_2')),
             ],
           ),
         ),
@@ -79,7 +80,7 @@ class _SeasonGrid extends ConsumerWidget {
     if (items.isEmpty) {
       return Center(
         child: Text(
-          'موردی پیدا نشد.',
+          tr('no_results_found'),
           style: TextStyle(color: AppColors.textSecondaryOf(context)),
         ),
       );

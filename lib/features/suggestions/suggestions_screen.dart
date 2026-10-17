@@ -9,6 +9,7 @@ import '../../core/widgets/state_views.dart';
 import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
 import '../../data/services/suggestion_engine.dart';
+import '../../core/i18n/lang.dart';
 
 class SuggestionsScreen extends ConsumerStatefulWidget {
   const SuggestionsScreen({super.key});
@@ -53,15 +54,15 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('یه انیمه انتخاب کن'),
+        title:  Text(tr('pick_an_anime_for_me')),
         actions: [
           IconButton(
-            tooltip: 'پاک کردن تاریخچهٔ پیشنهادها',
+            tooltip: tr('clear_suggestion_history'),
             onPressed: () async {
               await ref.read(watchOrderStorageProvider).clearHistory();
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('تاریخچه پاک شد.')),
+                 SnackBar(content: Text(tr('suggestion_history_cleared'))),
               );
             },
             icon: const Icon(Icons.history_toggle_off_rounded),
@@ -74,7 +75,7 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
 
   Widget _body() {
     if (_loading) {
-      return const LoadingView(message: 'در حال انتخاب...');
+      return  LoadingView(message: tr('picking'));
     }
     if (_error != null) {
       return ErrorView(message: _error!, onRetry: _pick);
@@ -85,8 +86,8 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
         child: Padding(
           padding: EdgeInsets.all(24),
           child: Text(
-            'پیشنهادی پیدا نشد. برای پیشنهاد باید به اینترنت وصل باشی '
-            'و انیمه‌ای بیرون از لیستت در بخش کشف پیدا شود.',
+            tr('no_suggestion_found_to_get_one_you_need_to_be_on') +
+            tr('and_there_must_be_an_anime_outside_your_list_in_'),
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.8),
           ),
@@ -110,7 +111,7 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
                       child: SizedBox(
                         width: 200,
                         height: 290,
-                        child: CoverImage(url: s.data.cover),
+                        child: CoverImage(url: s.data.cover, cacheWidth: 460),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -165,7 +166,7 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
                 child: OutlinedButton.icon(
                   onPressed: _pick,
                   icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('یکی دیگه'),
+                  label:  Text(tr('another_one')),
                 ),
               ),
               const SizedBox(width: 10),
@@ -175,7 +176,7 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
                     franchiseRouteFor(s.data.anilistId, s.historyId),
                   ),
                   icon: const Icon(Icons.arrow_forward_rounded),
-                  label: const Text('برو به صفحه'),
+                  label:  Text(tr('go_to_page')),
                 ),
               ),
             ],

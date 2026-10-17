@@ -11,6 +11,7 @@ import '../../core/widgets/state_views.dart';
 import '../../data/models/home_items.dart';
 import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
+import '../../core/i18n/lang.dart';
 
 /// صفحه تقویم پخش هفتگی.
 class WeeklyCalendarScreen extends ConsumerWidget {
@@ -22,18 +23,18 @@ class WeeklyCalendarScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تقویم پخش هفتگی'),
+        title:  Text(tr('weekly_airing_calendar')),
         actions: [
           IconButton(
-            tooltip: 'به‌روزرسانی',
+            tooltip: tr('refresh'),
             onPressed: () => ref.invalidate(weeklyAiringProvider),
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
       ),
       body: async.when(
-        loading: () => const LoadingView(
-          message: 'در حال دریافت برنامه پخش...',
+        loading: () =>  LoadingView(
+          message: tr('fetching_airing_schedule'),
         ),
         error: (e, _) => ErrorView(
           message: friendlyError(e),
@@ -44,8 +45,8 @@ class WeeklyCalendarScreen extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Text(
-                    'قسمت جدیدی برای نمایش نیست.\n'
-                    'انیمه‌های در حال پخش را باز کن تا به تقویم اضافه شوند.',
+                    tr('no_new_episodes_to_show') +
+                    tr('open_airing_anime_to_add_them_to_the_calendar'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.textSecondaryOf(context),
@@ -103,7 +104,7 @@ class _DaySection extends StatelessWidget {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      'امروز',
+                      tr('today'),
                       style: TextStyle(
                         color: AppColors.primaryTextOf(context),
                         fontSize: 11,
@@ -168,7 +169,7 @@ class _AiringRow extends StatelessWidget {
               child: SizedBox(
                 width: 44,
                 height: 64,
-                child: CoverImage(url: entry.cover),
+                child: CoverImage(url: entry.cover, cacheWidth: 140),
               ),
             ),
             const SizedBox(width: 12),
@@ -209,7 +210,7 @@ class _AiringRow extends StatelessWidget {
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          'قسمت ${toFa(entry.episode)}',
+                          tr('episode', [toFa(entry.episode)]),
                           style: TextStyle(
                             color: AppColors.primaryTextOf(context),
                             fontSize: 11,

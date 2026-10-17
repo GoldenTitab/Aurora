@@ -9,6 +9,7 @@ import '../../data/models/achievement.dart';
 import '../../data/providers.dart';
 import '../../data/storage/economy.dart';
 import 'cards_tab.dart';
+import '../../core/i18n/lang.dart';
 
 /// ناحیه «جوایز»: سطح، کارت‌ها، مأموریت‌ها و اچیومنت‌ها.
 class RewardsScreen extends ConsumerWidget {
@@ -21,7 +22,7 @@ class RewardsScreen extends ConsumerWidget {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('جوایز'),
+          title:  Text(tr('rewards')),
           actions: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -48,7 +49,7 @@ class RewardsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${toFa(eco.coins)} شفق',
+                        tr('shafaq', [toFa(eco.coins)]),
                         style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 13,
@@ -61,13 +62,13 @@ class RewardsScreen extends ConsumerWidget {
               ),
             ),
           ],
-          bottom: const TabBar(
+          bottom:  TabBar(
             isScrollable: true,
             tabs: [
-              Tab(text: 'سطح من'),
-              Tab(text: 'کارت‌ها'),
-              Tab(text: 'مأموریت‌ها'),
-              Tab(text: 'اچیومنت‌ها'),
+              Tab(text: tr('my_level')),
+              Tab(text: tr('cards')),
+              Tab(text: tr('missions')),
+              Tab(text: tr('achievements')),
             ],
           ),
         ),
@@ -153,8 +154,8 @@ class _LevelTab extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 next == null
-                    ? 'به بالاترین لول رسیدی!'
-                    : '${toFa(next - xp)} XP تا ${Economy.levelNames[level + 1]}',
+                    ? tr('you_reached_the_highest_level')
+                    : tr('xp_to', [toFa(next - xp), Economy.levelNames[level + 1]]),
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 12,
@@ -165,7 +166,7 @@ class _LevelTab extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 20),
-        const SectionTitle('مسیر لول‌ها'),
+         SectionTitle(tr('level_path')),
         const SizedBox(height: 12),
         for (var i = 0; i < Economy.levelNames.length; i++)
           Container(
@@ -213,14 +214,14 @@ class _LevelTab extends ConsumerWidget {
             ),
           ),
         const SizedBox(height: 8),
-        const SectionTitle('راه‌های گرفتن XP'),
+         SectionTitle(tr('ways_to_earn_xp')),
         const SizedBox(height: 8),
         Text(
-          '• هر قسمت دیده‌شده: ۱۰ XP و ۵ شفق\n'
-          '• امتیاز دادن: ۵ XP\n'
-          '• نوشتن یادداشت: ۵ XP\n'
-          '• تکمیل فرنچایز: ۵۰ XP\n'
-          '• سر زدن روزانه: ۵ XP و ۲۰ شفق',
+          tr('each_watched_episode_10_xp_and_5_shafaq') +
+          tr('rating_5_xp') +
+          tr('writing_a_note_5_xp') +
+          tr('completing_a_franchise_50_xp') +
+          tr('daily_check_in_5_xp_and_20_shafaq'),
           style: TextStyle(
             color: AppColors.textSecondaryOf(context),
             fontSize: 13,
@@ -250,11 +251,11 @@ class _MissionsTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       children: [
-        const SectionTitle('مأموریت‌های روزانه'),
+         SectionTitle(tr('daily_missions')),
         const SizedBox(height: 12),
         for (final m in daily) _MissionCard(m: m),
         const SizedBox(height: 16),
-        const SectionTitle('مأموریت‌های هفتگی'),
+         SectionTitle(tr('weekly_missions')),
         const SizedBox(height: 12),
         for (final m in weekly) _MissionCard(m: m),
       ],
@@ -328,7 +329,7 @@ class _MissionCard extends ConsumerWidget {
           Row(
             children: [
               Text(
-                '+${toFa(m.def.xp)} XP  •  +${toFa(m.def.coins)} شفق',
+                tr('xp_shafaq', [toFa(m.def.xp), toFa(m.def.coins)]),
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.starTextOf(context),
@@ -337,7 +338,7 @@ class _MissionCard extends ConsumerWidget {
               ),
               const Spacer(),
               if (m.claimed)
-                const Row(
+                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
@@ -347,7 +348,7 @@ class _MissionCard extends ConsumerWidget {
                     ),
                     SizedBox(width: 4),
                     Text(
-                      'دریافت شد',
+                      tr('claimed'),
                       style: TextStyle(
                         color: AppColors.completed,
                         fontSize: 12,
@@ -367,7 +368,7 @@ class _MissionCard extends ConsumerWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'جایزه مأموریت «${m.def.titleFa}» دریافت شد!',
+                                  tr('mission_reward_claimed', [m.def.titleFa]),
                                 ),
                               ),
                             );
@@ -377,7 +378,7 @@ class _MissionCard extends ConsumerWidget {
                   style: FilledButton.styleFrom(
                     visualDensity: VisualDensity.compact,
                   ),
-                  child: const Text('دریافت جایزه'),
+                  child:  Text(tr('claim_reward')),
                 ),
             ],
           ),
@@ -423,7 +424,7 @@ class _AchievementsTab extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  '${toFa(unlocked.length)} از ${toFa(all.length)} اچیومنت باز شده',
+                  tr('of_achievements_unlocked', [toFa(unlocked.length), toFa(all.length)]),
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),

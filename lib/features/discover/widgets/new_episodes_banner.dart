@@ -9,6 +9,7 @@ import '../../../core/utils/text_utils.dart';
 import '../../../core/widgets/cover_image.dart';
 import '../../../data/models/home_items.dart';
 import '../../../data/providers.dart';
+import '../../../core/i18n/lang.dart';
 
 /// بنر یادآوری قسمت‌های جدید در بالای صفحه خانه.
 class NewEpisodesBanner extends ConsumerStatefulWidget {
@@ -57,7 +58,7 @@ class _NewEpisodesBannerState extends ConsumerState<NewEpisodesBanner> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    '${toFa(total)} قسمت جدید پخش شده',
+                    tr('new_episodes_aired', [toFa(total)]),
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -67,13 +68,13 @@ class _NewEpisodesBannerState extends ConsumerState<NewEpisodesBanner> {
                     foregroundColor: AppColors.primaryTextOf(context),
                     visualDensity: VisualDensity.compact,
                   ),
-                  child: const Text(
-                    'مشاهده',
+                  child:  Text(
+                    tr('view'),
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
                 IconButton(
-                  tooltip: 'بستن',
+                  tooltip: tr('close'),
                   visualDensity: VisualDensity.compact,
                   onPressed: () {
                     ref.read(userExtrasProvider).dismissNewEpisodes();
@@ -109,9 +110,9 @@ class _NewEpisodesBannerState extends ConsumerState<NewEpisodesBanner> {
                 padding: const EdgeInsets.fromLTRB(8, 8, 20, 4),
                 child: Row(
                   children: [
-                    const Expanded(
+                     Expanded(
                       child: Text(
-                        'قسمت‌های جدید',
+                        tr('new_episodes'),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
@@ -119,7 +120,7 @@ class _NewEpisodesBannerState extends ConsumerState<NewEpisodesBanner> {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'بستن',
+                      tooltip: tr('close'),
                       onPressed: () => Navigator.of(sheetCtx).pop(),
                       icon: Icon(
                         Icons.close_rounded,
@@ -160,7 +161,7 @@ class _NewEpisodesBannerState extends ConsumerState<NewEpisodesBanner> {
                               child: SizedBox(
                                 width: 46,
                                 height: 66,
-                                child: CoverImage(url: item.cover),
+                                child: CoverImage(url: item.cover, cacheWidth: 140),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -192,7 +193,7 @@ class _NewEpisodesBannerState extends ConsumerState<NewEpisodesBanner> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'قسمت ${toFa(item.newCount)}',
+                                    tr('episode', [toFa(item.newCount)]),
                                     style: TextStyle(
                                       color: AppColors.primaryTextOf(context),
                                       fontSize: 12,

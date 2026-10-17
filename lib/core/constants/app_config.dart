@@ -1,9 +1,12 @@
-const Map<int, String> persianTitles = {
-  16498: 'حمله به تایتان',
-  101922: 'شیطان‌کش',
-  154587: 'فریرن',
-  113415: 'جوجوتسو کایسن',
-  140960: 'خانواده جاسوس',
+import '../../core/i18n/lang.dart';
+
+/// عنوان‌های دستی برای چند انیمه پرطرفدار (به زبان فعلی اپ).
+Map<int, String> get persianTitles => {
+  16498: tr('attack_on_titan'),
+  101922: tr('demon_slayer'),
+  154587: tr('frieren'),
+  113415: tr('jujutsu_kaisen'),
+  140960: tr('spy_family'),
 };
 
 const bool progressMainStoryOnly = true;

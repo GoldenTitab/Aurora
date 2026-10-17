@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../../core/i18n/lang.dart';
 
 class LoadingView extends StatefulWidget {
   const LoadingView({super.key, this.message});
@@ -88,7 +89,7 @@ class ErrorView extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('تلاش مجدد'),
+              label:  Text(tr('retry')),
             ),
           ],
         ),

@@ -10,6 +10,7 @@ import '../../../core/widgets/cover_image.dart';
 import '../../../core/widgets/section_title.dart';
 import '../../../data/models/home_items.dart';
 import '../../../data/providers.dart';
+import '../../../core/i18n/lang.dart';
 
 /// بخش «ادامه تماشا» در صفحه کشف.
 class ContinueWatching extends ConsumerWidget {
@@ -28,9 +29,9 @@ class ContinueWatching extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: SectionTitle('ادامه تماشا'),
+            child: SectionTitle(tr('continue_watching')),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -75,7 +76,7 @@ class _ContinueCard extends StatelessWidget {
                 child: SizedBox(
                   width: 84,
                   height: double.infinity,
-                  child: CoverImage(url: item.cover),
+                  child: CoverImage(url: item.cover, cacheWidth: 260),
                 ),
               ),
               const SizedBox(width: 10),
@@ -106,7 +107,7 @@ class _ContinueCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'قسمت ${toFa(item.lastEpisode)} از ${toFa(item.totalEpisodes)}',
+                      tr('episode_of', [toFa(item.lastEpisode), toFa(item.totalEpisodes)]),
                       style: TextStyle(
                         color: AppColors.primaryTextOf(context),
                         fontSize: 12,

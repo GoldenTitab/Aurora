@@ -1,5 +1,7 @@
 // مدل‌های سبک برای ویجت‌های صفحه خانه (ادامه تماشا، قسمت‌های جدید، تقویم پخش).
 
+import '../../core/i18n/lang.dart';
+
 class ContinueWatchItem {
   final String entryId;
   final int franchiseAnilistId;
@@ -91,6 +93,20 @@ class AiringDay {
     'یکشنبه',
   ];
 
-  String get labelFa =>
-      weekday >= 1 && weekday <= 7 ? weekdayFa[weekday] : 'نامشخص';
+  static const List<String> _weekdayEn = [
+    '',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+
+  /// نام روز به زبان فعلی اپ.
+  String get labelFa {
+    final names = Lang.isEn ? _weekdayEn : weekdayFa;
+    return weekday >= 1 && weekday <= 7 ? names[weekday] : tr('unknown');
+  }
 }

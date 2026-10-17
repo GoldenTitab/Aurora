@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/persian_numbers.dart';
 import '../../../data/providers.dart';
+import '../../../core/i18n/lang.dart';
 
 /// انتخاب امتیاز کاربر به یک اثر (۰ تا ۱۰) با پنج ستاره.
 ///
@@ -53,14 +54,14 @@ class _UserScorePickerState extends ConsumerState<UserScorePicker> {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Text(
-          'امتیاز من',
+         Text(
+          tr('my_score'),
           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
         ),
         const SizedBox(width: 4),
         for (var i = 0; i < 5; i++)
           Tooltip(
-            message: 'امتیاز ${toFa((i + 1) * 2)} از ۱۰',
+            message: tr('out_of_10', [toFa((i + 1) * 2)]),
             child: InkWell(
               onTap: () => _onTap(i),
               onLongPress: _clear,

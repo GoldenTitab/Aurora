@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/utils/persian_numbers.dart';
 import '../../core/widgets/anime_card.dart';
 import '../../core/widgets/state_views.dart';
 import '../../data/models/anime_card_data.dart';
 import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
+import '../../core/i18n/lang.dart';
 
 /// لیست کامل یک بخش از «کشف» با اسکرول بی‌نهایت.
 class DiscoverListScreen extends ConsumerStatefulWidget {
@@ -139,48 +139,10 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
               ),
               delegate: SliverChildBuilderDelegate((context, i) {
                 final d = _items[i];
-                final delta = widget.section == DiscoverSection.weeklyTop
-                    ? ref
-                        .watch(discoverSectionProvider(
-                            DiscoverSection.weeklyTop))
-                        .maybeWhen(
-                          data: (dd) => dd.rankDelta[d.anilistId],
-                          orElse: () => null,
-                        )
-                    : null;
-                return Stack(
-                  children: [
-                    AnimeCard(
-                      data: d,
-                      onTap: () =>
-                          context.push('/franchise/${d.anilistId}'),
-                    ),
-                    if (delta != null && delta != 0)
-                      Positioned(
-                        top: 6,
-                        left: 6,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: delta > 0
-                                ? AppColors.completed
-                                : AppColors.dropped,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            '${delta > 0 ? '↑' : '↓'}${toFa(delta.abs())}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+                return AnimeCard(
+                  data: d,
+                  onTap: () =>
+                      context.push('/franchise/${d.anilistId}'),
                 );
               }, childCount: _items.length),
             ),
@@ -206,7 +168,7 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
             TextButton.icon(
               onPressed: _load,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('تلاش مجدد'),
+              label:  Text(tr('retry')),
             ),
           ],
         ),
@@ -232,7 +194,7 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
         padding: EdgeInsets.symmetric(vertical: 24),
         child: Center(
           child: Text(
-            'به انتهای لیست رسیدی',
+            tr('you_ve_reached_the_end_of_the_list'),
             style: TextStyle(color: AppColors.textSecondaryOf(context), fontSize: 12),
           ),
         ),

@@ -1,16 +1,17 @@
+import '../../core/i18n/lang.dart';
 enum EntryType { series, movie, ova, special }
 
 extension EntryTypeX on EntryType {
   String get labelFa {
     switch (this) {
       case EntryType.series:
-        return 'سریال';
+        return tr('tv_series');
       case EntryType.movie:
-        return 'فیلم';
+        return tr('movie_2');
       case EntryType.ova:
         return 'OVA';
       case EntryType.special:
-        return 'ویژه';
+        return tr('special');
     }
   }
 
@@ -36,13 +37,13 @@ extension ReleaseStateX on ReleaseState {
   String get labelFa {
     switch (this) {
       case ReleaseState.announced:
-        return 'اعلام‌شده';
+        return tr('announced');
       case ReleaseState.airing:
-        return 'در حال پخش';
+        return tr('airing');
       case ReleaseState.released:
-        return 'منتشرشده';
+        return tr('released');
       case ReleaseState.unknown:
-        return 'نامشخص';
+        return tr('unknown');
     }
   }
 

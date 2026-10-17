@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/watch_status.dart';
 import '../providers.dart';
+import '../../core/i18n/lang.dart';
 
 /// نتیجه ایمپورت لیست.
 class LibraryImportResult {
@@ -61,18 +62,18 @@ Future<LibraryImportResult> importFromAniList(
   final client = ref.read(anilistClientProvider);
   final repo = ref.read(franchiseRepositoryProvider);
 
-  onProgress('در حال دریافت لیست...');
+  onProgress(tr('fetching_list'));
   final entries = await client.fetchUserAnimeList(username.trim());
   if (entries == null) {
-    return const LibraryImportResult(
+    return  LibraryImportResult(
       ok: false,
-      message: 'کاربر پیدا نشد یا لیستش خصوصی است.',
+      message: tr('user_not_found_or_their_list_is_private'),
     );
   }
   if (entries.isEmpty) {
-    return const LibraryImportResult(
+    return  LibraryImportResult(
       ok: false,
-      message: 'لیست این کاربر خالی است.',
+      message: tr('this_user_s_list_is_empty'),
     );
   }
 
@@ -83,7 +84,7 @@ Future<LibraryImportResult> importFromAniList(
 
   for (var i = 0; i < total; i++) {
     final e = entries[i];
-    onProgress('در حال وارد کردن ${i + 1} از $total...');
+    onProgress(tr('importing_of', [i + 1, total]));
     final media = (e['media'] as Map?)?.cast<String, dynamic>();
     final anilistId = media?['id'] as int?;
     final status = _anilistStatus(e['listStatus'] as String?);
@@ -115,7 +116,10 @@ Future<LibraryImportResult> importFromAniList(
   await ref.read(economyProvider.notifier).markImported();
   return LibraryImportResult(
     ok: true,
-    message: '$imported اثر وارد شد${skipped > 0 ? ' ($skipped مورد رد شد)' : ''}.',
+    message: tr('titles_imported', [
+      imported,
+      skipped > 0 ? tr('skipped', [skipped]) : '',
+    ]),
     imported: imported,
     skipped: skipped,
   );
@@ -131,7 +135,7 @@ Future<LibraryImportResult> importFromMal(
   final ani = ref.read(anilistClientProvider);
   final repo = ref.read(franchiseRepositoryProvider);
 
-  onProgress('در حال دریافت لیست MAL...');
+  onProgress(tr('fetching_mal_list'));
   final all = <Map<String, dynamic>>[];
   for (final s in [
     'watching',
@@ -144,9 +148,9 @@ Future<LibraryImportResult> importFromMal(
     while (true) {
       final batch = await jikan.fetchUserList(username.trim(), s, page);
       if (batch == null) {
-        return const LibraryImportResult(
+        return  LibraryImportResult(
           ok: false,
-          message: 'کاربر پیدا نشد یا لیستش خصوصی است.',
+          message: tr('user_not_found_or_their_list_is_private'),
         );
       }
       if (batch.isEmpty) break;
@@ -158,9 +162,9 @@ Future<LibraryImportResult> importFromMal(
     }
   }
   if (all.isEmpty) {
-    return const LibraryImportResult(
+    return  LibraryImportResult(
       ok: false,
-      message: 'لیست این کاربر خالی است.',
+      message: tr('this_user_s_list_is_empty'),
     );
   }
 
@@ -171,7 +175,7 @@ Future<LibraryImportResult> importFromMal(
 
   for (var i = 0; i < total; i++) {
     final e = all[i];
-    onProgress('در حال وارد کردن ${i + 1} از $total...');
+    onProgress(tr('importing_of', [i + 1, total]));
     final malId = (e['mal_id'] as num?)?.toInt();
     final status = _jikanStatus(e['jikanStatus'] as String?);
     if (malId == null || status == null) {
@@ -209,7 +213,10 @@ Future<LibraryImportResult> importFromMal(
   await ref.read(economyProvider.notifier).markImported();
   return LibraryImportResult(
     ok: true,
-    message: '$imported اثر وارد شد${skipped > 0 ? ' ($skipped مورد رد شد)' : ''}.',
+    message: tr('titles_imported', [
+      imported,
+      skipped > 0 ? tr('skipped', [skipped]) : '',
+    ]),
     imported: imported,
     skipped: skipped,
   );

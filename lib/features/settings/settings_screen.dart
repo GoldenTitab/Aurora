@@ -10,10 +10,10 @@ import '../../core/utils/persian_numbers.dart';
 import '../../data/providers.dart';
 import '../../data/storage/data_export.dart';
 import '../../data/storage/migrations.dart';
-import 'widgets/backup_settings.dart';
 import 'widgets/cache_settings.dart';
 import 'widgets/notification_settings.dart';
 import 'widgets/theme_settings.dart';
+import '../../core/i18n/lang.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -28,38 +28,80 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
-  Future<void> _copyExport() async {
+  Future<void> _copyFull() async {
     try {
-      await Clipboard.setData(ClipboardData(text: DataExport.build()));
-      _snack('خروجی JSON کپی شد. آن را در یک فایل متنی (Notepad) ذخیره کن.');
+      await Clipboard.setData(ClipboardData(text: DataExport.buildFull()));
+      _snack(tr('full_export_copied_save_it_in_a_text_file'));
     } catch (_) {
-      _snack('کپی خروجی ناموفق بود.');
+      _snack(tr('export_copy_failed'));
     }
+  }
+
+  Future<void> _restoreFromClipboard() async {
+    final data = await Clipboard.getData('text/plain');
+    final text = data?.text;
+    if (text == null || text.isEmpty) {
+      _snack(tr('clipboard_is_empty'));
+      return;
+    }
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title:  Text(tr('restore_from_clipboard_2')),
+        content:  Text(
+          tr('current_data_statuses_notes_scores_coins_and_car') +
+          tr('will_be_replaced_with_the_clipboard_content'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child:  Text(tr('cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child:  Text(tr('restore_2')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final result = await DataExport.importFull(text);
+    if (result.ok && mounted) {
+      ref.invalidate(watchStatusProvider);
+      ref.invalidate(episodeProgressProvider);
+      ref.invalidate(userExtrasProvider);
+      ref.invalidate(economyProvider);
+      ref.invalidate(missionsProvider);
+      ref.invalidate(myListFranchisesProvider);
+      setState(() {});
+    }
+    _snack(result.message);
   }
 
   Future<void> _restoreBackup() async {
     final backup = Migrations.latestBackup();
     if (backup == null) {
-      _snack('پشتیبان خودکاری وجود ندارد.');
+      _snack(tr('no_automatic_backup_exists'));
       return;
     }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('بازگردانی پشتیبان خودکار؟'),
-        content: const Text(
-          'وضعیت‌ها و قسمت‌های دیده‌شده به حالت آخرین پشتیبان برمی‌گردد و '
-          'تغییرهای بعد از آن از بین می‌رود. قبل از بازگردانی، از وضعیت فعلی '
-          'هم یک پشتیبان گرفته می‌شود.',
+        title:  Text(tr('restore_the_automatic_backup')),
+        content:  Text(
+          tr('statuses_and_watched_episodes_revert_to_the_last') +
+          tr('later_changes_are_lost_before_restoring_a_backup') +
+          tr('is_taken_as_well'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('انصراف'),
+            child:  Text(tr('cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('بازگردانی'),
+            child:  Text(tr('restore')),
           ),
         ],
       ),
@@ -73,13 +115,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ref.invalidate(watchStatusProvider);
         ref.invalidate(episodeProgressProvider);
         setState(() {});
-        _snack('پشتیبان بازگردانی شد.');
+        _snack(tr('backup_restored'));
       } else {
-        _snack('پشتیبان خودکاری وجود ندارد.');
+        _snack(tr('no_automatic_backup_exists'));
       }
     } catch (_) {
       if (!mounted) return;
-      _snack('بازگردانی ناموفق بود؛ دیتای فعلی دست‌نخورده ماند.');
+      _snack(tr('restore_failed_current_data_is_untouched'));
     }
   }
 
@@ -91,37 +133,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final version = Migrations.readVersion();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('تنظیمات')),
+      appBar: AppBar(title:  Text(tr('settings'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          const _GroupTitle('دیتای من'),
+           _GroupTitle(tr('my_data')),
           _InfoCard(
             rows: [
-              ('نسخه‌ی اپ', toFa(kAppVersion)),
-              ('اثرهای دارای وضعیت', toFa(statuses)),
-              ('فصل‌های دارای قسمت دیده‌شده', toFa(episodes)),
-              ('نسخه‌ی ساختار دیتا', toFa(version)),
-              ('پشتیبان‌های خودکار', toFa(backups)),
+              (tr('app_version'), toFa(kAppVersion)),
+              (tr('entries_with_a_status'), toFa(statuses)),
+              (tr('seasons_with_watched_episodes'), toFa(episodes)),
+              (tr('data_structure_version'), toFa(version)),
+              (tr('automatic_backups'), toFa(backups)),
             ],
           ),
           const SizedBox(height: 12),
+           _GroupTitle(tr('backup_transfer')),
           FilledButton.icon(
-            onPressed: _copyExport,
+            onPressed: _copyFull,
             icon: const Icon(Icons.copy_rounded),
-            label: const Text('کپی خروجی دیتا (JSON)'),
+            label:  Text(tr('copy_full_export_json')),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: _restoreFromClipboard,
+            icon: const Icon(Icons.paste_rounded),
+            label:  Text(tr('restore_from_clipboard')),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: backups == 0 ? null : _restoreBackup,
             icon: const Icon(Icons.restore_rounded),
-            label: const Text('بازگردانی آخرین پشتیبان خودکار'),
+            label:  Text(tr('restore_latest_automatic_backup')),
           ),
           const SizedBox(height: 8),
           Text(
-            'پشتیبان خودکار قبل از هر به‌روزرسانی ساختار دیتا گرفته می‌شود و '
-            'فقط داخل خود اپ می‌ماند. با حذف اپ از گوشی از بین می‌رود، پس '
-            'اگر می‌خواهی دیتایت بماند، خروجی JSON را جداگانه ذخیره کن.',
+            tr('the_full_export_includes_statuses_notes_scores_c') +
+            tr('is_enough_to_move_to_another_phone_automatic_bac') +
+            tr('and_are_deleted_when_the_app_is_removed'),
             style: TextStyle(
               color: AppColors.textSecondaryOf(context),
               fontSize: 12,
@@ -129,45 +178,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const _GroupTitle('ظاهر'),
+           _GroupTitle(tr('appearance')),
           const ThemeSettings(),
           const SizedBox(height: 8),
-          const _GroupTitle('بدون اسپویل'),
+           _GroupTitle(tr('language')),
+          const _LanguageSettings(),
+          const SizedBox(height: 8),
+           _GroupTitle(tr('spoiler_free')),
           const _SpoilerFreeSwitch(),
           const SizedBox(height: 8),
-          const _GroupTitle('اعلان‌ها'),
+           _GroupTitle(tr('notifications')),
           const NotificationSettings(),
           const SizedBox(height: 8),
-          const _GroupTitle('ایمپورت'),
-          OutlinedButton.icon(
-            onPressed: () => context.push('/import'),
-            icon: const Icon(Icons.download_rounded),
-            label: const Text('ایمپورت لیست از AniList / MAL'),
-          ),
-          const SizedBox(height: 8),
-          const _GroupTitle('پشتیبان‌گیری و انتقال'),
-          const BackupSettings(),
-          const SizedBox(height: 8),
-          const _GroupTitle('حافظه‌ی کش'),
+           _GroupTitle(tr('cache')),
           const CacheSettings(),
           const SizedBox(height: 8),
-          const _GroupTitle('راهنما و اطلاعات'),
+           _GroupTitle(tr('help_info')),
           OutlinedButton.icon(
             onPressed: () => context.push('/onboarding'),
             icon: const Icon(Icons.school_rounded),
-            label: const Text('پخش مجدد آموزش'),
+            label:  Text(tr('replay_tutorial')),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: () => context.push('/whats-new'),
             icon: const Icon(Icons.new_releases_rounded),
-            label: const Text('تازه‌های نسخه'),
+            label:  Text(tr('what_s_new')),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: () => context.push('/privacy'),
             icon: const Icon(Icons.privacy_tip_rounded),
-            label: const Text('حریم خصوصی'),
+            label:  Text(tr('privacy')),
           ),
         ],
       ),
@@ -236,10 +278,10 @@ class _SpoilerFreeSwitch extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final extras = ref.watch(userExtrasProvider);
     return SwitchListTile(
-      title: const Text('حالت بدون اسپویل'),
-      subtitle: const Text(
-        'خلاصه‌ی داستان مجموعه‌هایی که هنوز شروع نکرده‌ای و کاور '
-        'فصل‌هایی که ندیده‌ای تار می‌شود تا چیزی لو نرود.',
+      title:  Text(tr('spoiler_free_mode')),
+      subtitle:  Text(
+        tr('story_summaries_of_franchises_you_haven_t_starte') +
+        tr('unwatched_seasons_are_blurred_so_nothing_gets_sp'),
         style: TextStyle(fontSize: 12, height: 1.7),
       ),
       value: extras.spoilerFree(),
@@ -248,6 +290,35 @@ class _SpoilerFreeSwitch extends ConsumerWidget {
         // ignore: unused_result
         ref.invalidate(userExtrasProvider);
       },
+    );
+  }
+}
+
+/// انتخاب زبان اپ (فارسی/انگلیسی) — تغییر آن کل اپ را بازسازی می‌کند.
+class _LanguageSettings extends ConsumerWidget {
+  const _LanguageSettings();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(langProvider);
+    return SegmentedButton<String>(
+      segments: const [
+        ButtonSegment<String>(
+          value: 'fa',
+          label: Text('فارسی'),
+          icon: Icon(Icons.language_rounded),
+        ),
+        ButtonSegment<String>(
+          value: 'en',
+          label: Text('English'),
+          icon: Icon(Icons.language_rounded),
+        ),
+      ],
+      selected: {lang},
+      onSelectionChanged: (s) => ref.read(langProvider.notifier).set(s.first),
+      style: SegmentedButton.styleFrom(
+        visualDensity: VisualDensity.comfortable,
+      ),
     );
   }
 }

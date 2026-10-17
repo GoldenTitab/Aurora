@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/section_title.dart';
 import '../../data/providers.dart';
+import '../../core/i18n/lang.dart';
 
 /// ایمپورت لیست انیمه با یوزرنیم از AniList یا MAL.
 class ImportScreen extends ConsumerStatefulWidget {
@@ -27,7 +28,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     final username = _ctrl.text.trim();
     if (username.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('اول یوزرنیمت رو بنویس')),
+         SnackBar(content: Text(tr('enter_your_username_first'))),
       );
       return;
     }
@@ -43,11 +44,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     final state = ref.watch(importProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('ایمپورت لیست')),
+      appBar: AppBar(title:  Text(tr('import_list'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          const SectionTitle('از کجا وارد کنم؟'),
+           SectionTitle(tr('import_from_where')),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -55,7 +56,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                 child: _SourceCard(
                   selected: _useAnilist,
                   title: 'AniList',
-                  subtitle: 'سریع و کامل',
+                  subtitle: tr('fast_complete'),
                   icon: Icons.bolt_rounded,
                   onTap: () => setState(() => _useAnilist = true),
                 ),
@@ -65,7 +66,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                 child: _SourceCard(
                   selected: !_useAnilist,
                   title: 'MAL',
-                  subtitle: 'از طریق Jikan',
+                  subtitle: tr('via_jikan'),
                   icon: Icons.public_rounded,
                   onTap: () => setState(() => _useAnilist = false),
                 ),
@@ -73,7 +74,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          const SectionTitle('یوزرنیم'),
+           SectionTitle(tr('username')),
           const SizedBox(height: 10),
           TextField(
             controller: _ctrl,
@@ -112,7 +113,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                       ),
                     )
                   : const Icon(Icons.download_rounded),
-              label: Text(state.running ? 'در حال وارد کردن...' : 'شروع ایمپورت'),
+              label: Text(state.running ? tr('importing') : tr('start_import')),
             ),
           ),
           if (state.running) ...[
@@ -179,15 +180,15 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             OutlinedButton.icon(
               onPressed: () => ref.read(importProvider.notifier).reset(),
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('ایمپورت دوباره'),
+              label:  Text(tr('import_again')),
             ),
           ],
           const SizedBox(height: 16),
           Text(
-            '• لیست باید عمومی باشد.\n'
-            '• وضعیت‌ها این‌طور نگاشت می‌شوند: در حال تماشا، تماشا شده، متوقف شده، رها شده، می‌خوام ببینم.\n'
-            '• تعداد قسمت‌های دیده‌شده هم منتقل می‌شود.\n'
-            '• برای جلوگیری از محدودیت API، حداکثر ۶۰ اثر (AniList) یا ۴۰ اثر (MAL) در هر ایمپورت وارد می‌شود.',
+            tr('your_list_must_be_public') +
+            tr('statuses_map_as_follows_watching_completed_on_ho') +
+            tr('watched_episode_counts_carry_over_too') +
+            tr('to_avoid_api_rate_limits_each_import_brings_in_a'),
             style: TextStyle(
               color: AppColors.textSecondaryOf(context),
               fontSize: 12,

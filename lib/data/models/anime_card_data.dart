@@ -1,4 +1,5 @@
 import 'franchise.dart';
+import '../../core/i18n/lang.dart';
 
 /// منشأ نتیجه جست‌وجو (برای «جست‌وجوی جهانی بین دو API»).
 enum SearchSource { local, anilist, mal, jikan }
@@ -7,7 +8,7 @@ extension SearchSourceX on SearchSource {
   String get labelFa {
     switch (this) {
       case SearchSource.local:
-        return 'کتابخانه';
+        return tr('library');
       case SearchSource.anilist:
         return 'AniList';
       case SearchSource.mal:
@@ -33,6 +34,12 @@ class AnimeCardData {
   final int? year;
   final double score;
 
+  /// کد کشور سازنده (ISO مثل JP/CN/KR)؛ null یعنی نامشخص.
+  final String? countryOfOrigin;
+
+  /// وضعیت پخش در AniList (مثل FINISHED/RELEASING)؛ null یعنی نامشخص.
+  final String? status;
+
   const AnimeCardData({
     required this.anilistId,
     this.malId = 0,
@@ -42,6 +49,8 @@ class AnimeCardData {
     this.cover,
     this.year,
     required this.score,
+    this.countryOfOrigin,
+    this.status,
   });
 
   /// آیا این کارت مستقیماً به صفحه فرنچایز می‌رود؟

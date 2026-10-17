@@ -45,8 +45,7 @@ dependencies:
   flutter_local_notifications: ^19.4.0
   workmanager: ^0.9.0
   home_widget: ^0.8.0
-  pdf: ^3.11.3
-  printing: ^5.14.2
+  connectivity_plus: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -115,7 +114,3 @@ flutter_native_splash:
   android_12:
     image: assets/icon/icon_foreground.png
     color: "#0F0B1A"
-
-
-dependency_overrides:
-  archive: ^4.5.2

@@ -4,6 +4,7 @@ import 'package:home_widget/home_widget.dart';
 import '../../core/utils/persian_numbers.dart';
 import '../models/home_items.dart';
 import '../providers.dart';
+import '../../core/i18n/lang.dart';
 
 /// به‌روزرسانی هوم‌ویجت اندروید/iOS با «ادامه تماشا» و تعداد پخش امروز.
 ///
@@ -32,15 +33,17 @@ Future<void> refreshHomeWidget(WidgetRef ref) async {
     final String title;
     final String sub;
     if (top == null) {
-      title = 'ادامه تماشا';
-      sub = 'هنوز قسمتی شروع نشده';
+      title = tr('continue_watching');
+      sub = tr('no_episodes_started_yet');
     } else {
       final nextEp = top.lastEpisode + 1;
       final total = top.totalEpisodes;
       title = top.franchiseTitleFa;
-      sub = 'قسمت ${toFa(nextEp)}'
-          '${total > 0 ? ' از ${toFa(total)}' : ''}'
-          ' • ${top.entryTitle}';
+      sub = tr('episode_2', [
+        toFa(nextEp),
+        total > 0 ? tr('of', [toFa(total)]) : '',
+        top.entryTitle,
+      ]);
     }
 
     await HomeWidget.saveWidgetData<String>('cw_title', title);

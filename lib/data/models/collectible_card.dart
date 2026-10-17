@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/i18n/lang.dart';
 
 /// کمیابی کارت‌ها با وزن شانس و جایزه تکراری.
 ///
@@ -20,19 +21,19 @@ extension CardRarityX on CardRarity {
   String get labelFa {
     switch (this) {
       case CardRarity.common:
-        return 'عادی';
+        return tr('common');
       case CardRarity.uncommon:
-        return 'کمیاب';
+        return tr('uncommon');
       case CardRarity.rare:
-        return 'فوق کمیاب';
+        return tr('rare');
       case CardRarity.epic:
-        return 'حماسی';
+        return tr('epic');
       case CardRarity.legendary:
-        return 'افسانه‌ای';
+        return tr('legendary');
       case CardRarity.waifu:
-        return 'وایفو';
+        return tr('waifu');
       case CardRarity.husbando:
-        return 'هازبندو';
+        return tr('husbando');
     }
   }
 

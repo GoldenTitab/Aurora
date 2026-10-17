@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'app.dart';
+import 'core/i18n/lang.dart';
 import 'data/notifications/airing_check_task.dart';
 import 'data/notifications/notification_content.dart';
 import 'data/notifications/notification_service.dart';
@@ -27,6 +28,13 @@ Future<void> main() async {
   ]);
 
   await Migrations.run();
+
+  // زبان ذخیره‌شده را قبل از بالا آمدن UI اعمال کن تا tr() از اول درست کار کند.
+  try {
+    final metaBox = Hive.box<String>(Boxes.meta);
+    final lang = metaBox.get('app_lang');
+    Lang.current = lang == 'en' ? 'en' : 'fa';
+  } catch (_) {}
 
   // اعلان قسمت‌های جدید + بررسی روزانه پس‌زمینه (workmanager).
   try {

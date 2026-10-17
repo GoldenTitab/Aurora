@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/section_title.dart';
 import '../../../data/providers.dart';
+import '../../../core/i18n/lang.dart';
 
 /// یادداشت شخصی کاربر درباره یک فرنچایز.
 ///
@@ -53,7 +54,7 @@ class _NoteEditorState extends ConsumerState<NoteEditor> {
     if (mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('ذخیره شد')));
+      ).showSnackBar( SnackBar(content: Text(tr('saved'))));
     }
   }
 
@@ -62,7 +63,7 @@ class _NoteEditorState extends ConsumerState<NoteEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle('یادداشت من'),
+         SectionTitle(tr('my_note')),
         const SizedBox(height: 10),
         if (_hasNote && !_editing)
           Container(
@@ -85,7 +86,7 @@ class _NoteEditorState extends ConsumerState<NoteEditor> {
                 IconButton(
                   icon: const Icon(Icons.edit_rounded, size: 18),
                   color: AppColors.textSecondaryOf(context),
-                  tooltip: 'ویرایش',
+                  tooltip: tr('edit'),
                   onPressed: () => setState(() => _editing = true),
                 ),
               ],
@@ -97,7 +98,7 @@ class _NoteEditorState extends ConsumerState<NoteEditor> {
             maxLines: 3,
             minLines: 2,
             decoration: InputDecoration(
-              hintText: 'یادداشتت درباره این مجموعه...',
+              hintText: tr('your_thoughts_on_this_franchise'),
               hintStyle: TextStyle(color: AppColors.textSecondaryOf(context)),
               filled: true,
               fillColor: AppColors.surfaceOf(context),
@@ -119,7 +120,7 @@ class _NoteEditorState extends ConsumerState<NoteEditor> {
               FilledButton.icon(
                 onPressed: _save,
                 icon: const Icon(Icons.save_rounded, size: 18),
-                label: const Text('ذخیره یادداشت'),
+                label:  Text(tr('save_note')),
               ),
             ],
           ),

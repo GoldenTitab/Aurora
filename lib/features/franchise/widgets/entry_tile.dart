@@ -12,6 +12,7 @@ import '../../../data/models/watch_status.dart';
 import '../../../data/providers.dart';
 import 'status_dropdown.dart';
 import 'user_score_picker.dart';
+import '../../../core/i18n/lang.dart';
 
 class EntryTile extends ConsumerStatefulWidget {
   const EntryTile({
@@ -41,19 +42,19 @@ class _EntryTileState extends ConsumerState<EntryTile> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('حذف ورودی دستی'),
+        title:  Text(tr('remove_manual_entry')),
         content: Text(
-          '«${widget.entry.title}» از این فرنچایز حذف شود؟',
+          tr('remove_from_this_franchise', [widget.entry.title]),
           textDirection: dirFor(widget.entry.title),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('انصراف'),
+            child:  Text(tr('cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('حذف'),
+            child:  Text(tr('delete')),
           ),
         ],
       ),
@@ -80,8 +81,7 @@ class _EntryTileState extends ConsumerState<EntryTile> {
         watched.isEmpty &&
         status == null;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
+    return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surfaceOf(context),
@@ -101,13 +101,13 @@ class _EntryTileState extends ConsumerState<EntryTile> {
                         child: SizedBox(
                           width: 56,
                           height: 80,
-                          child: CoverImage(url: entry.cover),
+                          child: CoverImage(url: entry.cover, cacheWidth: 160),
                         ),
                       )
                     : SizedBox(
                         width: 56,
                         height: 80,
-                        child: CoverImage(url: entry.cover),
+                        child: CoverImage(url: entry.cover, cacheWidth: 160),
                       ),
               ),
               const SizedBox(width: 12),
@@ -137,8 +137,8 @@ class _EntryTileState extends ConsumerState<EntryTile> {
                         _Meta(
                           icon: Icons.tv_rounded,
                           text: entry.episodes == 0
-                              ? 'تعداد نامشخص'
-                              : '${toFa(entry.episodes)} قسمت',
+                              ? tr('unknown_count')
+                              : tr('episodes', [toFa(entry.episodes)]),
                         ),
                         if (entry.year != null)
                           _Meta(
@@ -159,7 +159,7 @@ class _EntryTileState extends ConsumerState<EntryTile> {
               ),
               if (entry.manual && widget.franchiseId != null)
                 IconButton(
-                  tooltip: 'حذف ورودی دستی',
+                  tooltip: tr('remove_manual_entry'),
                   visualDensity: VisualDensity.compact,
                   icon: Icon(
                     Icons.delete_outline_rounded,
@@ -180,7 +180,7 @@ class _EntryTileState extends ConsumerState<EntryTile> {
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: Text(
-                'آخرین قسمت دیده‌شده: ${toFa(watched.reduce((a, b) => a > b ? a : b))}',
+                tr('last_watched_episode', [toFa(watched.reduce((a, b) => a > b ? a : b))]),
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondaryOf(context),
@@ -244,13 +244,13 @@ class _EpisodesHeader extends StatelessWidget {
               color: AppColors.primaryTextOf(context),
             ),
             const SizedBox(width: 8),
-            const Text(
-              'قسمت‌ها',
+             Text(
+              tr('episodes_3'),
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
             ),
             const SizedBox(width: 8),
             Text(
-              '${toFa(watched)} از ${toFa(total)}',
+              tr('of_2', [toFa(watched), toFa(total)]),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -295,13 +295,13 @@ class _EpisodesGridState extends ConsumerState<_EpisodesGrid> {
     final action = await showDialog<_NoteAction>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('یادداشت قسمت ${toFa(ep)}'),
+        title: Text(tr('note_for_episode', [toFa(ep)])),
         content: TextField(
           controller: controller,
           maxLines: 4,
           minLines: 2,
           decoration: InputDecoration(
-            hintText: 'یادداشتت درباره این قسمت...',
+            hintText: tr('your_thoughts_on_this_episode'),
             hintStyle: TextStyle(color: AppColors.textSecondaryOf(context)),
           ),
         ),
@@ -309,18 +309,18 @@ class _EpisodesGridState extends ConsumerState<_EpisodesGrid> {
           if (existing != null && existing.isNotEmpty)
             TextButton(
               onPressed: () => Navigator.pop(ctx, _NoteAction.delete),
-              child: const Text(
-                'حذف',
+              child:  Text(
+                tr('delete'),
                 style: TextStyle(color: AppColors.dropped),
               ),
             ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, _NoteAction.cancel),
-            child: const Text('انصراف'),
+            child:  Text(tr('cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, _NoteAction.save),
-            child: const Text('ذخیره'),
+            child:  Text(tr('save')),
           ),
         ],
       ),
@@ -367,8 +367,8 @@ class _EpisodesGridState extends ConsumerState<_EpisodesGrid> {
         ),
         const SizedBox(height: 8),
         Text(
-          'برای علامت‌گذاری همه‌ی قسمت‌ها تا یک قسمت، روی آن قسمت نگه دار. '
-          'با دو بار ضربه زدن روی هر قسمت می‌توانی برایش یادداشت بنویسی.',
+          tr('long_press_an_episode_to_mark_all_episodes_up_to') +
+          tr('double_tap_any_episode_to_add_a_note'),
           style: TextStyle(fontSize: 11, color: AppColors.textSecondaryOf(context)),
         ),
         const SizedBox(height: 4),
@@ -376,12 +376,12 @@ class _EpisodesGridState extends ConsumerState<_EpisodesGrid> {
           children: [
             TextButton(
               onPressed: () => notifier.markAll(entry.id, total),
-              child: const Text('همه را دیده‌ام'),
+              child:  Text(tr('mark_all_as_watched')),
             ),
             TextButton(
               onPressed: () => notifier.clear(entry.id, total),
               child: Text(
-                'پاک کردن همه',
+                tr('clear_all'),
                 style: TextStyle(color: AppColors.textSecondaryOf(context)),
               ),
             ),
@@ -524,7 +524,7 @@ class _ManualPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        'دستی',
+        tr('manual'),
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
@@ -582,7 +582,7 @@ class _ReleaseBadge extends StatelessWidget {
             ),
           ),
           child: Text(
-            airing ? 'در حال پخش' : 'به‌زودی',
+            airing ? tr('airing') : tr('coming_soon'),
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,

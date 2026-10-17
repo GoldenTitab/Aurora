@@ -1,4 +1,5 @@
 import '../storage/economy.dart';
+import '../../core/i18n/lang.dart';
 
 enum MissionPeriod { daily, weekly }
 
@@ -44,11 +45,11 @@ class MissionState {
       def.target <= 0 ? 0 : (progress / def.target).clamp(0.0, 1.0).toDouble();
 }
 
-List<MissionDef> dailyMissions() => const [
+List<MissionDef> dailyMissions() =>  [
       MissionDef(
         id: 'd_ep3',
-        titleFa: 'قسمت‌بین روزانه',
-        descFa: '۳ قسمت انیمه ببین',
+        titleFa: tr('daily_watcher'),
+        descFa: tr('watch_3_anime_episodes'),
         target: 3,
         xp: 15,
         coins: 30,
@@ -57,8 +58,8 @@ List<MissionDef> dailyMissions() => const [
       ),
       MissionDef(
         id: 'd_rate1',
-        titleFa: 'منتقد',
-        descFa: 'به ۱ اثر امتیاز بده',
+        titleFa: tr('critic'),
+        descFa: tr('score_1_title'),
         target: 1,
         xp: 10,
         coins: 30,
@@ -67,8 +68,8 @@ List<MissionDef> dailyMissions() => const [
       ),
       MissionDef(
         id: 'd_open',
-        titleFa: 'سر بزن',
-        descFa: 'امروز وارد اپ شو',
+        titleFa: tr('check_in'),
+        descFa: tr('open_the_app_today'),
         target: 1,
         xp: 5,
         coins: 30,
@@ -77,11 +78,11 @@ List<MissionDef> dailyMissions() => const [
       ),
     ];
 
-List<MissionDef> weeklyMissions() => const [
+List<MissionDef> weeklyMissions() =>  [
       MissionDef(
         id: 'w_ep15',
-        titleFa: 'ماجراجوی هفته',
-        descFa: '۱۵ قسمت انیمه ببین',
+        titleFa: tr('weekly_adventurer'),
+        descFa: tr('watch_15_anime_episodes'),
         target: 15,
         xp: 40,
         coins: 30,
@@ -90,8 +91,8 @@ List<MissionDef> weeklyMissions() => const [
       ),
       MissionDef(
         id: 'w_pack1',
-        titleFa: 'کلکسیونر',
-        descFa: '۱ بسته کارت باز کن',
+        titleFa: tr('collector'),
+        descFa: tr('open_1_card_pack'),
         target: 1,
         xp: 20,
         coins: 30,

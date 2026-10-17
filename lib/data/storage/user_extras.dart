@@ -64,6 +64,15 @@ class UserExtras {
   Future<void> setSeedColor(Color color) =>
       _box.put('seed_color', color.toARGB32().toString());
 
+  // ── زبان اپ (fa/en) ────────────────────────────────────────────
+  String language() {
+    final v = _box.get('app_lang');
+    return v == 'en' ? 'en' : 'fa';
+  }
+
+  Future<void> setLanguage(String lang) =>
+      _box.put('app_lang', lang == 'en' ? 'en' : 'fa');
+
   // ── بنر قسمت‌های جدید ─────────────────────────────────────────
   int dismissedNewEpisodesAt() =>
       int.tryParse(_box.get('dismissed_new_ep') ?? '') ?? 0;
@@ -89,5 +98,29 @@ class UserExtras {
       return _box.delete(key);
     }
     return _box.put(key, note.trim());
+  }
+
+  /// پاک‌سازی کامل ردپای یک فرنچایز از «لیست من»: یادداشت فرنچایز،
+  /// امتیازها، یادداشت قسمت‌ها و آخرین بازدیدِ همه‌ی ورودی‌هایش.
+  /// (وضعیت‌ها و پیشرفت قسمت‌ها جدا و توسط notifierها پاک می‌شوند.)
+  Future<void> clearFranchise(String franchiseId, Iterable<String> entryIds) {
+    final ids = entryIds.toSet();
+    final remove = <String>[];
+    for (final k in _box.keys.map((e) => e.toString())) {
+      if (k == 'note:$franchiseId') {
+        remove.add(k);
+        continue;
+      }
+      for (final e in ids) {
+        if (k == 'seen:$e' ||
+            k == 'uscore:$e' ||
+            k.startsWith('enote:$e:')) {
+          remove.add(k);
+          break;
+        }
+      }
+    }
+    if (remove.isEmpty) return Future.value();
+    return _box.deleteAll(remove);
   }
 }

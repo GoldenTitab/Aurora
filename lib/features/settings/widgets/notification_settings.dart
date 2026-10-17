@@ -8,6 +8,7 @@ import '../../../data/notifications/airing_check_task.dart';
 import '../../../data/notifications/notification_content.dart';
 import '../../../data/notifications/notification_service.dart';
 import '../../../data/storage/migrations.dart';
+import '../../../core/i18n/lang.dart';
 
 /// بخش «اعلان‌ها» در تنظیمات:
 /// سوییچ «اعلان قسمت‌های جدید»، انتخاب ساعت بررسی روزانه (۰ تا ۲۳)
@@ -46,7 +47,7 @@ class _NotificationSettingsState extends ConsumerState<NotificationSettings> {
       if (value) {
         final granted = await NotificationService().requestPermissions();
         if (!granted) {
-          _snack('دسترسی اعلان داده نشد؛ اول از تنظیمات گوشی فعالش کن.');
+          _snack(tr('notification_permission_not_granted_enable_it_in'));
           return;
         }
         await NotificationPrefs.setEnabled(_meta, true);
@@ -75,21 +76,21 @@ class _NotificationSettingsState extends ConsumerState<NotificationSettings> {
     setState(() => _busy = true);
     try {
       await NotificationService().requestPermissions();
-      await NotificationService().showNewEpisodes(const [
+      await NotificationService().showNewEpisodes( [
         NewEpisodeNotifItem(
           entryId: 'demo-1',
-          titleFa: 'انیمه نمونه',
+          titleFa: tr('sample_anime'),
           newCount: 3,
           latestEpisode: 12,
         ),
         NewEpisodeNotifItem(
           entryId: 'demo-2',
-          titleFa: 'انیمه نمونه ۲',
+          titleFa: tr('sample_anime_2'),
           newCount: 1,
           latestEpisode: 5,
         ),
       ]);
-      _snack('اعلان آزمایشی ارسال شد.');
+      _snack(tr('test_notification_sent'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -101,9 +102,9 @@ class _NotificationSettingsState extends ConsumerState<NotificationSettings> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SwitchListTile(
-          title: const Text('اعلان قسمت‌های جدید'),
-          subtitle: const Text(
-            'بررسی روزانه قسمت‌های تازه پخش‌شده انیمه‌هایت',
+          title:  Text(tr('new_episode_notifications')),
+          subtitle:  Text(
+            tr('daily_check_for_newly_aired_episodes_of_your_ani'),
           ),
           value: _enabled,
           onChanged: _busy ? null : _setEnabled,
@@ -113,15 +114,15 @@ class _NotificationSettingsState extends ConsumerState<NotificationSettings> {
           DropdownButtonFormField<int>(
             key: ValueKey(_hour),
             initialValue: _hour,
-            decoration: const InputDecoration(
-              labelText: 'ساعت بررسی روزانه',
+            decoration:  InputDecoration(
+              labelText: tr('daily_check_time'),
               border: OutlineInputBorder(),
             ),
             items: [
               for (var h = 0; h < 24; h++)
                 DropdownMenuItem(
                   value: h,
-                  child: Text('ساعت ${toFa(h)}'),
+                  child: Text(tr('00', [toFa(h)])),
                 ),
             ],
             onChanged: (h) {
@@ -133,12 +134,12 @@ class _NotificationSettingsState extends ConsumerState<NotificationSettings> {
         OutlinedButton.icon(
           onPressed: _busy ? null : _sendTest,
           icon: const Icon(Icons.notifications_active_outlined),
-          label: const Text('ارسال اعلان آزمایشی'),
+          label:  Text(tr('send_test_notification')),
         ),
         const SizedBox(height: 8),
         Text(
-          'زمان‌بندی بررسی روزانه تقریبی است و سیستم‌عامل ممکن است آن را '
-          'چند ساعت جابه‌جا کند. در iOS زمان اجرا کاملاً با سیستم است.',
+          tr('the_daily_check_schedule_is_approximate_and_the_') +
+          tr('by_a_few_hours_on_ios_timing_is_entirely_up_to_t'),
           style: TextStyle(
             color: AppColors.textSecondaryOf(context),
             fontSize: 12,

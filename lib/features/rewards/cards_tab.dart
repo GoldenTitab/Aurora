@@ -10,8 +10,13 @@ import '../../core/widgets/section_title.dart';
 import '../../data/gamification/card_pool.dart';
 import '../../data/models/collectible_card.dart';
 import '../../data/providers.dart';
+import '../../core/i18n/lang.dart';
 
 /// تب «کارت‌ها»: باز کردن بسته و مشاهده کلکسیون.
+///
+/// برای روان ماندن اسکرول با کلکسیون‌های بزرگ، کل صفحه یک
+/// CustomScrollView تنبل است؛ هیچ گرید تو‌در‌تویی با shrinkWrap
+/// وجود ندارد که کل کلکسیون را یکجا بسازد.
 class CardsTab extends ConsumerWidget {
   const CardsTab({super.key});
 
@@ -24,159 +29,219 @@ class CardsTab extends ConsumerWidget {
       (sum, list) => sum + list.length,
     );
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceOf(context),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.borderOf(context)),
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.style_rounded,
-                    color: AppColors.primaryTextOf(context),
-                    size: 28,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'بسته کارت',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15,
-                          ),
-                        ),
-                        Text(
-                          '۳ کارت تصادفی از شخصیت‌های انیمه‌های کتابخانه‌ات',
-                          style: TextStyle(
-                            color: AppColors.textSecondaryOf(context),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: eco.coins < packPriceCoins
-                          ? null
-                          : () => context.push('/pack'),
-                      icon: const Icon(Icons.card_giftcard_rounded),
-                      label:
-                          Text('باز کردن (${toFa(packPriceCoins)} شفق)'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: cards.poolLoading
-                        ? null
-                        : () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            final n = await ref
-                                .read(cardsProvider.notifier)
-                                .rebuildPool(force: true);
-                            if (context.mounted) {
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    n > 0
-                                        ? 'استخر با ${toFa(n)} شخصیت به‌روز شد.'
-                                        : 'شخصیتی پیدا نشد؛ اول چند انیمه به لیستت اضافه کن.',
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                    icon: cards.poolLoading
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.refresh_rounded, size: 18),
-                    label: const Text('به‌روزرسانی'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${toFa(cards.poolSize)} شخصیت در استخر',
-                style: TextStyle(
-                  color: AppColors.textSecondaryOf(context),
-                  fontSize: 11,
-                ),
-              ),
-            ],
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          sliver: SliverToBoxAdapter(child: _PackHeader(cards: cards, ecoCoins: eco.coins)),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          sliver: SliverToBoxAdapter(
+            child: SectionTitle(tr('my_collection'), count: toFa(total)),
           ),
         ),
-        const SizedBox(height: 16),
-        SectionTitle('کلکسیون من', count: toFa(total)),
-        const SizedBox(height: 12),
         if (total == 0)
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: Center(
-              child: Text(
-                'هنوز کارتی نداری؛ یه بسته باز کن!',
-                style: TextStyle(color: AppColors.textSecondaryOf(context)),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            sliver: SliverToBoxAdapter(
+              child: Center(
+                child: Text(
+                  tr('no_cards_yet_open_a_pack'),
+                  style: TextStyle(color: AppColors.textSecondaryOf(context)),
+                ),
               ),
             ),
           )
         else
           for (final r in CardRarity.values)
             if (cards.collection[r]!.isNotEmpty) ...[
-              Row(
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: r.color,
-                      shape: BoxShape.circle,
-                    ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                sliver: SliverToBoxAdapter(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: r.color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${r.labelFa} (${toFa(cards.collection[r]!.length)})',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: r.color,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${r.labelFa} (${toFa(cards.collection[r]!.length)})',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: r.color,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  childAspectRatio: 0.72,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
                 ),
-                itemCount: cards.collection[r]!.length,
-                itemBuilder: (context, i) =>
-                    _CardTile(card: cards.collection[r]![i]),
               ),
-              const SizedBox(height: 16),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                sliver: SliverGrid(
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    childAspectRatio: 0.72,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) =>
+                        _CardTile(card: cards.collection[r]![i]),
+                    childCount: cards.collection[r]!.length,
+                  ),
+                ),
+              ),
             ],
+        const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
+    );
+  }
+}
+
+class _PackHeader extends ConsumerWidget {
+  const _PackHeader({required this.cards, required this.ecoCoins});
+  final CardsState cards;
+  final int ecoCoins;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceOf(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.borderOf(context)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.style_rounded,
+                color: AppColors.primaryTextOf(context),
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr('card_pack'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
+                    Text(
+                      tr('3_random_character_cards_from_your_library_s_ani'),
+                      style: TextStyle(
+                        color: AppColors.textSecondaryOf(context),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: ecoCoins < packPriceCoins
+                      ? null
+                      : () => context.push('/pack'),
+                  icon: const Icon(Icons.card_giftcard_rounded),
+                  label: Text(tr('open_shafaq', [toFa(packPriceCoins)])),
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: cards.poolLoading
+                    ? null
+                    : () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        final n = await ref
+                            .read(cardsProvider.notifier)
+                            .rebuildPool(force: true);
+                        if (context.mounted) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                n > 0
+                                    ? tr('pool_refreshed_with_characters',
+                                        [toFa(n)])
+                                    : tr('no_characters_found_add_a_few_anime_to_your_list'),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                icon: cards.poolLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 18),
+                label: Text(tr('refresh')),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            tr('characters_in_the_pool', [toFa(cards.poolSize)]),
+            style: TextStyle(
+              color: AppColors.textSecondaryOf(context),
+              fontSize: 11,
+            ),
+          ),
+          if (cards.poolBreakdown.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              '${tr('pool_mix')}: ${CardRarity.values.where((r) => (cards.poolBreakdown[r] ?? 0) > 0).map((r) => '${r.labelFa} ${toFa(cards.poolBreakdown[r]!)}').join(' · ')}',
+              style: TextStyle(
+                color: AppColors.textSecondaryOf(context),
+                fontSize: 11,
+              ),
+            ),
+          ],
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: cards.poolLoading
+                  ? null
+                  : () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      await ref.read(cardsProvider.notifier).clearPoolCache();
+                      if (context.mounted) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text(tr('pool_cache_cleared'))),
+                        );
+                      }
+                    },
+              icon: const Icon(Icons.cleaning_services_rounded, size: 16),
+              label: Text(tr('clear_pool_cache')),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(0, 32),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -204,7 +269,10 @@ class _CardTile extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(12),
               ),
-              child: CoverImage(url: card.image),
+              child: CoverImage(
+                url: card.image,
+                cacheWidth: 340,
+              ),
             ),
           ),
           Padding(
@@ -232,8 +300,7 @@ class _CardTile extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color:
-                        card.rarity.color.withValues(alpha: 0.15),
+                    color: card.rarity.color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(

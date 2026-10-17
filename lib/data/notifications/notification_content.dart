@@ -1,16 +1,16 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive/hive.dart';
 
+import '../../core/i18n/lang.dart';
 import '../../core/utils/persian_numbers.dart';
 
 /// شناسه کانال اعلان «قسمت‌های جدید».
 const String airingChannelId = 'aurora_airing';
 
-/// نام نمایشی کانال (فارسی).
-const String airingChannelName = 'قسمت‌های جدید';
+/// نام نمایشی کانال (به زبان فعلی اپ).
+String get airingChannelName => tr('new_episodes');
 
-const String airingChannelDescription =
-    'اعلان قسمت‌های تازه پخش‌شده انیمه‌های دنبال‌شده';
+String get airingChannelDescription => tr('newly_aired_episodes_from_anime_you_follow');
 
 /// payload اعلان: با تپ روی اعلان، کاربر به تقویم پخش هفتگی می‌رود.
 const String notifPayloadCalendar = '/calendar';

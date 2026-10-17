@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
 import 'api_exception.dart';
+import '../../core/i18n/lang.dart';
 
 enum ApiHost { anilist, mal, jikan }
 
@@ -57,26 +58,27 @@ class ApiGateway {
           ),
       _cache = cacheBox;
 
-  static const Map<ApiHost, HostPolicy> policies = {
+  /// (static final است نه const، چون پیام‌ها با tr() در رانتایم ساخته می‌شوند.)
+  static final Map<ApiHost, HostPolicy> policies = {
     ApiHost.anilist: HostPolicy(
       label: 'AniList',
       minGap: Duration(milliseconds: 750),
       rateLimitMessage:
-          'تعداد درخواست‌ها به AniList زیاد شد. چند دقیقه بعد دوباره تلاش کن.',
+          tr('too_many_requests_to_anilist_try_again_in_a_few_'),
     ),
     ApiHost.mal: HostPolicy(
       label: 'MAL',
       minGap: Duration(milliseconds: 400),
       maxAttempts: 3,
       rateLimitMessage:
-          'تعداد درخواست‌ها به MyAnimeList زیاد شد. چند دقیقه بعد دوباره تلاش کن.',
+          tr('too_many_requests_to_myanimelist_try_again_in_a_'),
     ),
     ApiHost.jikan: HostPolicy(
       label: 'Jikan',
       minGap: Duration(milliseconds: 1100),
       maxAttempts: 3,
       rateLimitMessage:
-          'تعداد درخواست‌ها به Jikan زیاد شد. چند دقیقه بعد دوباره تلاش کن.',
+          tr('too_many_requests_to_jikan_try_again_in_a_few_mi'),
     ),
   };
 
@@ -228,7 +230,7 @@ class ApiGateway {
       );
       return _toResponse(res);
     }
-    throw ApiException('دریافت اطلاعات از ${p.label} ناموفق بود.');
+    throw ApiException(tr('couldn_t_fetch_data_from', [p.label]));
   }
 
   ApiResponse _toResponse(http.Response res) => ApiResponse(

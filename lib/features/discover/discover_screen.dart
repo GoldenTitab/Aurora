@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/persian_numbers.dart';
 import '../../core/widgets/anime_card.dart';
+import '../../core/widgets/offline_banner.dart';
 import '../../core/widgets/section_title.dart';
 import '../../data/homewidget/home_widget_service.dart';
 import '../../data/models/anime_card_data.dart';
@@ -12,6 +13,7 @@ import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
 import 'widgets/continue_watching.dart';
 import 'widgets/new_episodes_banner.dart';
+import '../../core/i18n/lang.dart';
 
 /// صفحه «کشف»: رتبه‌بندی‌ها، پیشنهادها و چارت فصلی.
 class DiscoverScreen extends ConsumerWidget {
@@ -21,28 +23,35 @@ class DiscoverScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('کشف'),
+        title:  Text(tr('discover')),
         actions: [
           IconButton(
-            tooltip: 'فیلتر پیشرفته',
-            onPressed: () => context.push('/filter'),
-            icon: const Icon(Icons.tune_rounded),
-          ),
-          IconButton(
-            tooltip: 'چارت فصلی',
+            tooltip: tr('seasonal_chart'),
             onPressed: () => context.push('/seasonal'),
             icon: const Icon(Icons.calendar_month_outlined),
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: 24),
+      // ساخت تنبل بخش‌ها: فقط آیتم‌های نزدیک به دید ساخته می‌شوند تا
+      // اسکرول اول صفحه روان بماند. ترتیب: ۰ همگام‌سازی ویجت، ۱ ادامه‌ی
+      // تماشا، ۲ قسمت‌های تازه، ۳ پیشنهادها، ۴ به بعد بلوک‌های بخش‌ها.
+      // بنر آفلاین بالای لیست است و وقتی آنلاین هستیم هیچ فضایی نمی‌گیرد.
+      body: Column(
         children: [
-          const _HomeWidgetSync(),
-          const ContinueWatching(),
-          const NewEpisodesBanner(),
-          const _RecommendationsRow(),
-          for (final s in DiscoverSection.values) _DiscoverBlock(section: s),
+          const OfflineBanner(),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(bottom: 24),
+              itemCount: 4 + DiscoverSection.values.length,
+              itemBuilder: (context, i) {
+                if (i == 0) return const _HomeWidgetSync();
+                if (i == 1) return const ContinueWatching();
+                if (i == 2) return const NewEpisodesBanner();
+                if (i == 3) return const _RecommendationsRow();
+                return _DiscoverBlock(section: DiscoverSection.values[i - 4]);
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -62,7 +71,7 @@ class _RecommendationsRow extends ConsumerWidget {
       data: (items) {
         if (items.isEmpty) return const SizedBox.shrink();
         return _Row(
-          title: 'اگه اینو دوست داشتی...',
+          title: tr('if_you_liked_this'),
           items: items,
           rankDelta: const {},
         );
@@ -99,10 +108,10 @@ class _DiscoverBlock extends ConsumerWidget {
                     foregroundColor: AppColors.primaryTextOf(context),
                     visualDensity: VisualDensity.compact,
                   ),
-                  child: const Row(
+                  child:  Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('بیشتر',
+                      Text(tr('more'),
                           style: TextStyle(fontWeight: FontWeight.w700)),
                       SizedBox(width: 2),
                       Icon(Icons.chevron_right_rounded, size: 20),
@@ -187,7 +196,7 @@ class _Row extends StatelessWidget {
       return Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: Text(
-          'موردی پیدا نشد.',
+          tr('no_results_found'),
           style: TextStyle(color: AppColors.textSecondaryOf(context)),
         ),
       );

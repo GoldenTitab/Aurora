@@ -9,6 +9,7 @@ import '../../../data/models/entry.dart';
 import '../../../data/models/franchise.dart';
 import '../../../data/models/watch_status.dart';
 import '../../../data/providers.dart';
+import '../../../core/i18n/lang.dart';
 
 /// نمای درختی فرنچایز بر اساس [Entry.parentEntryId].
 ///
@@ -38,7 +39,7 @@ class FranchiseTreeView extends ConsumerWidget {
 
     if (roots.isEmpty) {
       return Text(
-        'ساختار درختی برای این مجموعه موجود نیست.',
+        tr('no_tree_structure_for_this_franchise'),
         style: TextStyle(color: AppColors.textSecondaryOf(context)),
       );
     }
@@ -102,7 +103,7 @@ class _TreeNode extends ConsumerWidget {
                   child: SizedBox(
                     width: 40,
                     height: 56,
-                    child: CoverImage(url: entry.cover),
+                    child: CoverImage(url: entry.cover, cacheWidth: 140),
                   ),
                 ),
                 const SizedBox(width: 10),

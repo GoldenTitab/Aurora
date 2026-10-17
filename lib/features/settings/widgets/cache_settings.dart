@@ -8,6 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/persian_numbers.dart';
 import '../../../data/remote/api_gateway.dart';
 import '../../../data/storage/migrations.dart';
+import '../../../core/i18n/lang.dart';
 
 /// بخش «حافظه‌ی کش» در تنظیمات: نمایش حجم تقریبی هر بخش و پاک‌سازی جدا یا کلی.
 ///
@@ -90,11 +91,11 @@ class _CacheSettingsState extends State<CacheSettings> {
   }
 
   String _formatBytes(int bytes) {
-    if (bytes < 1024) return '${toFa(bytes)} بایت';
+    if (bytes < 1024) return tr('b', [toFa(bytes)]);
     final kb = bytes / 1024;
-    if (kb < 1024) return '${toFa(kb.toStringAsFixed(1))} کیلوبایت';
+    if (kb < 1024) return tr('kb', [toFa(kb.toStringAsFixed(1))]);
     final mb = kb / 1024;
-    return '${toFa(mb.toStringAsFixed(1))} مگابایت';
+    return tr('mb', [toFa(mb.toStringAsFixed(1))]);
   }
 
   Future<bool> _confirm(String title, String body) async {
@@ -106,11 +107,11 @@ class _CacheSettingsState extends State<CacheSettings> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('انصراف'),
+            child:  Text(tr('cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('پاک‌سازی'),
+            child:  Text(tr('clear_2')),
           ),
         ],
       ),
@@ -120,9 +121,9 @@ class _CacheSettingsState extends State<CacheSettings> {
 
   Future<void> _clearImages() async {
     if (!await _confirm(
-      'پاک‌سازی کش تصاویر؟',
-      'تصاویر ذخیره‌شده‌ی موقت پاک می‌شوند و در صورت نیاز دوباره دانلود '
-      'می‌شوند. داده‌ی لیست و پیشرفت تو دست‌نخورده می‌ماند.',
+      tr('clear_image_cache'),
+      tr('cached_images_will_be_deleted_and_re_downloaded_') +
+      tr('your_list_data_and_progress_will_stay_untouched'),
     )) {
       return;
     }
@@ -136,16 +137,16 @@ class _CacheSettingsState extends State<CacheSettings> {
     } catch (_) {}
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('کش تصاویر پاک شد.')),
+       SnackBar(content: Text(tr('image_cache_cleared'))),
     );
     await _measure();
   }
 
   Future<void> _clearBoxes(List<String> names, String doneText) async {
     if (!await _confirm(
-      'پاک‌سازی کش؟',
-      'این کش‌ها فقط برای سرعت‌اند و دوباره ساخته می‌شوند. داده‌ی لیست و '
-      'پیشرفت تو دست‌نخورده می‌ماند.',
+      tr('clear_cache'),
+      tr('these_caches_only_speed_things_up_and_are_rebuil') +
+      tr('progress_will_stay_untouched'),
     )) {
       return;
     }
@@ -161,9 +162,9 @@ class _CacheSettingsState extends State<CacheSettings> {
 
   Future<void> _clearAll() async {
     if (!await _confirm(
-      'پاک‌سازی همه‌ی کش‌ها؟',
-      'همه‌ی کش‌های تصاویر و API پاک می‌شوند. داده‌ی لیست، وضعیت‌ها، '
-      'قسمت‌های دیده‌شده و جوایزت دست‌نخورده می‌ماند.',
+      tr('clear_all_caches_2'),
+      tr('all_image_and_api_caches_will_be_cleared_your_li') +
+      tr('watched_episodes_and_rewards_will_stay_untouched'),
     )) {
       return;
     }
@@ -182,7 +183,7 @@ class _CacheSettingsState extends State<CacheSettings> {
     }
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('همه‌ی کش‌ها پاک شدند.')),
+       SnackBar(content: Text(tr('all_caches_cleared'))),
     );
     await _measure();
   }
@@ -198,21 +199,21 @@ class _CacheSettingsState extends State<CacheSettings> {
 
     final sections = <_CacheSection>[
       _CacheSection(
-        title: 'کش تصاویر',
-        subtitle: 'حجم تقریبی: ${_formatBytes(_imageBytes)}',
+        title: tr('image_cache'),
+        subtitle: tr('approx_size', [_formatBytes(_imageBytes)]),
       ),
       _CacheSection(
-        title: 'کش API',
+        title: tr('api_cache'),
         subtitle:
-            'تعداد ورودی: ${toFa(_boxCounts[Boxes.apiCache] ?? 0)}',
+            tr('entries', [toFa(_boxCounts[Boxes.apiCache] ?? 0)]),
       ),
       _CacheSection(
-        title: 'کش فرنچایزها',
+        title: tr('franchise_cache'),
         subtitle:
-            'تعداد ورودی: ${toFa(_boxCounts[Boxes.franchiseCache] ?? 0)}',
+            tr('entries', [toFa(_boxCounts[Boxes.franchiseCache] ?? 0)]),
       ),
       _CacheSection(
-        title: 'کش خانه / کشف / کارت‌ها',
+        title: tr('home_discover_cards_cache'),
         subtitle: 'تعداد ورودی: ${toFa(
           (_boxCounts['home_cache'] ?? 0) +
               (_boxCounts['discover_cache'] ?? 0) +
@@ -232,13 +233,13 @@ class _CacheSettingsState extends State<CacheSettings> {
             children: [
               _row(sections[0], () => _clearImages()),
               const Divider(height: 1, indent: 14, endIndent: 14),
-              _row(sections[1], () => _clearBoxes([Boxes.apiCache], 'کش API پاک شد.')),
+              _row(sections[1], () => _clearBoxes([Boxes.apiCache], tr('api_cache_cleared'))),
               const Divider(height: 1, indent: 14, endIndent: 14),
               _row(
                 sections[2],
                 () => _clearBoxes(
                   [Boxes.franchiseCache],
-                  'کش فرنچایزها پاک شد.',
+                  tr('franchise_cache_cleared'),
                 ),
               ),
               const Divider(height: 1, indent: 14, endIndent: 14),
@@ -246,7 +247,7 @@ class _CacheSettingsState extends State<CacheSettings> {
                 sections[3],
                 () => _clearBoxes(
                   ['home_cache', 'discover_cache', 'card_cache'],
-                  'کش خانه / کشف / کارت‌ها پاک شد.',
+                  tr('home_discover_cards_cache_cleared'),
                 ),
               ),
             ],
@@ -258,12 +259,12 @@ class _CacheSettingsState extends State<CacheSettings> {
           child: OutlinedButton.icon(
             onPressed: _clearAll,
             icon: const Icon(Icons.delete_sweep_rounded),
-            label: const Text('پاک‌سازی همه‌ی کش‌ها'),
+            label:  Text(tr('clear_all_caches')),
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'حجم‌ها تقریبی‌اند. پاک‌سازی کش هیچ داده‌ی شخصی را حذف نمی‌کند.',
+          tr('sizes_are_approximate_clearing_cache_never_delet'),
           style: TextStyle(
             color: AppColors.textSecondaryOf(context),
             fontSize: 12,
@@ -298,7 +299,7 @@ class _CacheSettingsState extends State<CacheSettings> {
               ],
             ),
           ),
-          TextButton(onPressed: onClear, child: const Text('پاک‌سازی')),
+          TextButton(onPressed: onClear, child:  Text(tr('clear_2'))),
         ],
       ),
     );

@@ -8,11 +8,13 @@ import '../../core/utils/persian_numbers.dart';
 import '../../core/utils/route_utils.dart';
 import '../../core/utils/text_utils.dart';
 import '../../core/widgets/cover_image.dart';
+import '../../core/widgets/offline_banner.dart';
 import '../../data/models/entry.dart';
 import '../../data/models/watch_status.dart';
 import '../../data/providers.dart';
 import '../../data/storage/economy.dart';
 import '../../data/storage/migrations.dart';
+import '../../core/i18n/lang.dart';
 
 /// «لیست من»: گروه‌بندی بر اساس وضعیت، با مرتب‌سازی و فیلتر نوع.
 ///
@@ -30,17 +32,21 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
   static const _typeKey = 'mylist_type';
   static const _hideDoneKey = 'mylist_hide_done';
 
-  static const _sortLabels = <String, String>{
-    'status': 'پیش‌فرض (گروه‌بندی وضعیت)',
-    'rating': 'امتیاز من',
-    'progress': 'درصد پیشرفت',
-    'title': 'عنوان (الفبا)',
-    'airing': 'در حال پخش اول',
+  static final _sortLabels = <String, String>{
+    'status': tr('default_group_by_status'),
+    'rating': tr('my_score'),
+    'progress': tr('progress'),
+    'title': tr('title_a_z'),
+    'airing': tr('airing_first'),
   };
 
   String _sort = 'status';
   EntryType? _type;
   bool _hideDone = false;
+
+  /// حالت انتخاب چندتایی برای حذف گروهی فرنچایزها.
+  bool _selecting = false;
+  final _selected = <String>{};
 
   Box<String> get _meta => Hive.box<String>(Boxes.meta);
 
@@ -101,25 +107,6 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
     }
   }
 
-  List<Widget> _group(
-    WatchStatus status,
-    List<MyListFranchise> group,
-    Map<String, int?> ratings,
-  ) {
-    final list = group.where(_passes).toList()
-      ..sort((a, b) => _compare(a, b, ratings));
-    if (list.isEmpty) return const [];
-    return [
-      _GroupHeader(status: status, count: list.length),
-      for (final item in list)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: _FranchiseTile(item: item),
-        ),
-      const SizedBox(height: 12),
-    ];
-  }
-
   Widget _typeChip(EntryType? value, String label) {
     final selected = _type == value;
     return FilterChip(
@@ -138,14 +125,14 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Row(
         children: [
-          _typeChip(null, 'همه'),
+          _typeChip(null, tr('all')),
           const SizedBox(width: 8),
           for (final t in EntryType.values) ...[
             _typeChip(t, t.labelFa),
             const SizedBox(width: 8),
           ],
           FilterChip(
-            label: const Text('مخفی کردن تکمیل‌شده‌ها'),
+            label:  Text(tr('hide_completed')),
             selected: _hideDone,
             onSelected: (v) async {
               await _meta.put(_hideDoneKey, v ? '1' : '0');
@@ -154,6 +141,65 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _toggleSelect(String franchiseId) {
+    setState(() {
+      if (_selected.contains(franchiseId)) {
+        _selected.remove(franchiseId);
+      } else {
+        _selected.add(franchiseId);
+      }
+    });
+  }
+
+  /// حذف یک یا چند فرنچایز از «لیست من»: وضعیت‌ها، پیشرفت قسمت‌ها،
+  /// امتیازها، یادداشت‌ها و آخرین بازدید — همه پاک می‌شوند.
+  Future<void> _deleteSelected(List<MyListFranchise> items) async {
+    if (_selected.isEmpty) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('delete_selected')),
+        content: Text(tr('delete_n_franchises', [toFa(_selected.length)])),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(tr('cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(tr('delete')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final ids = _selected.toList();
+    final byId = {for (final i in items) i.franchise.id: i};
+    final statusN = ref.read(watchStatusProvider.notifier);
+    final epN = ref.read(episodeProgressProvider.notifier);
+    final extras = ref.read(userExtrasProvider);
+    final eco = Economy(_meta);
+    for (final fid in ids) {
+      final item = byId[fid];
+      if (item == null) continue;
+      final entryIds = item.franchise.entries.map((e) => e.id).toList();
+      for (final e in item.franchise.entries) {
+        await statusN.setStatus(e.id, null);
+        await epN.clear(e.id, e.episodes);
+      }
+      await extras.clearFranchise(fid, entryIds);
+      await eco.deleteFranchiseRating(fid);
+    }
+    if (!mounted) return;
+    setState(() {
+      _selected.clear();
+      _selecting = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(tr('franchises_removed', [toFa(ids.length)]))),
     );
   }
 
@@ -167,20 +213,59 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
 
     if (items.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('لیست من')),
+        appBar: AppBar(title:  Text(tr('my_list'))),
         body: const _EmptyList(),
       );
     }
 
     final visible = items.where(_passes).toList();
 
+    // ردیف‌های تخت برای ListView تنبل: سرگروه وضعیت + تایل‌های همان گروه.
+    // (قبلاً کل لیست با children ساخته می‌شد که برای لیست‌های بزرگ
+    // اسکرول را کند می‌کرد.)
+    final rows = <Object>[];
+    for (final s in WatchStatus.values) {
+      final list = visible.where((i) => i.status == s).toList()
+        ..sort((a, b) => _compare(a, b, ratings));
+      if (list.isEmpty) continue;
+      rows.add(_HeaderRow(s, list.length));
+      rows.addAll(list);
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('لیست من'),
-        actions: [
-          PopupMenuButton<String>(
+        title: Text(_selecting
+            ? tr('selected_count', [toFa(_selected.length)])
+            : tr('my_list')),
+        leading: _selecting
+            ? IconButton(
+                icon: const Icon(Icons.close_rounded),
+                tooltip: tr('cancel_selection'),
+                onPressed: () => setState(() {
+                  _selecting = false;
+                  _selected.clear();
+                }),
+              )
+            : null,
+        actions: _selecting
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.delete_rounded),
+                  tooltip: tr('delete_selected'),
+                  onPressed: _selected.isEmpty
+                      ? null
+                      : () => _deleteSelected(items),
+                ),
+              ]
+            : [
+                IconButton(
+                  icon: const Icon(Icons.checklist_rounded),
+                  tooltip: tr('select'),
+                  onPressed: () => setState(() => _selecting = true),
+                ),
+                PopupMenuButton<String>(
             icon: const Icon(Icons.sort_rounded),
-            tooltip: 'مرتب‌سازی (${_sortLabels[_sort]})',
+            tooltip: tr('sort', [_sortLabels[_sort]]),
             initialValue: _sort,
             onSelected: (v) async {
               await _meta.put(_sortKey, v);
@@ -199,20 +284,35 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
       ),
       body: Column(
         children: [
+          // بنر آفلاین؛ وقتی آنلاین هستیم هیچ فضایی نمی‌گیرد.
+          const OfflineBanner(),
           _filterChips(),
           Expanded(
             child: visible.isEmpty
                 ? const _EmptyFilter()
-                : ListView(
+                : ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                    children: [
-                      for (final s in WatchStatus.values)
-                        ..._group(
-                          s,
-                          items.where((i) => i.status == s).toList(),
-                          ratings,
+                    itemCount: rows.length,
+                    itemBuilder: (context, i) {
+                      final r = rows[i];
+                      if (r is _HeaderRow) {
+                        return _GroupHeader(
+                          status: r.status,
+                          count: r.count,
+                        );
+                      }
+                      final item = r as MyListFranchise;
+                      final fid = item.franchise.id;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _FranchiseTile(
+                          item: item,
+                          selecting: _selecting,
+                          selected: _selected.contains(fid),
+                          onToggle: () => _toggleSelect(fid),
                         ),
-                    ],
+                      );
+                    },
                   ),
           ),
         ],
@@ -221,11 +321,17 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
   }
 }
 
+/// سرگروه وضعیت در لیست تخت «لیست من».
+class _HeaderRow {
+  const _HeaderRow(this.status, this.count);
+  final WatchStatus status;
+  final int count;
+}
+
 class _GroupHeader extends StatelessWidget {
   const _GroupHeader({required this.status, required this.count});
   final WatchStatus status;
   final int count;
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -260,29 +366,47 @@ class _GroupHeader extends StatelessWidget {
 }
 
 class _FranchiseTile extends StatelessWidget {
-  const _FranchiseTile({required this.item});
+  const _FranchiseTile({
+    required this.item,
+    this.selecting = false,
+    this.selected = false,
+    this.onToggle,
+  });
   final MyListFranchise item;
+
+  /// حالت انتخاب چندتایی برای حذف گروهی.
+  final bool selecting;
+  final bool selected;
+  final VoidCallback? onToggle;
 
   @override
   Widget build(BuildContext context) {
     final f = item.franchise;
     final p = item.progress;
     return Material(
-      color: AppColors.surfaceOf(context),
+      color: selected
+          ? AppColors.primaryTextOf(context).withValues(alpha: 0.10)
+          : AppColors.surfaceOf(context),
       borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push(franchiseRouteFor(f.anilistId, f.id)),
+        onTap: selecting
+            ? onToggle
+            : () => context.push(franchiseRouteFor(f.anilistId, f.id)),
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Row(
             children: [
+              if (selecting) ...[
+                Checkbox(value: selected, onChanged: (_) => onToggle?.call()),
+                const SizedBox(width: 4),
+              ],
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: SizedBox(
                   width: 52,
                   height: 74,
-                  child: CoverImage(url: f.cover),
+                  child: CoverImage(url: f.cover, cacheWidth: 160),
                 ),
               ),
               const SizedBox(width: 12),
@@ -323,7 +447,7 @@ class _FranchiseTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '${toFa(p.done)} از ${toFa(p.total)} قسمت · ${toFa(p.percent)}٪',
+                      tr('of_episodes', [toFa(p.done), toFa(p.total), toFa(p.percent)]),
                       style: TextStyle(
                         fontSize: 11,
                         color: item.status.color,
@@ -359,12 +483,12 @@ class _EmptyList extends StatelessWidget {
             ),
             SizedBox(height: 12),
             Text(
-              'هنوز چیزی ثبت نکرده‌ای',
+              tr('nothing_logged_yet'),
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
             ),
             SizedBox(height: 6),
             Text(
-              'وارد صفحه یک مجموعه شو و وضعیت هر فصل یا فیلم را انتخاب کن تا اینجا ببینی.',
+              tr('open_a_franchise_page_and_set_a_status_for_each_'),
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.7),
             ),
@@ -394,12 +518,12 @@ class _EmptyFilter extends StatelessWidget {
             ),
             SizedBox(height: 12),
             Text(
-              'با این فیلترها چیزی پیدا نشد',
+              tr('no_results_with_these_filters'),
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
             ),
             SizedBox(height: 6),
             Text(
-              'فیلتر نوع اثر یا «مخفی کردن تکمیل‌شده‌ها» را تغییر بده.',
+              tr('try_changing_the_media_type_filter_or_hide_compl'),
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textSecondaryOf(context), height: 1.7),
             ),

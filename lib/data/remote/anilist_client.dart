@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'api_exception.dart';
 import 'api_gateway.dart';
+import '../../core/i18n/lang.dart';
 
 const String _nodeFields = '''
   id idMal type format status episodes duration averageScore seasonYear
@@ -66,7 +67,7 @@ query ($perPage: Int, $sort: [MediaSort], $status: MediaStatus,
     media(type: ANIME, isAdult: false, sort: $sort, status: $status,
           season: $season, seasonYear: $seasonYear, format: $format,
           format_in: $formatIn, popularity_greater: $popularityGreater) {
-      id idMal format episodes averageScore seasonYear
+      id idMal format episodes averageScore seasonYear countryOfOrigin status
       startDate { year }
       coverImage { large }
       title { romaji english native }
@@ -89,7 +90,7 @@ class AniListClient {
     );
     final media = data['Media'];
     if (media == null) {
-      throw const ApiException('این انیمه در AniList پیدا نشد.');
+      throw  ApiException(tr('this_anime_wasn_t_found_on_anilist'));
     }
     return (media as Map).cast<String, dynamic>();
   }
@@ -227,44 +228,62 @@ query ($id: Int, $perPage: Int) {
     return out;
   }
 
-  /// برنامه پخش بعدی چند مدیا (برای تقویم هفتگی) — کش کوتاه ۶ ساعته.
-  ///
-  /// فقط مدیاهایی که قسمت بعدیِ اعلام‌شده دارند در خروجی هستند.
-  Future<Map<int, ({int episode, int airingAt})>> fetchAiringSchedule(
-    List<int> ids,
-  ) async {
-    final out = <int, ({int episode, int airingAt})>{};
-    if (ids.isEmpty) return out;
+  /// گاید پخش هفتگی: همه قسمت‌هایی که در ۷ روز آینده پخش می‌شوند،
+  /// مستقیم از AiringSchedule (بدون وابستگی به کتابخانه کاربر).
+  /// کش ۶ ساعته؛ خروجی بر اساس شناسه مدیا یکتا شده و مرتب زمانی است.
+  Future<List<Map<String, dynamic>>> fetchWeeklyAiringGuide() async {
     const q = r'''
-query ($ids: [Int]) {
-  Page(perPage: 50) {
-    media(id_in: $ids, type: ANIME) {
-      id
-      nextAiringEpisode { episode airingAt }
+query ($page: Int, $perPage: Int, $gte: Int, $lte: Int) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo { hasNextPage }
+    airingSchedules(airingAt_greater: $gte, airingAt_lesser: $lte, sort: TIME) {
+      airingAt
+      episode
+      media {
+        id idMal averageScore countryOfOrigin
+        title { romaji english native }
+        coverImage { large }
+      }
     }
   }
 }
 ''';
-    for (var i = 0; i < ids.length; i += 50) {
-      final chunk = ids.sublist(i, (i + 50).clamp(0, ids.length));
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final out = <Map<String, dynamic>>[];
+    final seen = <int>{};
+    for (var page = 1; page <= 3; page++) {
+      Map<String, dynamic> data;
       try {
-        final data = await _query(
+        data = await _query(
           q,
-          {'ids': chunk},
+          {
+            'page': page,
+            'perPage': 50,
+            'gte': now,
+            'lte': now + 7 * 86400,
+          },
           cacheTtl: const Duration(hours: 6),
         );
-        final list = (data['Page']?['media'] as List?) ?? const [];
-        for (final m in list) {
-          final mm = (m as Map).cast<String, dynamic>();
-          final id = (mm['id'] as num?)?.toInt();
-          final next = mm['nextAiringEpisode'] as Map?;
-          if (id == null || next == null) continue;
-          final ep = (next['episode'] as num?)?.toInt();
-          final at = (next['airingAt'] as num?)?.toInt();
-          if (ep == null || at == null) continue;
-          out[id] = (episode: ep, airingAt: at);
-        }
-      } catch (_) {}
+      } catch (_) {
+        break;
+      }
+      final list = (data['Page']?['airingSchedules'] as List?) ?? const [];
+      if (list.isEmpty) break;
+      for (final s in list) {
+        final sm = (s as Map).cast<String, dynamic>();
+        final media = (sm['media'] as Map?)?.cast<String, dynamic>();
+        if (media == null) continue;
+        final id = (media['id'] as num?)?.toInt();
+        if (id == null || !seen.add(id)) continue;
+        out.add({
+          'airingAt': (sm['airingAt'] as num?)?.toInt() ?? 0,
+          'episode': (sm['episode'] as num?)?.toInt() ?? 0,
+          'media': media,
+        });
+      }
+      final hasNext =
+          (data['Page']?['pageInfo']?['hasNextPage'] as bool?) ?? false;
+      if (!hasNext) break;
     }
     return out;
   }
@@ -427,16 +446,16 @@ query ($page: Int, $perPage: Int, $sort: [MediaSort], $genreIn: [String],
     }
 
     if (res.statusCode == 404) {
-      throw const ApiException('این انیمه در AniList پیدا نشد.');
+      throw  ApiException(tr('this_anime_wasn_t_found_on_anilist'));
     }
     if (res.statusCode != 200 || body == null || body['errors'] != null) {
       if (kDebugMode) {
         debugPrint('[AniList] error ${res.statusCode}: ${res.body}');
       }
-      throw ApiException('خطا از سمت AniList (کد ${res.statusCode}).');
+      throw ApiException(tr('anilist_error_code', [res.statusCode]));
     }
     final data = body['data'];
-    if (data == null) throw const ApiException('پاسخ AniList خالی بود.');
+    if (data == null) throw  ApiException(tr('anilist_returned_an_empty_response'));
     return (data as Map).cast<String, dynamic>();
   }
 }
