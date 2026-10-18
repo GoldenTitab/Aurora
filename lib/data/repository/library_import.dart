@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/watch_status.dart';
 import '../providers.dart';
+import '../remote/api_exception.dart';
 import '../../core/i18n/lang.dart';
 
 class LibraryImportResult {
@@ -61,7 +62,12 @@ Future<LibraryImportResult> importFromAniList(
   final repo = ref.read(franchiseRepositoryProvider);
 
   onProgress(tr('fetching_list'));
-  final entries = await client.fetchUserAnimeList(username.trim());
+  List<Map<String, dynamic>>? entries;
+  try {
+    entries = await client.fetchUserAnimeList(username.trim());
+  } catch (e) {
+    return LibraryImportResult(ok: false, message: friendlyError(e));
+  }
   if (entries == null) {
     return LibraryImportResult(
       ok: false,
@@ -137,29 +143,33 @@ Future<LibraryImportResult> importFromMal(
 
   onProgress(tr('fetching_mal_list'));
   final all = <Map<String, dynamic>>[];
-  for (final s in [
-    'watching',
-    'completed',
-    'on_hold',
-    'dropped',
-    'plan_to_watch',
-  ]) {
-    var page = 1;
-    while (true) {
-      final batch = await jikan.fetchUserList(username.trim(), s, page);
-      if (batch == null) {
-        return LibraryImportResult(
-          ok: false,
-          message: tr('user_not_found_or_their_list_is_private'),
-        );
+  try {
+    for (final s in [
+      'watching',
+      'completed',
+      'on_hold',
+      'dropped',
+      'plan_to_watch',
+    ]) {
+      var page = 1;
+      while (true) {
+        final batch = await jikan.fetchUserList(username.trim(), s, page);
+        if (batch == null) {
+          return LibraryImportResult(
+            ok: false,
+            message: tr('user_not_found_or_their_list_is_private'),
+          );
+        }
+        if (batch.isEmpty) break;
+        all.addAll(batch.map((e) => {...e, 'jikanStatus': s}));
+        if (batch.length < 100) break;
+        page++;
+        if (page > 10) break;
+        await Future.delayed(const Duration(milliseconds: 400));
       }
-      if (batch.isEmpty) break;
-      all.addAll(batch.map((e) => {...e, 'jikanStatus': s}));
-      if (batch.length < 100) break;
-      page++;
-      if (page > 10) break;
-      await Future.delayed(const Duration(milliseconds: 400));
     }
+  } catch (e) {
+    return LibraryImportResult(ok: false, message: friendlyError(e));
   }
   if (all.isEmpty) {
     return LibraryImportResult(

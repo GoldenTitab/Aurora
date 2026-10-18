@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../core/i18n/lang.dart';
 
-enum CardRarity { common, uncommon, rare, epic, legendary, waifu, husbando }
+enum CardRarity { common, rare, superRare, epic, legendary, waifu, husbando }
 
 extension CardRarityX on CardRarity {
+  static const int totalWeight = 10000;
+
   String get labelFa {
     switch (this) {
       case CardRarity.common:
         return tr('common');
-      case CardRarity.uncommon:
-        return tr('uncommon');
       case CardRarity.rare:
         return tr('rare');
+      case CardRarity.superRare:
+        return tr('super_rare');
       case CardRarity.epic:
         return tr('epic');
       case CardRarity.legendary:
@@ -26,29 +28,31 @@ extension CardRarityX on CardRarity {
   int get weight {
     switch (this) {
       case CardRarity.common:
-        return 480;
-      case CardRarity.uncommon:
-        return 260;
+        return 4900;
       case CardRarity.rare:
-        return 150;
+        return 2646;
+      case CardRarity.superRare:
+        return 1470;
       case CardRarity.epic:
-        return 70;
+        return 588;
       case CardRarity.legendary:
-        return 30;
+        return 196;
       case CardRarity.waifu:
-        return 5;
+        return 100;
       case CardRarity.husbando:
-        return 5;
+        return 100;
     }
   }
+
+  double get percent => weight / 100.0;
 
   int get duplicateCoins {
     switch (this) {
       case CardRarity.common:
         return 5;
-      case CardRarity.uncommon:
-        return 10;
       case CardRarity.rare:
+        return 10;
+      case CardRarity.superRare:
         return 20;
       case CardRarity.epic:
         return 40;
@@ -65,9 +69,9 @@ extension CardRarityX on CardRarity {
     switch (this) {
       case CardRarity.common:
         return const Color(0xFF9CA3AF);
-      case CardRarity.uncommon:
-        return const Color(0xFF38BDF8);
       case CardRarity.rare:
+        return const Color(0xFF38BDF8);
+      case CardRarity.superRare:
         return const Color(0xFFA78BFA);
       case CardRarity.epic:
         return const Color(0xFFF59E0B);
@@ -80,7 +84,17 @@ extension CardRarityX on CardRarity {
     }
   }
 
+  static CardRarity rollOutcome(int roll) {
+    var acc = 0;
+    for (final r in CardRarity.values) {
+      acc += r.weight;
+      if (roll < acc) return r;
+    }
+    return CardRarity.common;
+  }
+
   static CardRarity fromKey(String key) {
+    if (key == 'uncommon') return CardRarity.rare;
     for (final r in CardRarity.values) {
       if (r.name == key) return r;
     }

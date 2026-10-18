@@ -194,7 +194,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     ),
                     child: IconButton(
                       tooltip: tr('advanced_filters'),
-                      onPressed: () => context.push('/filter'),
+                      onPressed: () => context.push(
+                        '/filter',
+                        extra: _query.isEmpty ? null : _query,
+                      ),
                       icon: Icon(
                         Icons.tune_rounded,
                         color: AppColors.primaryTextOf(context),

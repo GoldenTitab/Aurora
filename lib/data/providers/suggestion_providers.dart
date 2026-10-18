@@ -28,10 +28,8 @@ class SuggestionService {
     }
 
     final sectionWeight = {
-      DiscoverSection.trending: 'trending',
+      DiscoverSection.airing: 'airing',
       DiscoverSection.seasonal: 'seasonal',
-      DiscoverSection.topSeries: 'top',
-      DiscoverSection.topMovies: 'top',
       DiscoverSection.underrated: 'underrated',
     };
     final candidates = <({AnimeCardData data, String sourceFa})>[];
@@ -39,11 +37,30 @@ class SuggestionService {
       try {
         final data = await _ref.read(discoverSectionProvider(entry.key).future);
         for (final d in data.items) {
-          if (d.status != null && d.status != 'FINISHED') continue;
+          if (d.status != 'FINISHED') continue;
           candidates.add((data: d, sourceFa: entry.value));
         }
       } catch (_) {}
     }
+    try {
+      final client = _ref.read(anilistClientProvider);
+      final seenTop = <int>{};
+      for (var p = 1; p <= 2; p++) {
+        final r = await client.browsePage(
+          'suggest_top',
+          'sort: [SCORE_DESC]',
+          page: p,
+          perPage: 50,
+        );
+        for (final d in cardsFromRaw(r.items)) {
+          if (d.status != 'FINISHED') continue;
+          if (seenTop.add(d.anilistId)) {
+            candidates.add((data: d, sourceFa: 'top'));
+          }
+        }
+        if (!r.hasNext) break;
+      }
+    } catch (_) {}
     if (candidates.isEmpty) return null;
 
     final engine = SuggestionEngine();

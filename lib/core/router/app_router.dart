@@ -123,7 +123,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/filter',
       parentNavigatorKey: _rootKey,
-      builder: (context, state) => const FilterScreen(),
+      builder: (context, state) =>
+          FilterScreen(initialQuery: state.extra as String?),
     ),
     GoRoute(
       path: '/seasonal',
@@ -142,7 +143,7 @@ final GoRouter appRouter = GoRouter(
         final name = state.pathParameters['name'];
         final section = DiscoverSection.values.firstWhere(
           (s) => s.name == name,
-          orElse: () => DiscoverSection.trending,
+          orElse: () => DiscoverSection.airing,
         );
         return DiscoverListScreen(section: section);
       },

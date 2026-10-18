@@ -7,6 +7,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../core/i18n/lang.dart';
 import '../models/anime_card_data.dart';
 import '../models/franchise.dart';
+import '../remote/anilist_client.dart';
 import '../storage/economy.dart';
 import '../storage/migrations.dart' show Boxes;
 import 'core_providers.dart';
@@ -14,9 +15,7 @@ import 'home_providers.dart';
 import 'watch_providers.dart';
 
 enum DiscoverSection {
-  trending('trending_anime'),
-  topSeries('top_100_tv_anime'),
-  topMovies('top_100_anime_movies'),
+  airing('currently_airing'),
   underrated('underrated_anime'),
   seasonal('seasonal_chart');
 
@@ -44,12 +43,8 @@ class DiscoverSectionData {
 
 String discoverArgs(DiscoverSection section) {
   switch (section) {
-    case DiscoverSection.trending:
-      return 'sort: [TRENDING_DESC]';
-    case DiscoverSection.topSeries:
-      return 'sort: [SCORE_DESC], format_in: [TV, TV_SHORT]';
-    case DiscoverSection.topMovies:
-      return 'sort: [SCORE_DESC], format: MOVIE';
+    case DiscoverSection.airing:
+      return 'status: RELEASING, sort: [POPULARITY_DESC]';
     case DiscoverSection.underrated:
       return 'sort: [POPULARITY], averageScore_greater: 75';
     case DiscoverSection.seasonal:
@@ -58,25 +53,9 @@ String discoverArgs(DiscoverSection section) {
   }
 }
 
-int discoverPerPage(DiscoverSection section) {
-  switch (section) {
-    case DiscoverSection.topSeries:
-    case DiscoverSection.topMovies:
-      return 50;
-    default:
-      return 24;
-  }
-}
+int discoverPerPage(DiscoverSection section) => 24;
 
-int _discoverPages(DiscoverSection section) {
-  switch (section) {
-    case DiscoverSection.topSeries:
-    case DiscoverSection.topMovies:
-      return 2;
-    default:
-      return 1;
-  }
-}
+int _discoverPages(DiscoverSection section) => 1;
 
 class DiscoverSectionNotifier
     extends FamilyAsyncNotifier<DiscoverSectionData, DiscoverSection> {
@@ -216,15 +195,119 @@ final discoverSectionProvider =
       DiscoverSection
     >(DiscoverSectionNotifier.new);
 
+Future<List<AnimeCardData>> _fetchSeasonAll(
+  AniListClient client,
+  String season,
+  int year,
+) async {
+  final seen = <int>{};
+  final out = <AnimeCardData>[];
+  var page = 1;
+  while (true) {
+    final r = await client.browsePage(
+      'season_all_${season}_$year',
+      'season: $season, seasonYear: $year, sort: [POPULARITY_DESC]',
+      page: page,
+      perPage: 50,
+    );
+    for (final c in cardsFromRaw(r.items)) {
+      if (seen.add(c.anilistId)) out.add(c);
+    }
+    if (!r.hasNext || page >= 20) break;
+    page++;
+  }
+  return out;
+}
+
+Future<Box<String>> _seasonCacheBox() async => Hive.isBoxOpen('discover_cache')
+    ? Hive.box<String>('discover_cache')
+    : await Hive.openBox<String>('discover_cache');
+
+Future<List<AnimeCardData>?> _readSeasonCache(String key) async {
+  try {
+    final raw = (await _seasonCacheBox()).get(key);
+    if (raw == null) return null;
+    final m = jsonDecode(raw) as Map<String, dynamic>;
+    final t = m['t'] as int? ?? 0;
+    if (DateTime.now().millisecondsSinceEpoch - t >
+        const Duration(hours: 12).inMilliseconds) {
+      return null;
+    }
+    final items = (m['items'] as List?) ?? const [];
+    if (items.isEmpty) return null;
+    return items.map((e) {
+      final x = (e as Map).cast<String, dynamic>();
+      return AnimeCardData(
+        anilistId: x['id'] as int,
+        titleFa: x['fa'] as String,
+        titleEn: x['en'] as String,
+        cover: x['cover'] as String?,
+        year: x['year'] as int?,
+        score: (x['score'] as num).toDouble(),
+        countryOfOrigin: x['co'] as String?,
+        status: x['st'] as String?,
+      );
+    }).toList();
+  } catch (_) {
+    return null;
+  }
+}
+
+Future<void> _writeSeasonCache(String key, List<AnimeCardData> items) async {
+  try {
+    await (await _seasonCacheBox()).put(
+      key,
+      jsonEncode({
+        't': DateTime.now().millisecondsSinceEpoch,
+        'items': [
+          for (final c in items)
+            {
+              'id': c.anilistId,
+              'fa': c.titleFa,
+              'en': c.titleEn,
+              'cover': c.cover,
+              'year': c.year,
+              'score': c.score,
+              'co': c.countryOfOrigin,
+              'st': c.status,
+            },
+        ],
+      }),
+    );
+  } catch (_) {}
+}
+
+Future<List<AnimeCardData>> _seasonAll(
+  AniListClient client,
+  String cacheKey,
+  String season,
+  int year,
+) async {
+  final cached = await _readSeasonCache(cacheKey);
+  if (cached != null) return cached;
+  final items = await _fetchSeasonAll(client, season, year);
+  if (items.isNotEmpty) await _writeSeasonCache(cacheKey, items);
+  return items;
+}
+
+final seasonalAllProvider = FutureProvider<List<AnimeCardData>>((ref) async {
+  final c = _currentSeason(DateTime.now());
+  return _seasonAll(
+    ref.read(anilistClientProvider),
+    'season_all_current',
+    c.season,
+    c.year,
+  );
+});
+
 final seasonalNextProvider = FutureProvider<List<AnimeCardData>>((ref) async {
   final n = _nextSeason(DateTime.now());
-  final client = ref.read(anilistClientProvider);
-  final r = await client.browsePage(
-    'season_next',
-    'season: ${n.season}, seasonYear: ${n.year}, sort: [POPULARITY_DESC]',
-    perPage: 24,
+  return _seasonAll(
+    ref.read(anilistClientProvider),
+    'season_all_next',
+    n.season,
+    n.year,
   );
-  return cardsFromRaw(r.items);
 });
 
 final recommendationsProvider = FutureProvider<List<AnimeCardData>>((

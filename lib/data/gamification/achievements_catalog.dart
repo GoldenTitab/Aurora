@@ -205,8 +205,8 @@ List<AchievementDef> buildAchievements() {
   }
   final rarities = [
     ('common', tr('common')),
-    ('uncommon', tr('uncommon')),
     ('rare', tr('rare')),
+    ('super_rare', tr('super_rare')),
     ('epic', tr('epic')),
     ('legendary', tr('legendary')),
     ('waifu', tr('waifu')),

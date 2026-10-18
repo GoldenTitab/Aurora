@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/persian_numbers.dart';
 import '../../data/providers.dart';
 import '../../data/storage/data_export.dart';
+import '../../data/storage/data_reset.dart';
 import '../../data/storage/migrations.dart';
 import 'widgets/cache_settings.dart';
 import 'widgets/notification_settings.dart';
@@ -128,6 +129,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _resetAllData() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('reset_all_data_confirm_title')),
+        content: Text(tr('reset_all_data_confirm_body')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(tr('cancel')),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(tr('reset_all_data_confirm_yes')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      await DataReset.resetAll();
+      ref.invalidate(watchStatusProvider);
+      ref.invalidate(episodeProgressProvider);
+      ref.invalidate(myListFranchisesProvider);
+      ref.invalidate(continueWatchingProvider);
+      ref.invalidate(newEpisodesProvider);
+      ref.invalidate(libraryStatsProvider);
+      ref.invalidate(economyProvider);
+      ref.invalidate(streakProvider);
+      ref.invalidate(heatmapProvider);
+      ref.invalidate(missionsProvider);
+      ref.invalidate(achievementsProvider);
+      ref.invalidate(cardsProvider);
+      ref.invalidate(franchiseRatingProvider);
+      ref.invalidate(weeklyAiringProvider);
+      ref.invalidate(userExtrasProvider);
+      if (!mounted) return;
+      Navigator.pop(context);
+      setState(() {});
+      _snack(tr('data_reset_done'));
+    } catch (_) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      _snack(tr('restore_failed_current_data_is_untouched'));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final statuses = Hive.box<String>(Boxes.watchStatus).length;
@@ -213,6 +268,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onPressed: () => context.push('/privacy'),
             icon: const Icon(Icons.privacy_tip_rounded),
             label: Text(tr('privacy')),
+          ),
+          const SizedBox(height: 8),
+          _GroupTitle(tr('reset_all_data')),
+          Text(
+            tr('reset_all_data_desc'),
+            style: TextStyle(
+              color: AppColors.textSecondaryOf(context),
+              fontSize: 12,
+              height: 1.7,
+            ),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: _resetAllData,
+            icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
+            label: Text(
+              tr('reset_all_data'),
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),

@@ -46,7 +46,9 @@ Map<String, String> get formatOptions => {
 };
 
 class FilterScreen extends ConsumerStatefulWidget {
-  const FilterScreen({super.key});
+  const FilterScreen({super.key, this.initialQuery});
+
+  final String? initialQuery;
 
   @override
   ConsumerState<FilterScreen> createState() => _FilterScreenState();
@@ -59,6 +61,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
   RangeValues _episodes = const RangeValues(1, 50);
   String _format = '';
   final _studioCtrl = TextEditingController();
+  late final TextEditingController _queryCtrl;
 
   bool _searched = false;
   bool _loading = false;
@@ -73,6 +76,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
   @override
   void initState() {
     super.initState();
+    _queryCtrl = TextEditingController(text: widget.initialQuery ?? '');
     _scroll.addListener(() {
       if (!_scroll.hasClients) return;
       final p = _scroll.position;
@@ -84,6 +88,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
   void dispose() {
     _scroll.dispose();
     _studioCtrl.dispose();
+    _queryCtrl.dispose();
     super.dispose();
   }
 
@@ -112,6 +117,9 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
           .read(anilistClientProvider)
           .advancedBrowse(
             page: _page + 1,
+            query: _queryCtrl.text.trim().isEmpty
+                ? null
+                : _queryCtrl.text.trim(),
             genres: _genres.isEmpty ? null : _genres.toList(),
             scoreMin: _score.start.round() <= 0
                 ? null
@@ -231,6 +239,33 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          SectionTitle(tr('search_2')),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _queryCtrl,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _search(),
+            decoration: InputDecoration(
+              hintText: tr('search_a_persian_or_english_title'),
+              hintStyle: TextStyle(color: AppColors.textSecondaryOf(context)),
+              filled: true,
+              fillColor: AppColors.surfaceOf(context),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: AppColors.borderOf(context)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.primary),
+              ),
+              prefixIcon: const Icon(Icons.search_rounded),
+            ),
+          ),
+          const SizedBox(height: 16),
           SectionTitle(tr('genres')),
           const SizedBox(height: 10),
           Wrap(

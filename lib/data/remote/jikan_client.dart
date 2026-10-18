@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../../core/i18n/lang.dart';
+import 'api_exception.dart';
 import 'api_gateway.dart';
 
 class JikanClient {
@@ -70,24 +72,27 @@ class JikanClient {
     String status,
     int page,
   ) async {
-    try {
-      final res = await _gw.get(
-        ApiHost.jikan,
-        Uri.parse(
-          'https://api.jikan.moe/v4/users/${Uri.encodeComponent(username)}'
-          '/animelist?status=$status&page=$page&limit=100',
-        ),
-        cacheTtl: const Duration(minutes: 10),
-        maxAttempts: 2,
+    final res = await _gw.get(
+      ApiHost.jikan,
+      Uri.parse(
+        'https://api.jikan.moe/v4/users/${Uri.encodeComponent(username)}'
+        '/animelist?status=$status&page=$page&limit=100',
+      ),
+      cacheTtl: const Duration(minutes: 10),
+      maxAttempts: 2,
+    );
+    if (res.statusCode == 404 || res.statusCode == 400) return null;
+    if (res.statusCode == 429) {
+      throw ApiException(
+        tr('too_many_requests_to_jikan_try_again_in_a_few_mi'),
       );
-      if (res.statusCode == 404 || res.statusCode == 400) return null;
-      if (res.statusCode != 200) return const [];
-      final json = jsonDecode(res.body) as Map<String, dynamic>;
-      final list = (json['data'] as List?) ?? const [];
-      return list.map((e) => (e as Map).cast<String, dynamic>()).toList();
-    } catch (_) {
-      return const [];
     }
+    if (res.statusCode != 200) {
+      throw ApiException(tr('anilist_error_code', [res.statusCode]));
+    }
+    final json = jsonDecode(res.body) as Map<String, dynamic>;
+    final list = (json['data'] as List?) ?? const [];
+    return list.map((e) => (e as Map).cast<String, dynamic>()).toList();
   }
 
   Future<List<({String relation, int malId})>> relations(int malId) async {

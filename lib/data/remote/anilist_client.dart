@@ -151,7 +151,7 @@ class AniListClient {
     final q =
         '{ Page(page: $page, perPage: $perPage) { pageInfo { hasNextPage } '
         'media(type: ANIME, isAdult: false, $args) '
-        '{ id averageScore seasonYear title { romaji english } coverImage { large } } } }';
+        '{ id averageScore seasonYear status countryOfOrigin title { romaji english } coverImage { large } } } }';
     final sw = Stopwatch()..start();
     try {
       final data = await _query(q, const {});
@@ -329,28 +329,26 @@ query ($userName: String) {
   }
 }
 ''';
-    try {
-      final data = await _query(q, {'userName': username});
-      final lists =
-          (data['MediaListCollection'] as Map?)?['lists'] as List? ?? const [];
-      final out = <Map<String, dynamic>>[];
-      for (final l in lists) {
-        final lm = (l as Map).cast<String, dynamic>();
-        final status = lm['status'] as String?;
-        for (final e in (lm['entries'] as List? ?? const [])) {
-          final em = (e as Map).cast<String, dynamic>();
-          out.add({...em, 'listStatus': status});
-        }
+    final data = await _query(q, {'userName': username});
+    final coll = data['MediaListCollection'] as Map?;
+    if (coll == null) return null;
+    final lists = coll['lists'] as List? ?? const [];
+    final out = <Map<String, dynamic>>[];
+    for (final l in lists) {
+      final lm = (l as Map).cast<String, dynamic>();
+      final status = lm['status'] as String?;
+      for (final e in (lm['entries'] as List? ?? const [])) {
+        final em = (e as Map).cast<String, dynamic>();
+        out.add({...em, 'listStatus': status});
       }
-      return out;
-    } catch (_) {
-      return null;
     }
+    return out;
   }
 
   Future<({List<Map<String, dynamic>> items, bool hasNext})> advancedBrowse({
     int page = 1,
     int perPage = 24,
+    String? query,
     List<String>? genres,
     int? scoreMin,
     int? scoreMax,
@@ -364,14 +362,14 @@ query ($userName: String) {
     const q = r'''
 query ($page: Int, $perPage: Int, $sort: [MediaSort], $genreIn: [String],
        $scoreGreater: Int, $scoreLesser: Int, $yearGreater: Int, $yearLesser: Int,
-       $epGreater: Int, $epLesser: Int, $format: MediaFormat) {
+       $epGreater: Int, $epLesser: Int, $format: MediaFormat, $search: String) {
   Page(page: $page, perPage: $perPage) {
     pageInfo { hasNextPage }
     media(type: ANIME, isAdult: false, sort: $sort, genre_in: $genreIn,
           averageScore_greater: $scoreGreater, averageScore_lesser: $scoreLesser,
           seasonYear_greater: $yearGreater, seasonYear_lesser: $yearLesser,
           episodes_greater: $epGreater, episodes_lesser: $epLesser,
-          format: $format) {
+          format: $format, search: $search) {
       id idMal format episodes averageScore seasonYear
       startDate { year }
       coverImage { large }
@@ -386,6 +384,7 @@ query ($page: Int, $perPage: Int, $sort: [MediaSort], $genreIn: [String],
       'page': page,
       'perPage': perPage,
       'sort': [sort ?? 'POPULARITY_DESC'],
+      'search': query?.trim().isEmpty ?? true ? null : query!.trim(),
       'genreIn': genres,
       'scoreGreater': scoreMin,
       'scoreLesser': scoreMax,
@@ -438,8 +437,9 @@ query ($page: Int, $perPage: Int, $sort: [MediaSort], $genreIn: [String],
       throw ApiException(tr('anilist_error_code', [res.statusCode]));
     }
     final data = body['data'];
-    if (data == null)
+    if (data == null) {
       throw ApiException(tr('anilist_returned_an_empty_response'));
+    }
     return (data as Map).cast<String, dynamic>();
   }
 }

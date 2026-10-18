@@ -44,8 +44,10 @@ class SuggestionEngine {
     for (final c in pool) {
       var score = (c.data.score * 4).round();
       switch (c.sourceFa) {
-        case 'trending':
+        case 'top':
           score += 15;
+        case 'underrated':
+          score += 10;
         case 'seasonal':
           score += 5;
       }

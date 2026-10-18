@@ -128,8 +128,9 @@ class Migrations {
         if (raw == null) return const {};
         if (raw is! Map) throw FormatException(tr('section_is_invalid', [key]));
         return raw.map((k, v) {
-          if (v is! String)
+          if (v is! String) {
             throw FormatException(tr('section_is_invalid', [key]));
+          }
           return MapEntry(k.toString(), v);
         });
       }

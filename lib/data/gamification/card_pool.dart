@@ -21,28 +21,32 @@ class CardPool {
 
   static const _poolKey = 'cardpool';
 
-  static const _poolVersion = 2;
+  static const _poolVersion = 4;
   static const _poolTtl = Duration(days: 7);
   static const _maxFranchises = 40;
   static const _charsPerMedia = 20;
 
-  static const int _favUncommon = 80;
-  static const int _favRare = 300;
-  static const int _favEpic = 1000;
-  static const int _favLegendary = 3000;
-  static const int _favSpecial = 10000;
+  static const _maxOutcomeRerolls = 10;
+
+  static const int _favRare = 6000;
+  static const int _favSuperRare = 12000;
+  static const int _favEpic = 20000;
+  static const int _favLegendary = 30000;
+
+  static const _rarityMigrationKey = 'card_rarity_v4_done';
+
+  static const _legacyRarityMap = {'uncommon': 'rare', 'rare': 'superRare'};
 
   static CardRarity rarityFor(int favourites, String? gender) {
-    if (favourites >= _favSpecial) {
+    if (favourites >= _favLegendary) {
       final g = (gender ?? '').toLowerCase();
       if (g == 'female') return CardRarity.waifu;
       if (g == 'male') return CardRarity.husbando;
       return CardRarity.legendary;
     }
-    if (favourites >= _favLegendary) return CardRarity.legendary;
     if (favourites >= _favEpic) return CardRarity.epic;
+    if (favourites >= _favSuperRare) return CardRarity.superRare;
     if (favourites >= _favRare) return CardRarity.rare;
-    if (favourites >= _favUncommon) return CardRarity.uncommon;
     return CardRarity.common;
   }
 
@@ -65,15 +69,12 @@ class CardPool {
         for (final c in chars) {
           final id = c['id'] as int;
           if (!seen.add(id)) continue;
-          final fav = (c['favourites'] as num?)?.toInt() ?? 0;
-          final gender = (c['gender'] as String?) ?? '';
           pool.add({
             'id': id,
             'name': c['name'] ?? '—',
             'image': c['image'],
-            'favourites': fav,
-            'gender': gender,
-            'rarity': rarityFor(fav, gender).name,
+            'favourites': (c['favourites'] as num?)?.toInt() ?? 0,
+            'gender': (c['gender'] as String?) ?? '',
           });
         }
       } catch (_) {}
@@ -117,65 +118,84 @@ class CardPool {
   Map<CardRarity, int> rarityBreakdown() {
     final out = <CardRarity, int>{};
     for (final p in _poolItems()) {
-      final r = CardRarityX.fromKey(p['rarity'] as String? ?? '');
+      final r = rarityFor(
+        (p['favourites'] as num?)?.toInt() ?? 0,
+        p['gender'] as String?,
+      );
       out[r] = (out[r] ?? 0) + 1;
     }
     return out;
   }
 
-  CardRarity _rollRarity(Random rnd) {
-    final roll = rnd.nextInt(1000);
-    var acc = 0;
-    for (final r in CardRarity.values) {
-      acc += r.weight;
-      if (roll < acc) return r;
+  Future<void> migrateLegacyRarities() async {
+    if ((_meta.get(_rarityMigrationKey) ?? '') == '1') return;
+    for (final k in _meta.keys.map((e) => e.toString())) {
+      if (!k.startsWith('cardinfo:')) continue;
+      try {
+        final raw = _meta.get(k);
+        if (raw == null) continue;
+        final m = (jsonDecode(raw) as Map).cast<String, dynamic>();
+        final r = m['rarity'] as String?;
+        final mapped = _legacyRarityMap[r];
+        if (mapped != null) {
+          m['rarity'] = mapped;
+          await _meta.put(k, jsonEncode(m));
+        }
+      } catch (_) {}
     }
-    return CardRarity.common;
+    await _meta.put(_rarityMigrationKey, '1');
   }
 
-  Map<String, dynamic>? _pickForTier(
+  static Map<String, dynamic>? pickForOutcome(
     List<Map<String, dynamic>> pool,
-    CardRarity tier,
+    CardRarity? outcome,
     Random rnd,
     Set<int> exclude,
   ) {
-    final order = <CardRarity>[tier];
-    final idx = CardRarity.values.indexOf(tier);
-    for (var d = 1; d < CardRarity.values.length; d++) {
-      if (idx - d >= 0) order.add(CardRarity.values[idx - d]);
-      if (idx + d < CardRarity.values.length) {
-        order.add(CardRarity.values[idx + d]);
-      }
-    }
-    for (final r in order) {
-      final list = pool
-          .where((p) => p['rarity'] == r.name && !exclude.contains(p['id']))
-          .toList();
-      if (list.isNotEmpty) return list[rnd.nextInt(list.length)];
-    }
-    return null;
+    final list = pool.where((p) {
+      if (exclude.contains(p['id'] as int)) return false;
+      if (outcome == null) return true;
+      return rarityFor(
+            (p['favourites'] as num?)?.toInt() ?? 0,
+            p['gender'] as String?,
+          ) ==
+          outcome;
+    }).toList();
+    if (list.isEmpty) return null;
+    return list[rnd.nextInt(list.length)];
   }
 
   int _ownedCount(int charId) =>
       int.tryParse(_meta.get('card:$charId') ?? '') ?? 0;
+
+  CardRarity _storedRarity(int charId) {
+    try {
+      final raw = _meta.get('cardinfo:$charId');
+      if (raw == null) return CardRarity.common;
+      final m = (jsonDecode(raw) as Map).cast<String, dynamic>();
+      final r = m['rarity'] as String? ?? 'common';
+      return CardRarityX.fromKey(_legacyRarityMap[r] ?? r);
+    } catch (_) {
+      return CardRarity.common;
+    }
+  }
 
   CardRarity _effectiveRarity(
     int charId,
     Map<int, Map<String, dynamic>> poolIndex,
   ) {
     final p = poolIndex[charId];
-    if (p != null) return CardRarityX.fromKey(p['rarity'] as String? ?? '');
-    try {
-      final raw = _meta.get('cardinfo:$charId');
-      if (raw == null) return CardRarity.common;
-      final m = (jsonDecode(raw) as Map).cast<String, dynamic>();
-      return CardRarityX.fromKey(m['rarity'] as String? ?? 'common');
-    } catch (_) {
-      return CardRarity.common;
+    if (p != null) {
+      return rarityFor(
+        (p['favourites'] as num?)?.toInt() ?? 0,
+        p['gender'] as String?,
+      );
     }
+    return _storedRarity(charId);
   }
 
-  Future<PackResult?> openPack(Economy eco) async {
+  Future<PackResult?> openPack(Economy eco, {Random? random}) async {
+    await migrateLegacyRarities();
     var pool = _poolItems();
     if (pool.isEmpty) {
       await rebuildPool();
@@ -184,31 +204,30 @@ class CardPool {
     }
     if (!await eco.spendCoins(packPriceCoins)) return null;
 
-    final rnd = Random();
+    final rnd = random ?? Random();
     final pickedIds = <int>{};
     final cards = <CollectibleCard>[];
     final dups = <bool>[];
     var dupCoins = 0;
 
     for (var i = 0; i < packSize; i++) {
-      var tier = _rollRarity(rnd);
       Map<String, dynamic>? p;
-      for (var attempt = 0; attempt < 6; attempt++) {
-        final cand = _pickForTier(pool, tier, rnd, pickedIds);
-        if (cand == null) break;
-        final actual = CardRarityX.fromKey(
-          cand['rarity'] as String? ?? tier.name,
-        );
-        if (actual == tier || attempt == 5) {
+      for (var attempt = 0; attempt < _maxOutcomeRerolls; attempt++) {
+        final o = CardRarityX.rollOutcome(rnd.nextInt(CardRarityX.totalWeight));
+        final cand = pickForOutcome(pool, o, rnd, pickedIds);
+        if (cand != null) {
           p = cand;
           break;
         }
-        tier = _rollRarity(rnd);
       }
+      p ??= pickForOutcome(pool, null, rnd, pickedIds);
       if (p == null) continue;
       final id = p['id'] as int;
       pickedIds.add(id);
-      final rarity = CardRarityX.fromKey(p['rarity'] as String? ?? tier.name);
+      final rarity = rarityFor(
+        (p['favourites'] as num?)?.toInt() ?? 0,
+        p['gender'] as String?,
+      );
       final owned = _ownedCount(id);
       if (owned > 0) {
         dups.add(true);

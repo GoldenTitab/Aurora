@@ -13,6 +13,7 @@ import '../storage/economy.dart';
 import '../storage/migrations.dart' show Boxes;
 import 'core_providers.dart';
 import 'mylist_providers.dart';
+import 'theme_providers.dart';
 
 class EconomyState {
   final int xp;
@@ -165,15 +166,18 @@ final achievementsProvider =
     );
 
 class AchievementsNotifier extends Notifier<Set<String>> {
-  late final List<AchievementDef> _defs = buildAchievements();
+  List<AchievementDef> _defs = const [];
 
   final Set<String> _inflight = {};
 
   List<AchievementDef> get all => _defs;
 
   @override
-  Set<String> build() =>
-      Economy(Hive.box<String>(Boxes.meta)).unlockedAchievements().toSet();
+  Set<String> build() {
+    ref.watch(langProvider);
+    _defs = buildAchievements();
+    return Economy(Hive.box<String>(Boxes.meta)).unlockedAchievements().toSet();
+  }
 
   AchCtx _buildCtx() {
     final eco = Economy(Hive.box<String>(Boxes.meta));
@@ -284,7 +288,10 @@ class CardsNotifier extends Notifier<CardsState> {
   );
 
   @override
-  CardsState build() => _read();
+  CardsState build() {
+    unawaited(_pool.migrateLegacyRarities().then((_) => state = _read()));
+    return _read();
+  }
 
   Future<int> rebuildPool({bool force = false}) async {
     state = _read(loading: true);

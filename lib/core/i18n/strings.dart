@@ -418,6 +418,7 @@ const kEn = <String, String>{
       'send only the anime ID; no personal data, watch list, or ',
   'essentials_only': 'Essentials Only ({0})',
   'rare': 'Rare',
+  'super_rare': 'Super Rare',
   'try_changing_the_media_type_filter_or_hide_compl':
       'Try changing the media-type filter or “Hide completed”.',
   'advanced_filters': 'Advanced filters',
@@ -593,7 +594,6 @@ const kEn = <String, String>{
   'collector': 'Collector',
   'clipboard_is_empty': 'Clipboard is empty.',
   'less': 'Less',
-  'uncommon': 'Uncommon',
   'export_copy_failed': 'Export copy failed.',
   'copy_full_export_json': 'Copy full export (JSON)',
   'str_7': 'ی',
@@ -659,9 +659,16 @@ const kEn = <String, String>{
   'delete_n_franchises': 'Remove {0} franchises from My List?',
   'franchises_removed': '{0} franchises removed from My List.',
   'cancel_selection': 'Cancel selection',
-};
-
-const kFa = <String, String>{
+  'reset_all_data': 'Delete all data',
+  'reset_all_data_desc':
+      'Watch list, episode progress, scores, notes, cards, coins, XP, achievements and missions will be permanently deleted. This cannot be undone.',
+  'reset_all_data_confirm_title': 'Are you sure?',
+  'reset_all_data_confirm_body':
+      'Everything you logged, every card you got and every level you gained will be permanently deleted and cannot be recovered.',
+  'reset_all_data_confirm_yes': 'Yes, delete everything',
+  'data_reset_done': 'All data has been deleted.',
+  'currently_airing': 'Currently Airing',
+};const kFa = <String, String>{
   'skipped': ' ({0} مورد رد شد)',
   'of': ' از {0}',
   'json_in_settings_you_can_take_a_manual_copy_and_':
@@ -1078,7 +1085,8 @@ const kFa = <String, String>{
   'send_only_the_anime_id_no_personal_data_watch_li':
       'فقط شناسه‌ی انیمه رو می‌فرستند؛ هیچ داده‌ی شخصی، لیست تماشا یا ',
   'essentials_only': 'فقط ضروری‌ها ({0})',
-  'rare': 'فوق کمیاب',
+  'rare': 'کمیاب',
+  'super_rare': 'فوق کمیاب',
   'try_changing_the_media_type_filter_or_hide_compl':
       'فیلتر نوع اثر یا «مخفی کردن تکمیل‌شده‌ها» رو تغییر بده.',
   'advanced_filters': 'فیلتر پیشرفته',
@@ -1252,7 +1260,6 @@ const kFa = <String, String>{
   'collector': 'کلکسیونر',
   'clipboard_is_empty': 'کلیپ‌بورد خالیه.',
   'less': 'کمتر',
-  'uncommon': 'کمیاب',
   'export_copy_failed': 'کپی خروجی ناموفق بود.',
   'copy_full_export_json': 'کپی خروجی کامل (JSON)',
   'str_7': 'ی',
@@ -1319,4 +1326,13 @@ const kFa = <String, String>{
   'delete_n_franchises': '{0} فرنچایز از «لیست من» حذف شه؟',
   'franchises_removed': '{0} فرنچایز از «لیست من» حذف شد.',
   'cancel_selection': 'لغو انتخاب',
+  'reset_all_data': 'حذف کامل داده‌ها',
+  'reset_all_data_desc':
+      'لیست تماشا، پیشرفت قسمت‌ها، نمره‌ها، یادداشت‌ها، کارت‌ها، سکه‌ها، XP، اچیومنت‌ها و مأموریت‌ها برای همیشه پاک می‌شن. این کار قابل برگشت نیست.',
+  'reset_all_data_confirm_title': 'مطمئنی؟',
+  'reset_all_data_confirm_body':
+      'هرچی ثبت کردی، هر کارتی گرفتی و هر لولی رفتی بالا برای همیشه پاک می‌شه و برنمی‌گرده.',
+  'reset_all_data_confirm_yes': 'آره، همه رو پاک کن',
+  'data_reset_done': 'همه‌ی داده‌ها پاک شد.',
+  'currently_airing': 'در حال پخش',
 };

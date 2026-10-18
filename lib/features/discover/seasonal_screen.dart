@@ -47,9 +47,7 @@ class _SeasonGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = kind == _SeasonKind.current
-        ? ref
-              .watch(discoverSectionProvider(DiscoverSection.seasonal))
-              .whenData((d) => d.items)
+        ? ref.watch(seasonalAllProvider)
         : ref.watch(seasonalNextProvider);
 
     return async.when(
@@ -68,7 +66,7 @@ class _SeasonGrid extends ConsumerWidget {
       error: (e, _) => ErrorView(
         message: friendlyError(e),
         onRetry: () => kind == _SeasonKind.current
-            ? ref.invalidate(discoverSectionProvider(DiscoverSection.seasonal))
+            ? ref.invalidate(seasonalAllProvider)
             : ref.invalidate(seasonalNextProvider),
       ),
       data: (items) => _grid(context, ref, items),
