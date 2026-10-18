@@ -5,6 +5,7 @@ import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../../core/i18n/lang.dart';
 import '../models/watch_status.dart';
 import '../remote/anilist_client.dart';
 import '../remote/api_gateway.dart';
@@ -93,6 +94,7 @@ Future<void> _runAiringCheck() async {
 
 Future<void> _check() async {
   final meta = await Hive.openBox<String>('app_meta');
+  Lang.current = meta.get('app_lang') == 'en' ? 'en' : 'fa';
   if (!NotificationPrefs.isEnabled(meta)) return;
 
   final statusBox = await Hive.openBox<String>('watch_status');

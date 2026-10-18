@@ -6,13 +6,22 @@ import '../models/anime_card_data.dart';
 class Suggestion {
   final AnimeCardData data;
   final int score;
-  final String reasonFa;
+  final String sourceKey;
 
   const Suggestion({
     required this.data,
     required this.score,
-    required this.reasonFa,
+    required this.sourceKey,
   });
+
+  /// Computed lazily so it always follows the current app language.
+  String get reasonFa {
+    final src = tr(sourceKey);
+    if (data.score >= 8.5) {
+      return tr('high_score_of_from', [data.score.toStringAsFixed(1), src]);
+    }
+    return tr('picked_from_for_variety', [src]);
+  }
 
   String get historyId =>
       data.anilistId > 0 ? 'al-${data.anilistId}' : 'mal-${data.malId}';
@@ -61,18 +70,10 @@ class SuggestionEngine {
     return Suggestion(
       data: picked.data,
       score: picked.score,
-      reasonFa: _reason(picked),
+      sourceKey: picked.sourceFa,
     );
   }
 
-  String _reason(_Candidate c) {
-    final d = c.data;
-    final src = tr(c.sourceFa);
-    if (d.score >= 8.5) {
-      return tr('high_score_of_from', [d.score.toStringAsFixed(1), src]);
-    }
-    return tr('picked_from_for_variety', [src]);
-  }
 }
 
 class _Candidate {

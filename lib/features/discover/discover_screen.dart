@@ -262,6 +262,7 @@ class _HomeWidgetSyncState extends ConsumerState<_HomeWidgetSync> {
   Widget build(BuildContext context) {
     ref.listen(continueWatchingProvider, (_, _) => refreshHomeWidget(ref));
     ref.listen(weeklyAiringProvider, (_, _) => refreshHomeWidget(ref));
+    ref.listen(langProvider, (_, _) => refreshHomeWidget(ref));
     return const SizedBox.shrink();
   }
 }

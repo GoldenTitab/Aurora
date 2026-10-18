@@ -145,7 +145,10 @@ class MissionsNotifier extends Notifier<List<MissionState>> {
       MissionEngine(Economy(Hive.box<String>(Boxes.meta)));
 
   @override
-  List<MissionState> build() => _engine.states();
+  List<MissionState> build() {
+    ref.watch(langProvider);
+    return _engine.states();
+  }
 
   Future<bool> claim(MissionDef def) async {
     final r = await _engine.claim(def);

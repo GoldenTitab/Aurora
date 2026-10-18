@@ -38,6 +38,16 @@ class NotificationService {
     _initialized = true;
   }
 
+  Future<void> refreshChannel() async {
+    try {
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      await android?.createNotificationChannel(airingChannel);
+    } catch (_) {}
+  }
+
   Future<bool> requestPermissions() async {
     var granted = true;
     try {

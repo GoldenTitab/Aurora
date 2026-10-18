@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/i18n/lang.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'data/notifications/notification_service.dart';
 import 'data/providers.dart';
 import 'features/settings/whats_new_screen.dart';
 
@@ -15,6 +15,12 @@ class AuroraApp extends ConsumerWidget {
     final seed = ref.watch(seedColorProvider);
     final lang = ref.watch(langProvider);
 
+    ref.listen<String>(langProvider, (prev, next) {
+      if (prev == next) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _rebuildAll());
+      NotificationService().refreshChannel();
+    });
+
     return MaterialApp.router(
       title: 'Aurora',
       debugShowCheckedModeBanner: false,
@@ -24,11 +30,20 @@ class AuroraApp extends ConsumerWidget {
       themeMode: mode,
       routerConfig: appRouter,
       builder: (context, child) => Directionality(
-        textDirection: Lang.isEn ? TextDirection.ltr : TextDirection.rtl,
+        textDirection: lang == 'en' ? TextDirection.ltr : TextDirection.rtl,
         child: _WhatsNewGate(child: child!),
       ),
     );
   }
+}
+
+void _rebuildAll() {
+  void rebuild(Element el) {
+    el.markNeedsBuild();
+    el.visitChildren(rebuild);
+  }
+
+  WidgetsBinding.instance.rootElement?.visitChildren(rebuild);
 }
 
 class _WhatsNewGate extends StatefulWidget {

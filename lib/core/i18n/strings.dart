@@ -1,4 +1,5 @@
 const kEn = <String, String>{
+  'notif_item_new_episodes': '• {0}: {1} new episodes',
   'skipped': ' ({0} skipped)',
   'of': ' of {0}',
   'json_in_settings_you_can_take_a_manual_copy_and_':
@@ -669,6 +670,7 @@ const kEn = <String, String>{
   'data_reset_done': 'All data has been deleted.',
   'currently_airing': 'Currently Airing',
 };const kFa = <String, String>{
+  'notif_item_new_episodes': '• {0}: {1} قسمت جدید',
   'skipped': ' ({0} مورد رد شد)',
   'of': ' از {0}',
   'json_in_settings_you_can_take_a_manual_copy_and_':

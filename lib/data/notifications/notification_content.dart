@@ -15,7 +15,7 @@ const String notifPayloadCalendar = '/calendar';
 
 const int airingNotificationId = 1001;
 
-final AndroidNotificationChannel airingChannel = AndroidNotificationChannel(
+AndroidNotificationChannel get airingChannel => AndroidNotificationChannel(
   airingChannelId,
   airingChannelName,
   description: airingChannelDescription,
@@ -47,12 +47,12 @@ InitializationSettings notificationInitSettings() =>
     );
 
 String buildAiringBody({required int totalNew, required int animeCount}) =>
-    '${toFa(totalNew)} قسمت جدید از ${toFa(animeCount)} انیمه';
+    tr('new_episodes_from_anime', [toFa(totalNew), toFa(animeCount)]);
 
 NotificationDetails buildAiringDetails(List<NewEpisodeNotifItem> items) {
   final lines = items
       .take(5)
-      .map((e) => '• ${e.titleFa}: ${toFa(e.newCount)} قسمت جدید')
+      .map((e) => tr('notif_item_new_episodes', [e.titleFa, toFa(e.newCount)]))
       .join('\n');
   final android = AndroidNotificationDetails(
     airingChannelId,

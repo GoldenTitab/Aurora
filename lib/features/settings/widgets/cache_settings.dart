@@ -208,7 +208,13 @@ class _CacheSettingsState extends State<CacheSettings> {
       _CacheSection(
         title: tr('home_discover_cards_cache'),
         subtitle:
-            'تعداد ورودی: ${toFa((_boxCounts['home_cache'] ?? 0) + (_boxCounts['discover_cache'] ?? 0) + (_boxCounts['card_cache'] ?? 0))}',
+            tr('entries', [
+              toFa(
+                (_boxCounts['home_cache'] ?? 0) +
+                    (_boxCounts['discover_cache'] ?? 0) +
+                    (_boxCounts['card_cache'] ?? 0),
+              ),
+            ]),
       ),
     ];
 
