@@ -11,22 +11,16 @@ class BulkImportParser {
     return _parseLines(content);
   }
 
-  /// تمیزکاری یک عنوان: حذف سال داخل پرانتز، فاصله‌های اضافه، خط کامنت.
   static String cleanTitle(String raw) {
     var t = raw.trim();
     if (t.isEmpty || t.startsWith('#')) return '';
-    // حذف « (2013)» یا « [TV]» انتهایی
     t = t.replaceAll(RegExp(r'\s*[\(\[]\s*\d{4}\s*[\)\]]\s*$'), '').trim();
     t = t.replaceAll(RegExp(r'\s+'), ' ');
     return t;
   }
 
   static List<String> _parseLines(String c) {
-    return c
-        .split('\n')
-        .map(cleanTitle)
-        .where((t) => t.isNotEmpty)
-        .toList();
+    return c.split('\n').map(cleanTitle).where((t) => t.isNotEmpty).toList();
   }
 
   static List<String> _parseCsv(String c) {
@@ -36,7 +30,6 @@ class BulkImportParser {
         .where((l) => l.isNotEmpty && !l.startsWith('#'))
         .toList();
     if (lines.isEmpty) return const [];
-    // تشخیص ستون عنوان از هدر
     final header = _splitCsv(lines.first).map((h) => h.toLowerCase()).toList();
     var titleIdx = 0;
     const keys = ['title', 'name', 'anime', 'english', 'romaji'];
@@ -59,7 +52,6 @@ class BulkImportParser {
     return out;
   }
 
-  /// اسپلیتر ساده CSV که کوتیشن دوتایی را هم می‌فهمد.
   static List<String> _splitCsv(String line) {
     final cols = <String>[];
     final buf = StringBuffer();
@@ -109,38 +101,37 @@ class BulkImportParser {
       }
 
       if (d is List) {
-        for (final v in d) add(v);
+        for (final v in d) {
+          add(v);
+        }
       } else if (d is Map) {
         for (final k in ['anime', 'titles', 'list', 'data', 'items']) {
           final v = d[k];
           if (v is List) {
-            for (final e in v) add(e);
+            for (final e in v) {
+              add(e);
+            }
             return out;
           }
         }
-        // آبجکت تکی
         add(d);
       }
       return out;
     } catch (_) {
-      // اگر JSON خراب بود، به‌عنوان متن خط‌به‌خط تلاش کن
       return _parseLines(c);
     }
   }
 
-  /// نرمال‌سازی برای مقایسه عنوان‌ها (انگلیسی).
   static String norm(String s) {
     return s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
   }
 
-  /// آیا نتیجه سرچ به کوئری می‌خورد؟ (برای تشخیص اطمینان)
   static bool confident(String query, String titleA, String titleB) {
     final q = norm(query);
     if (q.isEmpty) return false;
     final a = norm(titleA);
     final b = norm(titleB);
     if (q == a || (b.isNotEmpty && q == b)) return true;
-    // کوئری زیررشته عنوان باشد یا برعکس (با حداقل طول)
     if (q.length >= 4) {
       if (a.isNotEmpty && (a.contains(q) || q.contains(a))) return true;
       if (b.isNotEmpty && (b.contains(q) || q.contains(b))) return true;
