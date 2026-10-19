@@ -7,6 +7,7 @@ import '../../features/discover/filter_screen.dart';
 import '../../features/discover/seasonal_screen.dart';
 import '../../features/franchise/franchise_screen.dart';
 import '../../features/calendar/weekly_calendar_screen.dart';
+import '../../features/import/bulk_import_screen.dart';
 import '../../features/import/import_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/rewards/pack_opening_screen.dart';
@@ -140,6 +141,11 @@ final GoRouter appRouter = GoRouter(
       path: '/import',
       parentNavigatorKey: _rootKey,
       builder: (context, state) => const ImportScreen(),
+    ),
+    GoRoute(
+      path: '/bulk-import',
+      parentNavigatorKey: _rootKey,
+      builder: (context, state) => const BulkImportScreen(),
     ),
     GoRoute(
       path: '/discover/:name',
