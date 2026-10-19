@@ -4,6 +4,15 @@ import 'package:aurora/data/gamification/card_pool.dart';
 import 'package:aurora/data/models/collectible_card.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// تست‌های قطعی سیستم کارت محبوبیتی (تصمیم علی 2026-10-18).
+///
+/// درجه‌ی ذاتی از محبوبیت (favourites):
+/// عادی < ۶٬۰۰۰ | کمیاب ۶٬۰۰۰–۱۲٬۰۰۰ | فوق‌کمیاب ۱۲٬۰۰۰–۲۰٬۰۰۰ |
+/// حماسی ۲۰٬۰۰۰–۳۰٬۰۰۰ | افسانه‌ای ۳۰٬۰۰۰+ |
+/// وایفو: مؤنث ۳۰٬۰۰۰+ | هازبندو: مذکر ۳۰٬۰۰۰+
+///
+/// تاس با وزن‌های علی (از ۱۰۰۰۰): عادی 4900، کمیاب 2646، فوق‌کمیاب 1470،
+/// حماسی 588، افسانه‌ای 196، وایفو 100، هازبندو 100.
 void main() {
   group('weights (dice)', () {
     test('مجموع وزن‌ها دقیقاً 10000 است', () {
@@ -24,6 +33,8 @@ void main() {
   });
 
   group('rollOutcome boundaries', () {
+    // بازه‌ها: [0,4900) عادی، [4900,7546) کمیاب، [7546,9016) فوق‌کمیاب،
+    // [9016,9604) حماسی، [9604,9800) افسانه‌ای، [9800,9900) وایفو، [9900,10000) هازبندو
     final edges = <int, CardRarity>{
       0: CardRarity.common,
       4899: CardRarity.common,
@@ -82,8 +93,10 @@ void main() {
       expect(CardPool.rarityFor(30000, 'female'), CardRarity.waifu);
       expect(CardPool.rarityFor(99999, 'Male'), CardRarity.husbando);
       expect(CardPool.rarityFor(30000, 'male'), CardRarity.husbando);
+      // جنسیت نامشخص در سقف → افسانه‌ای
       expect(CardPool.rarityFor(30000, ''), CardRarity.legendary);
       expect(CardPool.rarityFor(30000, null), CardRarity.legendary);
+      // زیر سقف، جنسیت تأثیری ندارد
       expect(CardPool.rarityFor(29999, 'Female'), CardRarity.epic);
       expect(CardPool.rarityFor(5000, 'Male'), CardRarity.common);
     });
@@ -127,7 +140,12 @@ void main() {
       };
       for (final entry in expected.entries) {
         for (var i = 0; i < 10; i++) {
-          final p = CardPool.pickForOutcome(pool(), entry.key, rnd, const {});
+          final p = CardPool.pickForOutcome(
+            pool(),
+            entry.key,
+            rnd,
+            const {},
+          );
           if (entry.value.isEmpty) {
             expect(p, isNull, reason: entry.key.name);
           } else {
@@ -142,9 +160,12 @@ void main() {
     });
 
     test('شناسه‌های exclude نادیده گرفته می‌شوند', () {
-      final p = CardPool.pickForOutcome(pool(), CardRarity.common, Random(1), {
-        1,
-      });
+      final p = CardPool.pickForOutcome(
+        pool(),
+        CardRarity.common,
+        Random(1),
+        {1},
+      );
       expect(p, isNull);
     });
 

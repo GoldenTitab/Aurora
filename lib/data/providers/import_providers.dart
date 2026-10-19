@@ -34,8 +34,15 @@ class ImportNotifier extends Notifier<ImportState> {
   @override
   ImportState build() => const ImportState();
 
+  bool _cancelRequested = false;
+
+  void cancel() {
+    _cancelRequested = true;
+  }
+
   Future<void> run({required bool useAnilist, required String username}) async {
     if (state.running) return;
+    _cancelRequested = false;
     state = ImportState(running: true, status: tr('starting'));
     LibraryImportResult r;
     try {
@@ -44,11 +51,13 @@ class ImportNotifier extends Notifier<ImportState> {
               ref,
               username,
               (s) => state = state.copyWith(status: s),
+              isCancelled: () => _cancelRequested,
             )
           : await importFromMal(
               ref,
               username,
               (s) => state = state.copyWith(status: s),
+              isCancelled: () => _cancelRequested,
             );
     } catch (e) {
       r = LibraryImportResult(ok: false, message: tr('error', [e]));

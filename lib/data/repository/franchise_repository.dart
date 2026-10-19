@@ -503,7 +503,12 @@ class FranchiseRepository {
 
   List<Entry> manualEntries(String franchiseId) => _readManualList(franchiseId);
 
-  Future<void> addManualEntry(String franchiseId, Entry entry) async {
+  Future<void> addManualEntry(
+    String franchiseId,
+    Entry entry, {
+    String? insertAfterId,
+    String? note,
+  }) async {
     final list = _readManualList(franchiseId);
     if (list.any((e) => e.id == entry.id)) return;
     list.add(entry.copyWith(manual: true, isMainStory: true));
@@ -511,16 +516,48 @@ class FranchiseRepository {
       'manual_entries:$franchiseId',
       jsonEncode({'items': list.map((e) => e.toJson()).toList()}),
     );
+    // جایگاه دلخواه: بعد از ورودی X
+    if (insertAfterId != null && insertAfterId.isNotEmpty) {
+      try {
+        final box = Hive.box<String>(Boxes.meta);
+        final raw = box.get('manual_pos:$franchiseId');
+        final map = <String, String>{
+          if (raw != null && raw.isNotEmpty)
+            ...(jsonDecode(raw) as Map).cast<String, String>(),
+        };
+        map[entry.id] = insertAfterId;
+        await box.put('manual_pos:$franchiseId', jsonEncode(map));
+      } catch (_) {}
+    }
+    // یادداشت «چرا»
+    if (note != null && note.trim().isNotEmpty) {
+      try {
+        await Hive.box<String>(Boxes.meta).put(
+          'manual_note:$franchiseId:${entry.id}',
+          note.trim(),
+        );
+      } catch (_) {}
+    }
     _invalidate();
   }
 
   Future<void> removeManualEntry(String franchiseId, String entryId) async {
     final list = _readManualList(franchiseId);
     list.removeWhere((e) => e.id == entryId);
-    await Hive.box<String>(Boxes.meta).put(
+    final box = Hive.box<String>(Boxes.meta);
+    await box.put(
       'manual_entries:$franchiseId',
       jsonEncode({'items': list.map((e) => e.toJson()).toList()}),
     );
+    try {
+      final raw = box.get('manual_pos:$franchiseId');
+      if (raw != null && raw.isNotEmpty) {
+        final map = (jsonDecode(raw) as Map).cast<String, String>();
+        map.remove(entryId);
+        await box.put('manual_pos:$franchiseId', jsonEncode(map));
+      }
+      await box.delete('manual_note:$franchiseId:$entryId');
+    } catch (_) {}
     _invalidate();
   }
 
@@ -530,7 +567,28 @@ class FranchiseRepository {
     final ids = f.entries.map((e) => e.id).toSet();
     final extra = manual.where((e) => !ids.contains(e.id)).toList();
     if (extra.isEmpty) return f;
-    return f.copyWith(entries: [...f.entries, ...extra]);
+    final merged = [...f.entries, ...extra];
+    // جایگاه‌های دلخواه دستی: انتقال بعد از ورودی لنگر
+    try {
+      final raw = Hive.box<String>(
+        Boxes.meta,
+      ).get('manual_pos:${f.id}');
+      if (raw != null && raw.isNotEmpty) {
+        final pos = (jsonDecode(raw) as Map).cast<String, String>();
+        for (final e in extra) {
+          final afterId = pos[e.id];
+          if (afterId == null) continue;
+          merged.remove(e);
+          final anchor = merged.indexWhere((x) => x.id == afterId);
+          if (anchor >= 0) {
+            merged.insert(anchor + 1, e);
+          } else {
+            merged.add(e);
+          }
+        }
+      }
+    } catch (_) {}
+    return f.copyWith(entries: merged);
   }
 
   Future<Entry?> resolveManualEntry(AnimeCardData d) async {

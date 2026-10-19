@@ -5,12 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/persian_numbers.dart';
 import '../../core/widgets/anime_card.dart';
 import '../../core/widgets/offline_banner.dart';
 import '../../core/widgets/state_views.dart';
 import '../../data/models/anime_card_data.dart';
 import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
+import '../discover/filter_screen.dart';
 import '../../core/i18n/lang.dart';
 
 Future<void> openAnimeCard(
@@ -68,7 +70,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     setState(() {});
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () {
-      if (mounted) setState(() => _query = value.trim());
+      if (!mounted) return;
+      final q = value.trim();
+      setState(() => _query = q);
+      if (q.length >= 2) {
+        ref.read(searchHistoryProvider.notifier).push(q);
+      }
     });
   }
 
@@ -187,23 +194,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceOf(context),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: IconButton(
-                      tooltip: tr('advanced_filters'),
-                      onPressed: () => context.push(
-                        '/filter',
-                        extra: _query.isEmpty ? null : _query,
-                      ),
-                      icon: Icon(
-                        Icons.tune_rounded,
-                        color: AppColors.primaryTextOf(context),
-                      ),
-                    ),
-                  ),
+                  _FilterButton(query: _query),
                 ],
               ),
             ),
@@ -223,63 +214,184 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 }
 
-class _SearchHint extends StatelessWidget {
+class _FilterButton extends ConsumerWidget {
+  const _FilterButton({required this.query});
+  final String query;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeCount = ref.watch(activeFilterProvider)?.activeCount ?? 0;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceOf(context),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          IconButton(
+            tooltip: tr('advanced_filters'),
+            onPressed: () {
+              final saved = ref.read(activeFilterProvider);
+              context.push(
+                '/filter',
+                extra: saved ?? (query.isEmpty ? null : query),
+              );
+            },
+            icon: Icon(
+              Icons.tune_rounded,
+              color: AppColors.primaryTextOf(context),
+            ),
+          ),
+          if (activeCount > 0)
+            Positioned(
+              top: 6,
+              left: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  toFa(activeCount),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SearchHint extends ConsumerWidget {
   const _SearchHint({required this.onPick});
   final ValueChanged<String> onPick;
 
-  static const _suggestions = [
-    'Frieren',
-    'Jujutsu Kaisen',
-    'Demon Slayer',
-    'Spy x Family',
-    'Attack on Titan',
+  static const _genreShortlist = [
+    'Action',
+    'Comedy',
+    'Drama',
+    'Fantasy',
+    'Mystery',
+    'Romance',
+    'Sci-Fi',
+    'Thriller',
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.travel_explore_rounded,
-              size: 56,
-              color: AppColors.primaryTextOf(context),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              tr('type_an_anime_title'),
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              tr('anilist_is_searched_first_if_nothing_is_found_ma'),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textSecondaryOf(context),
-                height: 1.7,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: [
-                for (final s in _suggestions)
-                  ActionChip(
-                    label: Text(s),
-                    backgroundColor: AppColors.surfaceOf(context),
-                    side: BorderSide(color: AppColors.borderOf(context)),
-                    onPressed: () => onPick(s),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final history = ref.watch(searchHistoryProvider);
+    final popular = ref.watch(seasonalAllProvider);
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      children: [
+        if (history.isNotEmpty) ...[
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  tr('recent_searches'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
                   ),
-              ],
-            ),
+                ),
+              ),
+              TextButton(
+                onPressed: () =>
+                    ref.read(searchHistoryProvider.notifier).clear(),
+                child: Text(tr('clear_search_history')),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final h in history)
+                ActionChip(
+                  label: Text(h),
+                  backgroundColor: AppColors.surfaceOf(context),
+                  side: BorderSide(color: AppColors.borderOf(context)),
+                  avatar: Icon(
+                    Icons.history_rounded,
+                    size: 16,
+                    color: AppColors.textSecondaryOf(context),
+                  ),
+                  onPressed: () => onPick(h),
+                ),
+            ],
+          ),
+          const SizedBox(height: 20),
+        ],
+        Text(
+          tr('browse_by_genre'),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final g in _genreShortlist)
+              ActionChip(
+                label: Text(g, textDirection: TextDirection.ltr),
+                backgroundColor: AppColors.surfaceOf(context),
+                side: BorderSide(color: AppColors.borderOf(context)),
+                onPressed: () => context.push(
+                  '/filter',
+                  extra: FilterState(genresInclude: {g}),
+                ),
+              ),
           ],
         ),
-      ),
+        const SizedBox(height: 20),
+        Text(
+          tr('popular_this_season'),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+        ),
+        const SizedBox(height: 8),
+        popular.when(
+          loading: () => const SizedBox(
+            height: 180,
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (_, _) => const SizedBox.shrink(),
+          data: (items) {
+            final top = items.take(8).toList();
+            if (top.isEmpty) return const SizedBox.shrink();
+            return SizedBox(
+              height: 200,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: top.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                itemBuilder: (context, i) {
+                  final d = top[i];
+                  return SizedBox(
+                    width: 132,
+                    child: AnimeCard(
+                      data: d,
+                      onTap: () => openAnimeCard(context, ref, d),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }

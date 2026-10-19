@@ -45,21 +45,146 @@ Map<String, String> get formatOptions => {
   'SPECIAL': tr('special'),
 };
 
-class FilterScreen extends ConsumerStatefulWidget {
-  const FilterScreen({super.key, this.initialQuery});
+Map<String, String> get sortOptions => {
+  'POPULARITY_DESC': tr('sort_popularity'),
+  'SCORE_DESC': tr('sort_score'),
+  'START_DATE_DESC': tr('sort_year'),
+  'TITLE_ROMAJI': tr('sort_az'),
+};
 
+Map<String, String> get statusOptions => {
+  '': tr('all'),
+  'RELEASING': tr('currently_airing'),
+  'FINISHED': tr('status_finished'),
+  'NOT_YET_RELEASED': tr('coming_soon'),
+};
+
+Map<String, String> get seasonOptions => {
+  '': tr('all'),
+  'WINTER': tr('winter'),
+  'SPRING': tr('spring'),
+  'SUMMER': tr('summer'),
+  'FALL': tr('fall'),
+};
+
+/// وضعیت فیلترهای پیشرفته — بین صفحه‌ی جست‌وجو و فیلتر به اشتراک گذاشته می‌شود.
+class FilterState {
+  final String query;
+  final Set<String> genresInclude;
+  final Set<String> genresExclude;
+  final double scoreMin;
+  final double scoreMax;
+  final double yearMin;
+  final double yearMax;
+  final int seasonYear;
+  final String season;
+  final String status;
+  final double epMin;
+  final double epMax;
+  final String format;
+  final String studio;
+  final String sort;
+
+  const FilterState({
+    this.query = '',
+    this.genresInclude = const {},
+    this.genresExclude = const {},
+    this.scoreMin = 0,
+    this.scoreMax = 10,
+    this.yearMin = 1970,
+    double? yearMax,
+    int? seasonYear,
+    this.season = '',
+    this.status = '',
+    this.epMin = 1,
+    this.epMax = 50,
+    this.format = '',
+    this.studio = '',
+    this.sort = 'POPULARITY_DESC',
+  })  : yearMax = yearMax ?? 0,
+        seasonYear = seasonYear ?? 0;
+
+  int get activeCount {
+    var n = 0;
+    if (query.trim().isNotEmpty) n++;
+    n += genresInclude.length + genresExclude.length;
+    if (scoreMin > 0 || scoreMax < 10) n++;
+    if (season.isNotEmpty) {
+      n++;
+    } else if (yearMin > 1970 || (yearMax > 0 && yearMax < DateTime.now().year)) {
+      n++;
+    }
+    if (status.isNotEmpty) n++;
+    if (epMin > 1 || epMax < 50) n++;
+    if (format.isNotEmpty) n++;
+    if (studio.trim().isNotEmpty) n++;
+    if (sort != 'POPULARITY_DESC') n++;
+    return n;
+  }
+
+  FilterState copyWith({
+    String? query,
+    Set<String>? genresInclude,
+    Set<String>? genresExclude,
+    double? scoreMin,
+    double? scoreMax,
+    double? yearMin,
+    double? yearMax,
+    int? seasonYear,
+    String? season,
+    String? status,
+    double? epMin,
+    double? epMax,
+    String? format,
+    String? studio,
+    String? sort,
+  }) {
+    return FilterState(
+      query: query ?? this.query,
+      genresInclude: genresInclude ?? this.genresInclude,
+      genresExclude: genresExclude ?? this.genresExclude,
+      scoreMin: scoreMin ?? this.scoreMin,
+      scoreMax: scoreMax ?? this.scoreMax,
+      yearMin: yearMin ?? this.yearMin,
+      yearMax: yearMax ?? this.yearMax,
+      seasonYear: seasonYear ?? this.seasonYear,
+      season: season ?? this.season,
+      status: status ?? this.status,
+      epMin: epMin ?? this.epMin,
+      epMax: epMax ?? this.epMax,
+      format: format ?? this.format,
+      studio: studio ?? this.studio,
+      sort: sort ?? this.sort,
+    );
+  }
+}
+
+final activeFilterProvider = StateProvider<FilterState?>((ref) => null);
+
+class FilterScreen extends ConsumerStatefulWidget {
+  const FilterScreen({super.key, this.initialQuery, this.initialFilter});
+
+  /// متن جستجویی که از صفحه‌ی جستجو آمده؛ با فیلترها ترکیب می‌شود.
   final String? initialQuery;
+
+  /// فیلترهای قبلی (برای حفظ وضعیت بین بازدیدها).
+  final FilterState? initialFilter;
 
   @override
   ConsumerState<FilterScreen> createState() => _FilterScreenState();
 }
 
 class _FilterScreenState extends ConsumerState<FilterScreen> {
-  final _genres = <String>{};
+  final _genresInclude = <String>{};
+  final _genresExclude = <String>{};
   RangeValues _score = const RangeValues(0, 10);
-  RangeValues _year = RangeValues(1980, DateTime.now().year.toDouble());
+  RangeValues _year = RangeValues(1970, DateTime.now().year.toDouble());
   RangeValues _episodes = const RangeValues(1, 50);
   String _format = '';
+  String _season = '';
+  int _seasonYear = DateTime.now().year;
+  String _status = '';
+  String _sort = 'POPULARITY_DESC';
   final _studioCtrl = TextEditingController();
   late final TextEditingController _queryCtrl;
 
@@ -76,7 +201,28 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
   @override
   void initState() {
     super.initState();
-    _queryCtrl = TextEditingController(text: widget.initialQuery ?? '');
+    final init = widget.initialFilter;
+    if (init != null) {
+      _genresInclude.addAll(init.genresInclude);
+      _genresExclude.addAll(init.genresExclude);
+      _score = RangeValues(init.scoreMin, init.scoreMax);
+      _year = RangeValues(
+        init.yearMin,
+        init.yearMax > 0 ? init.yearMax : DateTime.now().year.toDouble(),
+      );
+      _episodes = RangeValues(init.epMin, init.epMax);
+      _format = init.format;
+      _season = init.season;
+      _seasonYear = init.seasonYear > 0 ? init.seasonYear : DateTime.now().year;
+      _status = init.status;
+      _sort = init.sort;
+      _studioCtrl.text = init.studio;
+      _queryCtrl = TextEditingController(
+        text: widget.initialQuery ?? init.query,
+      );
+    } else {
+      _queryCtrl = TextEditingController(text: widget.initialQuery ?? '');
+    }
     _scroll.addListener(() {
       if (!_scroll.hasClients) return;
       final p = _scroll.position;
@@ -92,7 +238,43 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
     super.dispose();
   }
 
+  FilterState _currentState() => FilterState(
+    query: _queryCtrl.text.trim(),
+    genresInclude: Set.of(_genresInclude),
+    genresExclude: Set.of(_genresExclude),
+    scoreMin: _score.start,
+    scoreMax: _score.end,
+    yearMin: _year.start,
+    yearMax: _year.end,
+    seasonYear: _seasonYear,
+    season: _season,
+    status: _status,
+    epMin: _episodes.start,
+    epMax: _episodes.end,
+    format: _format,
+    studio: _studioCtrl.text.trim(),
+    sort: _sort,
+  );
+
+  void _clearAll() {
+    setState(() {
+      _genresInclude.clear();
+      _genresExclude.clear();
+      _score = const RangeValues(0, 10);
+      _year = RangeValues(1970, DateTime.now().year.toDouble());
+      _episodes = const RangeValues(1, 50);
+      _format = '';
+      _season = '';
+      _seasonYear = DateTime.now().year;
+      _status = '';
+      _sort = 'POPULARITY_DESC';
+      _studioCtrl.clear();
+    });
+    ref.read(activeFilterProvider.notifier).state = null;
+  }
+
   Future<void> _search() async {
+    ref.read(activeFilterProvider.notifier).state = _currentState();
     setState(() {
       _searched = true;
       _loading = true;
@@ -113,6 +295,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
       _error = null;
     });
     try {
+      final useSeason = _season.isNotEmpty;
       final r = await ref
           .read(anilistClientProvider)
           .advancedBrowse(
@@ -120,20 +303,27 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             query: _queryCtrl.text.trim().isEmpty
                 ? null
                 : _queryCtrl.text.trim(),
-            genres: _genres.isEmpty ? null : _genres.toList(),
+            genres: _genresInclude.isEmpty ? null : _genresInclude.toList(),
+            genresExclude: _genresExclude.isEmpty
+                ? null
+                : _genresExclude.toList(),
             scoreMin: _score.start.round() <= 0
                 ? null
                 : _score.start.round() * 10,
             scoreMax: _score.end.round() >= 10 ? null : _score.end.round() * 10,
-            yearMin: _year.start.round(),
-            yearMax: _year.end.round() >= DateTime.now().year
+            yearMin: useSeason ? null : _year.start.round(),
+            yearMax: useSeason || _year.end.round() >= DateTime.now().year
                 ? null
                 : _year.end.round(),
+            seasonYear: useSeason ? _seasonYear : null,
+            season: useSeason ? _season : null,
+            status: _status.isEmpty ? null : _status,
             epMin: _episodes.start.round() <= 1
                 ? null
                 : _episodes.start.round(),
             epMax: _episodes.end.round() >= 50 ? null : _episodes.end.round(),
             format: _format.isEmpty ? null : _format,
+            sort: _sort,
           );
       if (!mounted) return;
       final studio = _studioCtrl.text.trim().toLowerCase();
@@ -168,7 +358,15 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(tr('advanced_filters'))),
+      appBar: AppBar(
+        title: Text(tr('advanced_filters')),
+        actions: [
+          TextButton(
+            onPressed: _clearAll,
+            child: Text(tr('clear_all')),
+          ),
+        ],
+      ),
       body: CustomScrollView(
         controller: _scroll,
         slivers: [
@@ -187,7 +385,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
           else if (_searched && _items.isEmpty && !_loadingMore)
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 48),
+                padding: const EdgeInsets.symmetric(vertical: 48),
                 child: Center(
                   child: Text(
                     tr('no_results_match_these_filters'),
@@ -265,131 +463,267 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
               prefixIcon: const Icon(Icons.search_rounded),
             ),
           ),
-          const SizedBox(height: 16),
-          SectionTitle(tr('genres')),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final g in anilistGenres)
-                FilterChip(
-                  label: Text(g, textDirection: TextDirection.ltr),
-                  selected: _genres.contains(g),
-                  onSelected: (s) => setState(() {
-                    if (s) {
-                      _genres.add(g);
-                    } else {
-                      _genres.remove(g);
-                    }
-                  }),
-                ),
-            ],
+          const SizedBox(height: 8),
+          _collapse(
+            title: tr('genres_include'),
+            initiallyOpen: _genresInclude.isNotEmpty,
+            child: _genreChips(_genresInclude),
           ),
-          const SizedBox(height: 16),
-          SectionTitle(
-            tr('score_to', [
+          _collapse(
+            title: tr('genres_exclude'),
+            initiallyOpen: _genresExclude.isNotEmpty,
+            child: _genreChips(_genresExclude, exclude: true),
+          ),
+          _collapse(
+            title: tr('year_season'),
+            initiallyOpen: _season.isNotEmpty,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final kv in seasonOptions.entries)
+                      ChoiceChip(
+                        label: Text(kv.value),
+                        selected: _season == kv.key,
+                        onSelected: (_) => setState(() => _season = kv.key),
+                      ),
+                  ],
+                ),
+                if (_season.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Text(
+                        tr('season_year'),
+                        style: TextStyle(
+                          color: AppColors.textSecondaryOf(context),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      DropdownButton<int>(
+                        value: _seasonYear,
+                        items: [
+                          for (var y = DateTime.now().year; y >= 1970; y--)
+                            DropdownMenuItem(
+                              value: y,
+                              child: Text(toFa(y)),
+                            ),
+                        ],
+                        onChanged: (v) =>
+                            setState(() => _seasonYear = v ?? _seasonYear),
+                      ),
+                    ],
+                  ),
+                ] else ...[
+                  const SizedBox(height: 6),
+                  SectionTitle(
+                    tr('release_year_to', [
+                      toFa(_year.start.round()),
+                      toFa(_year.end.round()),
+                    ]),
+                  ),
+                  RangeSlider(
+                    values: _year,
+                    min: 1970,
+                    max: DateTime.now().year.toDouble(),
+                    divisions: DateTime.now().year - 1970,
+                    labels: RangeLabels(
+                      toFa(_year.start.round()),
+                      toFa(_year.end.round()),
+                    ),
+                    onChanged: (v) => setState(() => _year = v),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          _collapse(
+            title: tr('title_type'),
+            initiallyOpen: _format.isNotEmpty,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final kv in formatOptions.entries)
+                  ChoiceChip(
+                    label: Text(kv.value),
+                    selected: _format == kv.key,
+                    onSelected: (_) => setState(() => _format = kv.key),
+                  ),
+              ],
+            ),
+          ),
+          _collapse(
+            title: tr('airing_status'),
+            initiallyOpen: _status.isNotEmpty,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final kv in statusOptions.entries)
+                  ChoiceChip(
+                    label: Text(kv.value),
+                    selected: _status == kv.key,
+                    onSelected: (_) => setState(() => _status = kv.key),
+                  ),
+              ],
+            ),
+          ),
+          _collapse(
+            title: tr('sort_by'),
+            initiallyOpen: _sort != 'POPULARITY_DESC',
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final kv in sortOptions.entries)
+                  ChoiceChip(
+                    label: Text(kv.value),
+                    selected: _sort == kv.key,
+                    onSelected: (_) => setState(() => _sort = kv.key),
+                  ),
+              ],
+            ),
+          ),
+          _collapse(
+            title: tr('score_to', [
               toFa(_score.start.round()),
               toFa(_score.end.round()),
             ]),
-          ),
-          RangeSlider(
-            values: _score,
-            min: 0,
-            max: 10,
-            divisions: 20,
-            labels: RangeLabels(
-              toFa(_score.start.toStringAsFixed(1)),
-              toFa(_score.end.toStringAsFixed(1)),
+            child: RangeSlider(
+              values: _score,
+              min: 0,
+              max: 10,
+              divisions: 20,
+              labels: RangeLabels(
+                toFa(_score.start.toStringAsFixed(1)),
+                toFa(_score.end.toStringAsFixed(1)),
+              ),
+              onChanged: (v) => setState(() => _score = v),
             ),
-            onChanged: (v) => setState(() => _score = v),
           ),
-          SectionTitle(
-            tr('release_year_to', [
-              toFa(_year.start.round()),
-              toFa(_year.end.round()),
-            ]),
-          ),
-          RangeSlider(
-            values: _year,
-            min: 1970,
-            max: DateTime.now().year.toDouble(),
-            divisions: DateTime.now().year - 1970,
-            labels: RangeLabels(
-              toFa(_year.start.round()),
-              toFa(_year.end.round()),
-            ),
-            onChanged: (v) => setState(() => _year = v),
-          ),
-          SectionTitle(
-            tr('episodes_to', [
+          _collapse(
+            title: tr('episodes_to', [
               toFa(_episodes.start.round()),
               toFa(_episodes.end.round()),
             ]),
-          ),
-          RangeSlider(
-            values: _episodes,
-            min: 1,
-            max: 50,
-            divisions: 49,
-            labels: RangeLabels(
-              toFa(_episodes.start.round()),
-              toFa(_episodes.end.round()),
+            child: RangeSlider(
+              values: _episodes,
+              min: 1,
+              max: 50,
+              divisions: 49,
+              labels: RangeLabels(
+                toFa(_episodes.start.round()),
+                toFa(_episodes.end.round()),
+              ),
+              onChanged: (v) => setState(() => _episodes = v),
             ),
-            onChanged: (v) => setState(() => _episodes = v),
           ),
-          const SizedBox(height: 8),
-          SectionTitle(tr('title_type')),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final kv in formatOptions.entries)
-                ChoiceChip(
-                  label: Text(kv.value),
-                  selected: _format == kv.key,
-                  onSelected: (_) => setState(() => _format = kv.key),
+          _collapse(
+            title: tr('studio_optional'),
+            child: TextField(
+              controller: _studioCtrl,
+              textDirection: TextDirection.ltr,
+              decoration: InputDecoration(
+                hintText: tr('e_g_mappa'),
+                hintStyle: TextStyle(
+                  color: AppColors.textSecondaryOf(context),
                 ),
+                filled: true,
+                fillColor: AppColors.surfaceOf(context),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: AppColors.borderOf(context)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: AppColors.primary),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _clearAll,
+                  child: Text(tr('clear_all')),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: FilledButton.icon(
+                  onPressed: _search,
+                  icon: const Icon(Icons.search_rounded),
+                  label: Text(tr('apply_filters')),
+                ),
+              ),
             ],
-          ),
-          const SizedBox(height: 16),
-          SectionTitle(tr('studio_optional')),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _studioCtrl,
-            textDirection: TextDirection.ltr,
-            decoration: InputDecoration(
-              hintText: tr('e_g_mappa'),
-              hintStyle: TextStyle(color: AppColors.textSecondaryOf(context)),
-              filled: true,
-              fillColor: AppColors.surfaceOf(context),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 12,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: AppColors.borderOf(context)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.primary),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: _search,
-              icon: const Icon(Icons.search_rounded),
-              label: Text(tr('search_with_these_filters')),
-            ),
           ),
           const SizedBox(height: 8),
         ],
       ),
+    );
+  }
+
+  Widget _collapse({
+    required String title,
+    required Widget child,
+    bool initiallyOpen = false,
+  }) {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        initiallyExpanded: initiallyOpen,
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: child,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _genreChips(Set<String> selected, {bool exclude = false}) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final g in anilistGenres)
+          FilterChip(
+            label: Text(g, textDirection: TextDirection.ltr),
+            selected: selected.contains(g),
+            selectedColor: exclude
+                ? AppColors.dropped.withValues(alpha: 0.25)
+                : null,
+            onSelected: (s) => setState(() {
+              if (s) {
+                selected.add(g);
+                // یه ژانر نمی‌تونه هم شامل باشه هم حذف
+                (exclude ? _genresInclude : _genresExclude).remove(g);
+              } else {
+                selected.remove(g);
+              }
+            }),
+          ),
+      ],
     );
   }
 }

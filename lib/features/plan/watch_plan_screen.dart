@@ -9,6 +9,7 @@ import '../../core/utils/text_utils.dart';
 import '../../core/utils/time_format.dart';
 import '../../core/widgets/cover_image.dart';
 import '../../data/models/watch_plan.dart';
+import '../../data/models/watch_status.dart';
 import '../../data/providers.dart';
 import '../../core/i18n/lang.dart';
 
@@ -22,6 +23,7 @@ class WatchPlanScreen extends ConsumerStatefulWidget {
 class _WatchPlanScreenState extends ConsumerState<WatchPlanScreen> {
   int _minutes = 60;
   WatchPlan? _plan;
+  Set<WatchStatus> _sources = const {WatchStatus.watching, WatchStatus.onHold};
 
   static const _presets = [30, 60, 120, 180, 240, 300, 360];
 
@@ -49,6 +51,74 @@ class _WatchPlanScreenState extends ConsumerState<WatchPlanScreen> {
                 ),
             ],
           ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text(
+                tr('custom_time'),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondaryOf(context),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Expanded(
+                child: Slider(
+                  value: _minutes.toDouble().clamp(15, 480),
+                  min: 15,
+                  max: 480,
+                  divisions: 31,
+                  label: _label(_minutes),
+                  onChanged: (v) => setState(() => _minutes = v.round()),
+                ),
+              ),
+              Text(
+                _label(_minutes),
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            tr('plan_source'),
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondaryOf(context),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            children: [
+              ChoiceChip(
+                label: Text(WatchStatus.watching.labelFa),
+                selected: _sources.length == 1 &&
+                    _sources.contains(WatchStatus.watching),
+                onSelected: (_) => setState(
+                  () => _sources = {WatchStatus.watching},
+                ),
+              ),
+              ChoiceChip(
+                label: Text(WatchStatus.onHold.labelFa),
+                selected: _sources.length == 1 &&
+                    _sources.contains(WatchStatus.onHold),
+                onSelected: (_) => setState(
+                  () => _sources = {WatchStatus.onHold},
+                ),
+              ),
+              ChoiceChip(
+                label: Text(tr('watching_and_onhold')),
+                selected: _sources.length == 2,
+                onSelected: (_) => setState(
+                  () => _sources = {
+                    WatchStatus.watching,
+                    WatchStatus.onHold,
+                  },
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: _build,
@@ -73,7 +143,7 @@ class _WatchPlanScreenState extends ConsumerState<WatchPlanScreen> {
   void _build() {
     final plan = ref
         .read(watchPlanServiceProvider)
-        .buildPlan(minutesAvailable: _minutes);
+        .buildPlan(minutesAvailable: _minutes, sources: _sources);
     setState(() => _plan = plan);
   }
 }
@@ -155,13 +225,13 @@ class _PlanCard extends StatelessWidget {
   }
 }
 
-class _PlanItemCard extends StatelessWidget {
+class _PlanItemCard extends ConsumerWidget {
   const _PlanItemCard({required this.index, required this.item});
   final int index;
   final WatchPlanItem item;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
@@ -177,7 +247,10 @@ class _PlanItemCard extends StatelessWidget {
           ),
           child: Padding(
             padding: const EdgeInsets.all(10),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
               children: [
                 Container(
                   width: 30,
@@ -235,7 +308,7 @@ class _PlanItemCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${tr('episodes_4', [toFa(item.startEpisode), toFa(item.endEpisode)])}· ${formatDurationFa(item.estimatedDuration)}',
+                        '${tr('episodes_4', [toFa(item.startEpisode), toFa(item.endEpisode)])} · ${formatDurationFa(item.estimatedDuration)}',
                         style: TextStyle(
                           fontSize: 11,
                           color: AppColors.primaryTextOf(context),
@@ -247,8 +320,85 @@ class _PlanItemCard extends StatelessWidget {
                 ),
               ],
             ),
+            _episodeChecklist(
+              context,
+              ref,
+              ref.watch(episodeProgressProvider)[item.entry.id] ??
+                  const <int>{},
+            ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _episodeChecklist(
+    BuildContext context,
+    WidgetRef ref,
+    Set<int> watched,
+  ) {
+    final total = item.entry.episodes > 0 ? item.entry.episodes : 24;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Divider(height: 1, color: AppColors.borderOf(context)),
+          const SizedBox(height: 8),
+          Text(
+            tr('session_progress'),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textSecondaryOf(context),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (var ep = item.startEpisode; ep <= item.endEpisode; ep++)
+                InkWell(
+                  onTap: () => ref
+                      .read(episodeProgressProvider.notifier)
+                      .toggle(item.entry.id, ep, total),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 36,
+                    height: 32,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: watched.contains(ep)
+                          ? AppColors.completed.withValues(alpha: 0.2)
+                          : AppColors.surfaceHighOf(context),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: watched.contains(ep)
+                            ? AppColors.completed
+                            : AppColors.borderOf(context),
+                      ),
+                    ),
+                    child: watched.contains(ep)
+                        ? Icon(
+                            Icons.check_rounded,
+                            size: 18,
+                            color: AppColors.completed,
+                          )
+                        : Text(
+                            toFa(ep),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

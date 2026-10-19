@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/persian_numbers.dart';
-import '../../core/utils/route_utils.dart';
 import '../../core/utils/text_utils.dart';
 import '../../core/widgets/cover_image.dart';
 import '../../core/widgets/state_views.dart';
@@ -13,223 +12,379 @@ import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
 import '../../core/i18n/lang.dart';
 
-class WeeklyCalendarScreen extends ConsumerWidget {
+class WeeklyCalendarScreen extends ConsumerStatefulWidget {
   const WeeklyCalendarScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WeeklyCalendarScreen> createState() =>
+      _WeeklyCalendarScreenState();
+}
+
+class _WeeklyCalendarScreenState extends ConsumerState<WeeklyCalendarScreen> {
+  bool _onlyMine = false;
+  final _scroll = ScrollController();
+  final _dayKeys = <int, GlobalKey>{};
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _jumpToDay(int weekday) {
+    final key = _dayKeys[weekday];
+    final ctx = key?.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final async = ref.watch(weeklyAiringProvider);
+    final inList = {
+      for (final i in ref.watch(myListFranchisesProvider))
+        i.franchise.anilistId,
+    };
 
     return Scaffold(
       appBar: AppBar(
         title: Text(tr('weekly_airing_calendar')),
         actions: [
-          IconButton(
-            tooltip: tr('refresh'),
-            onPressed: () => ref.invalidate(weeklyAiringProvider),
-            icon: const Icon(Icons.refresh_rounded),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                tr('only_my_list'),
+                style: const TextStyle(fontSize: 12),
+              ),
+              Switch(
+                value: _onlyMine,
+                onChanged: (v) => setState(() => _onlyMine = v),
+              ),
+            ],
           ),
         ],
       ),
       body: async.when(
-        loading: () => LoadingView(message: tr('fetching_airing_schedule')),
+        loading: () => LoadingView(message: tr('loading_calendar')),
         error: (e, _) => ErrorView(
           message: friendlyError(e),
           onRetry: () => ref.invalidate(weeklyAiringProvider),
         ),
-        data: (days) => days.isEmpty
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    tr('no_new_episodes_to_show') +
-                        tr('open_airing_anime_to_add_them_to_the_calendar'),
-                    textAlign: TextAlign.center,
+        data: (days) {
+          final shown = _onlyMine
+              ? [
+                  for (final d in days)
+                    AiringDay(
+                      weekday: d.weekday,
+                      items: d.items
+                          .where((e) => inList.contains(e.franchiseAnilistId))
+                          .toList(),
+                    ),
+                ]
+              : days;
+          final total = shown.fold<int>(0, (s, d) => s + d.items.length);
+          if (total == 0) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('🎉', style: TextStyle(fontSize: 48)),
+                    const SizedBox(height: 12),
+                    Text(
+                      _onlyMine
+                          ? tr('no_episodes_from_your_list')
+                          : tr('no_episodes_today'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.textSecondaryOf(context),
+                        height: 1.8,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          return Column(
+            children: [
+              _DayStrip(
+                days: shown,
+                onTap: _jumpToDay,
+              ),
+              Expanded(
+                child: ListView.builder(
+                  controller: _scroll,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  itemCount: shown.length,
+                  itemBuilder: (context, i) {
+                    final d = shown[i];
+                    if (d.items.isEmpty) return const SizedBox.shrink();
+                    _dayKeys[d.weekday] ??= GlobalKey();
+                    return _DaySection(
+                      key: _dayKeys[d.weekday],
+                      day: d,
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// نوار روزها با تعداد قسمت هر روز.
+class _DayStrip extends StatelessWidget {
+  const _DayStrip({required this.days, required this.onTap});
+  final List<AiringDay> days;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final today = DateTime.now().weekday;
+    return Container(
+      height: 76,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.borderOf(context)),
+        ),
+      ),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: days.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final d = days[i];
+          final isToday = d.weekday == today;
+          return InkWell(
+            onTap: () => onTap(d.weekday),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 64,
+              decoration: BoxDecoration(
+                color: isToday
+                    ? AppColors.primary.withValues(alpha: 0.18)
+                    : AppColors.surfaceOf(context),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isToday
+                      ? AppColors.primary
+                      : AppColors.borderOf(context),
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    AiringDay.weekdayFa[d.weekday],
                     style: TextStyle(
-                      color: AppColors.textSecondaryOf(context),
-                      height: 1.8,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: isToday
+                          ? AppColors.primaryTextOf(context)
+                          : AppColors.textSecondaryOf(context),
                     ),
                   ),
-                ),
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                itemCount: days.length,
-                itemBuilder: (context, i) => _DaySection(day: days[i]),
+                  const SizedBox(height: 2),
+                  Text(
+                    toFa(d.items.length),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: isToday
+                          ? AppColors.primaryTextOf(context)
+                          : AppColors.textPrimaryOf(context),
+                    ),
+                  ),
+                ],
               ),
+            ),
+          );
+        },
       ),
     );
   }
 }
 
 class _DaySection extends StatelessWidget {
-  const _DaySection({required this.day});
+  const _DaySection({super.key, required this.day});
   final AiringDay day;
+
+  bool get _isToday => DateTime.now().weekday == day.weekday;
 
   @override
   Widget build(BuildContext context) {
-    final isToday = day.weekday == DateTime.now().weekday;
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-            child: Row(
-              children: [
-                Text(
-                  day.labelFa,
+    final items = [...day.items]
+      ..sort((a, b) => a.airingAt.compareTo(b.airingAt));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            children: [
+              Text(
+                AiringDay.weekdayFa[day.weekday],
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: _isToday
+                      ? AppColors.primary.withValues(alpha: 0.18)
+                      : AppColors.surfaceHighOf(context),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  _isToday ? tr('today') : toFa(items.length),
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 11,
                     fontWeight: FontWeight.w800,
-                    color: isToday
+                    color: _isToday
                         ? AppColors.primaryTextOf(context)
-                        : AppColors.textPrimaryOf(context),
+                        : AppColors.textSecondaryOf(context),
                   ),
                 ),
-                if (isToday) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      tr('today'),
-                      style: TextStyle(
-                        color: AppColors.primaryTextOf(context),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+              ),
+            ],
           ),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surfaceOf(context),
-              borderRadius: BorderRadius.circular(16),
-              border: isToday
-                  ? Border.all(color: AppColors.primary.withValues(alpha: 0.5))
-                  : null,
-            ),
-            child: Column(
-              children: [
-                for (var i = 0; i < day.items.length; i++) ...[
-                  _AiringRow(entry: day.items[i]),
-                  if (i < day.items.length - 1)
-                    Divider(height: 1, color: AppColors.borderOf(context)),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+        for (final e in items) _AiringRow(entry: e, isToday: _isToday),
+        const SizedBox(height: 8),
+      ],
     );
   }
 }
 
-class _AiringRow extends StatelessWidget {
-  const _AiringRow({required this.entry});
+class _AiringRow extends ConsumerWidget {
+  const _AiringRow({required this.entry, required this.isToday});
   final AiringEntry entry;
-
-  String get _timeFa {
-    final dt = DateTime.fromMillisecondsSinceEpoch(entry.airingAt * 1000);
-    final hh = dt.hour.toString().padLeft(2, '0');
-    final mm = dt.minute.toString().padLeft(2, '0');
-    return toFa('$hh:$mm');
-  }
+  final bool isToday;
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () => context.push(
-        franchiseRouteFor(entry.franchiseAnilistId, entry.entryId),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                width: 44,
-                height: 64,
-                child: CoverImage(url: entry.cover, cacheWidth: 140),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.entryTitle,
-                    textDirection: dirFor(entry.entryTitle),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dt = DateTime.fromMillisecondsSinceEpoch(entry.airingAt * 1000);
+    final time =
+        '${toFa(dt.hour.toString().padLeft(2, '0'))}:${toFa(dt.minute.toString().padLeft(2, '0'))}';
+    final countdown = isToday ? _countdown(entry.airingAt) : null;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: AppColors.surfaceOf(context),
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.push('/franchise/${entry.franchiseAnilistId}'),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    width: 44,
+                    height: 62,
+                    child: CoverImage(url: entry.cover, cacheWidth: 140),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    entry.franchiseTitleFa,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: AppColors.textSecondaryOf(context),
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 3,
+                      Text(
+                        entry.franchiseTitleFa,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textDirection: dirFor(entry.franchiseTitleFa),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
                         ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          tr('episode', [toFa(entry.episode)]),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              tr('episode', [toFa(entry.episode)]),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primaryTextOf(context),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            time,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondaryOf(context),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (countdown != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          countdown,
                           style: TextStyle(
-                            color: AppColors.primaryTextOf(context),
                             fontSize: 11,
+                            color: AppColors.completed,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        _timeFa,
-                        style: TextStyle(
-                          color: AppColors.textSecondaryOf(context),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                      ],
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  String _countdown(int airingAtSec) {
+    final diff = DateTime.fromMillisecondsSinceEpoch(
+      airingAtSec * 1000,
+    ).difference(DateTime.now());
+    if (diff.isNegative) return tr('aired');
+    if (diff.inHours < 1) {
+      return tr('in_minutes', [toFa(diff.inMinutes.clamp(1, 59))]);
+    }
+    if (diff.inHours < 24) return tr('in_hours', [toFa(diff.inHours)]);
+    return tr('in_days', [toFa(diff.inDays)]);
   }
 }

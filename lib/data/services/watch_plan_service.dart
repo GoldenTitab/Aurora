@@ -18,12 +18,18 @@ class WatchPlanService {
 
   final _order = const WatchOrderService();
 
-  WatchPlan buildPlan({required int minutesAvailable}) {
+  WatchPlan buildPlan({
+    required int minutesAvailable,
+    Set<WatchStatus> sources = const {
+      WatchStatus.watching,
+      WatchStatus.onHold,
+    },
+  }) {
     final budget = Duration(minutes: minutesAvailable);
     var remaining = budget;
     final items = <WatchPlanItem>[];
 
-    final eligible = franchises.where(_isEligible).toList();
+    final eligible = franchises.where((f) => _isEligible(f, sources)).toList();
     eligible.sort((a, b) => _priority(b).compareTo(_priority(a)));
 
     for (final f in eligible) {
@@ -34,7 +40,7 @@ class WatchPlanService {
         if (!wo.isEssential) continue;
         final e = wo.entry;
         final st = statuses[e.id];
-        if (st != WatchStatus.watching && st != WatchStatus.onHold) continue;
+        if (st == null || !sources.contains(st)) continue;
 
         final totalEps = e.episodes > 0 ? e.episodes : 1;
         final watched = episodes[e.id] ?? <int>{};
@@ -76,10 +82,10 @@ class WatchPlanService {
     return WatchPlan(requested: budget, total: total, items: items);
   }
 
-  bool _isEligible(Franchise f) {
+  bool _isEligible(Franchise f, Set<WatchStatus> sources) {
     return f.entries.any((e) {
       final st = statuses[e.id];
-      return st == WatchStatus.watching || st == WatchStatus.onHold;
+      return st != null && sources.contains(st);
     });
   }
 

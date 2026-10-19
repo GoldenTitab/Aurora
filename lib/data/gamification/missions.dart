@@ -127,7 +127,7 @@ class MissionEngine {
     if (progress < def.target) return (ok: false, leveledTo: null);
     if (_eco.missionClaimed(pid, def.id)) return (ok: false, leveledTo: null);
     await _eco.markMissionClaimed(pid, def.id);
-    final leveledTo = await _eco.addXp(def.xp);
+    final leveledTo = await _eco.addXp(def.xp, reason: tr('xp_reason_mission', [def.titleFa]));
     await _eco.addCoins(def.coins);
     await _eco.bumpStat('mission_done');
     return (ok: true, leveledTo: leveledTo);

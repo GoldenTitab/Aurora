@@ -68,6 +68,7 @@ List<AnimeCardData> cardsFromRaw(List<Map<String, dynamic>> raw) {
         score: avg == null ? 0 : avg / 10.0,
         countryOfOrigin: m['countryOfOrigin'] as String?,
         status: m['status'] as String?,
+        format: m['format'] as String?,
       ),
     );
   }

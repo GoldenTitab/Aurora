@@ -12,6 +12,7 @@ import '../../core/widgets/section_title.dart';
 import '../../core/widgets/state_views.dart';
 import '../../data/models/entry.dart';
 import '../../data/models/franchise.dart';
+import '../../data/models/watch_status.dart';
 import '../../data/providers.dart';
 import '../../data/remote/api_exception.dart';
 import 'widgets/entry_tile.dart';
@@ -371,6 +372,13 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
 
           SliverToBoxAdapter(
             child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: _AddToListBar(franchise: f),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,14 +397,16 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-              child: NoteEditor(franchiseId: f.id),
-            ),
-          ),
-
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: FranchiseRating(franchiseId: f.id),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SectionTitle(tr('my_review')),
+                  const SizedBox(height: 10),
+                  NoteEditor(franchiseId: f.id),
+                  const SizedBox(height: 12),
+                  FranchiseRating(franchiseId: f.id),
+                ],
+              ),
             ),
           ),
 
@@ -560,10 +570,155 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
             ],
           ],
 
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: OutlinedButton.icon(
+                onPressed: _openManualAdd,
+                icon: const Icon(Icons.add_rounded),
+                label: Text(tr('add_related_anime')),
+              ),
+            ),
+          ),
+
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
       ),
     );
+  }
+}
+
+/// نوار برجسته افزودن فرنچایز به لیست من.
+class _AddToListBar extends ConsumerWidget {
+  const _AddToListBar({required this.franchise});
+  final Franchise franchise;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statuses = ref.watch(watchStatusProvider);
+    WatchStatus? current;
+    for (final e in franchise.entries) {
+      final st = statuses[e.id];
+      if (st != null) {
+        current ??= st;
+        if (st != current) {
+          current = null;
+          break;
+        }
+      }
+    }
+    final inList = statuses.keys.any(
+      (id) => franchise.entries.any((e) => e.id == id),
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              inList
+                  ? Icons.bookmark_added_rounded
+                  : Icons.bookmark_add_outlined,
+              color: AppColors.primaryTextOf(context),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  inList && current != null
+                      ? tr('in_your_list_status', [current.labelFa])
+                      : tr('not_in_your_list'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  tr('set_status_for_all_entries'),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondaryOf(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton.tonal(
+            onPressed: () => _pickStatus(context, ref),
+            child: Text(
+              inList ? tr('change_status') : tr('add_to_my_list'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickStatus(BuildContext context, WidgetRef ref) async {
+    final sel = await showModalBottomSheet<WatchStatus>(
+      context: context,
+      backgroundColor: AppColors.backgroundOf(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.borderOf(ctx),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (final st in WatchStatus.values)
+              ListTile(
+                title: Text(st.labelFa),
+                leading: Icon(st.icon),
+                onTap: () => Navigator.of(ctx).pop(st),
+              ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+    if (sel == null) return;
+    final notifier = ref.read(watchStatusProvider.notifier);
+    for (final e in franchise.entries) {
+      await notifier.setStatus(e.id, sel);
+    }
+    if (sel == WatchStatus.completed) {
+      final ep = ref.read(episodeProgressProvider.notifier);
+      for (final e in franchise.entries) {
+        if (e.episodes > 0) await ep.markAll(e.id, e.episodes);
+      }
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('added_to_list'))));
+    }
   }
 }
 

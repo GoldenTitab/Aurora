@@ -6,16 +6,28 @@ import '../models/anime_card_data.dart';
 class Suggestion {
   final AnimeCardData data;
   final int score;
+
+  /// مسیر موتور (حالت سلیقه‌ای): کلید منبع — دلیل تنبل ساخته می‌شود.
   final String sourceKey;
+
+  /// حالت‌های دیگر پیکر: کلید دلیل + کلیدهای آرگومان.
+  final String reasonKey;
+  final List<String> reasonArgKeys;
 
   const Suggestion({
     required this.data,
     required this.score,
-    required this.sourceKey,
+    this.sourceKey = '',
+    this.reasonKey = '',
+    this.reasonArgKeys = const [],
   });
 
-  /// Computed lazily so it always follows the current app language.
+  /// تنبل محاسبه می‌شود تا همیشه زبان فعلی اپ را دنبال کند.
   String get reasonFa {
+    if (reasonKey.isNotEmpty) {
+      return tr(reasonKey, [for (final k in reasonArgKeys) tr(k)]);
+    }
+    if (sourceKey.isEmpty) return '';
     final src = tr(sourceKey);
     if (data.score >= 8.5) {
       return tr('high_score_of_from', [data.score.toStringAsFixed(1), src]);
@@ -73,7 +85,6 @@ class SuggestionEngine {
       sourceKey: picked.sourceFa,
     );
   }
-
 }
 
 class _Candidate {

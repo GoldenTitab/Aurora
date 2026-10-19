@@ -10,6 +10,7 @@ import '../../core/utils/text_utils.dart';
 import '../../core/widgets/cover_image.dart';
 import '../../core/widgets/offline_banner.dart';
 import '../../data/models/entry.dart';
+import '../../data/models/home_items.dart';
 import '../../data/models/watch_status.dart';
 import '../../data/providers.dart';
 import '../../data/storage/economy.dart';
@@ -43,6 +44,13 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
   bool _selecting = false;
   final _selected = <String>{};
 
+  /// گروه‌های جمع‌شده (نام WatchStatus)؛ watching باز، بقیه پیش‌فرض بسته.
+  final _collapsed = <String>{};
+  static const _collapsedKey = 'mylist_collapsed';
+
+  String _textQuery = '';
+  final _textCtrl = TextEditingController();
+
   Box<String> get _meta => Hive.box<String>(Boxes.meta);
 
   @override
@@ -54,6 +62,33 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
     }
     _type = _parseType(_meta.get(_typeKey));
     _hideDone = _meta.get(_hideDoneKey) == '1';
+    final rawCollapsed = _meta.get(_collapsedKey);
+    if (rawCollapsed == null) {
+      // پیش‌فرض: completed و dropped بسته
+      _collapsed.addAll([
+        WatchStatus.completed.name,
+        WatchStatus.dropped.name,
+      ]);
+    } else if (rawCollapsed.isNotEmpty) {
+      _collapsed.addAll(rawCollapsed.split(','));
+    }
+  }
+
+  @override
+  void dispose() {
+    _textCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _toggleCollapsed(WatchStatus s) async {
+    setState(() {
+      if (_collapsed.contains(s.name)) {
+        _collapsed.remove(s.name);
+      } else {
+        _collapsed.add(s.name);
+      }
+    });
+    await _meta.put(_collapsedKey, _collapsed.join(','));
   }
 
   static EntryType? _parseType(String? raw) {
@@ -68,6 +103,12 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
     if (_hideDone && item.status == WatchStatus.completed) return false;
     if (_type != null && !item.franchise.entries.any((e) => e.type == _type)) {
       return false;
+    }
+    final q = _textQuery.trim();
+    if (q.isNotEmpty) {
+      final f = item.franchise;
+      final hay = '${f.titleFa} ${f.titleEn}'.toLowerCase();
+      if (!hay.contains(q.toLowerCase())) return false;
     }
     return true;
   }
@@ -210,13 +251,27 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
 
     final visible = items.where(_passes).toList();
 
+    // نزدیک‌ترین قسمت آینده برای هر فرنچایز (فقط watching)
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final nextAir = <int, AiringEntry>{};
+    final days = ref.watch(weeklyAiringProvider).valueOrNull ?? const [];
+    for (final d in days) {
+      for (final e in d.items) {
+        if (e.airingAt * 1000 <= nowMs) continue;
+        final cur = nextAir[e.franchiseAnilistId];
+        if (cur == null || e.airingAt < cur.airingAt) {
+          nextAir[e.franchiseAnilistId] = e;
+        }
+      }
+    }
+
     final rows = <Object>[];
     for (final s in WatchStatus.values) {
       final list = visible.where((i) => i.status == s).toList()
         ..sort((a, b) => _compare(a, b, ratings));
       if (list.isEmpty) continue;
       rows.add(_HeaderRow(s, list.length));
-      rows.addAll(list);
+      if (!_collapsed.contains(s.name)) rows.addAll(list);
     }
 
     return Scaffold(
@@ -274,6 +329,44 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
       body: Column(
         children: [
           const OfflineBanner(),
+          _StatsStrip(items: items),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: TextField(
+              controller: _textCtrl,
+              onChanged: (v) => setState(() => _textQuery = v),
+              decoration: InputDecoration(
+                hintText: tr('search_2'),
+                hintStyle: TextStyle(
+                  color: AppColors.textSecondaryOf(context),
+                ),
+                filled: true,
+                fillColor: AppColors.surfaceOf(context),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: AppColors.borderOf(context)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: AppColors.primary),
+                ),
+                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                suffixIcon: _textQuery.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear_rounded, size: 20),
+                        onPressed: () => setState(() {
+                          _textCtrl.clear();
+                          _textQuery = '';
+                        }),
+                      ),
+              ),
+            ),
+          ),
           _filterChips(),
           Expanded(
             child: visible.isEmpty
@@ -284,7 +377,12 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
                     itemBuilder: (context, i) {
                       final r = rows[i];
                       if (r is _HeaderRow) {
-                        return _GroupHeader(status: r.status, count: r.count);
+                        return _GroupHeader(
+                          status: r.status,
+                          count: r.count,
+                          collapsed: _collapsed.contains(r.status.name),
+                          onToggle: () => _toggleCollapsed(r.status),
+                        );
                       }
                       final item = r as MyListFranchise;
                       final fid = item.franchise.id;
@@ -295,6 +393,7 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
                           selecting: _selecting,
                           selected: _selected.contains(fid),
                           onToggle: () => _toggleSelect(fid),
+                          nextAiring: nextAir[item.franchise.anilistId],
                         ),
                       );
                     },
@@ -313,33 +412,93 @@ class _HeaderRow {
 }
 
 class _GroupHeader extends StatelessWidget {
-  const _GroupHeader({required this.status, required this.count});
+  const _GroupHeader({
+    required this.status,
+    required this.count,
+    required this.collapsed,
+    required this.onToggle,
+  });
   final WatchStatus status;
   final int count;
+  final bool collapsed;
+  final VoidCallback onToggle;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 12),
+      child: InkWell(
+        onTap: onToggle,
+        borderRadius: BorderRadius.circular(12),
+        child: Row(
+          children: [
+            Icon(status.icon, color: status.color, size: 22),
+            const SizedBox(width: 8),
+            Text(
+              status.labelFa,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceHighOf(context),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                toFa(count),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondaryOf(context),
+                ),
+              ),
+            ),
+            const Spacer(),
+            Icon(
+              collapsed
+                  ? Icons.keyboard_arrow_down_rounded
+                  : Icons.keyboard_arrow_up_rounded,
+              color: AppColors.textSecondaryOf(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// نوار آمار یک‌خطی بالای لیست.
+class _StatsStrip extends ConsumerWidget {
+  const _StatsStrip({required this.items});
+  final List<MyListFranchise> items;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final watching = items
+        .where((i) => i.status == WatchStatus.watching)
+        .length;
+    final heat = ref.watch(heatmapProvider);
+    final weekEps = heat.length <= 7
+        ? heat.fold<int>(0, (s, e) => s + e.count)
+        : heat.sublist(heat.length - 7).fold<int>(0, (s, e) => s + e.count);
+    if (watching == 0 && weekEps == 0) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(
         children: [
-          Icon(status.icon, color: status.color, size: 22),
-          const SizedBox(width: 8),
-          Text(
-            status.labelFa,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          Icon(
+            Icons.insights_rounded,
+            size: 16,
+            color: AppColors.textSecondaryOf(context),
           ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceHighOf(context),
-              borderRadius: BorderRadius.circular(10),
-            ),
+          const SizedBox(width: 6),
+          Expanded(
             child: Text(
-              toFa(count),
+              '${tr('watching_count', [toFa(watching)])} • ${tr('episodes_this_week', [toFa(weekEps)])}',
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondaryOf(context),
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -355,12 +514,16 @@ class _FranchiseTile extends StatelessWidget {
     this.selecting = false,
     this.selected = false,
     this.onToggle,
+    this.nextAiring,
   });
   final MyListFranchise item;
 
   final bool selecting;
   final bool selected;
   final VoidCallback? onToggle;
+
+  /// نزدیک‌ترین قسمت آینده (فقط برای watching نمایش داده می‌شود).
+  final AiringEntry? nextAiring;
 
   @override
   Widget build(BuildContext context) {
@@ -428,6 +591,18 @@ class _FranchiseTile extends StatelessWidget {
                         valueColor: AlwaysStoppedAnimation(item.status.color),
                       ),
                     ),
+                    if (item.status == WatchStatus.watching &&
+                        nextAiring != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        '${tr('next_episode', [toFa(nextAiring!.episode)])} • ${_countdown(nextAiring!.airingAt)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.completed,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Text(
                       tr('of_episodes', [
@@ -450,6 +625,18 @@ class _FranchiseTile extends StatelessWidget {
       ),
     );
   }
+}
+
+String _countdown(int airingAtSec) {
+  final diff = DateTime.fromMillisecondsSinceEpoch(
+    airingAtSec * 1000,
+  ).difference(DateTime.now());
+  if (diff.inHours < 1) {
+    final m = diff.inMinutes.clamp(1, 59);
+    return tr('in_minutes', [toFa(m)]);
+  }
+  if (diff.inHours < 24) return tr('in_hours', [toFa(diff.inHours)]);
+  return tr('in_days', [toFa(diff.inDays)]);
 }
 
 class _EmptyList extends StatelessWidget {

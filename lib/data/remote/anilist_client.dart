@@ -312,6 +312,13 @@ query ($id: Int, $perPage: Int) {
     }
   }
 
+  /// لیست انیمه‌ی کاربر.
+  ///
+  /// * برمی‌گرداند null فقط وقتی کاربر وجود ندارد یا لیستش خصوصی است
+  ///   (AniList در این حالت MediaListCollection را null می‌دهد).
+  /// * خطاهای شبکه/سرور به‌صورت [ApiException] پرتاب می‌شوند تا پیام
+  ///   واقعی («عدم اتصال» و...) به کاربر برسد، نه پیام گمراه‌کننده‌ی
+  ///   «کاربر پیدا نشد».
   Future<List<Map<String, dynamic>>?> fetchUserAnimeList(
     String username,
   ) async {
@@ -350,10 +357,14 @@ query ($userName: String) {
     int perPage = 24,
     String? query,
     List<String>? genres,
+    List<String>? genresExclude,
     int? scoreMin,
     int? scoreMax,
     int? yearMin,
     int? yearMax,
+    int? seasonYear,
+    String? season,
+    String? status,
     int? epMin,
     int? epMax,
     String? format,
@@ -361,16 +372,19 @@ query ($userName: String) {
   }) async {
     const q = r'''
 query ($page: Int, $perPage: Int, $sort: [MediaSort], $genreIn: [String],
-       $scoreGreater: Int, $scoreLesser: Int, $yearGreater: Int, $yearLesser: Int,
-       $epGreater: Int, $epLesser: Int, $format: MediaFormat, $search: String) {
+       $genreNotIn: [String], $scoreGreater: Int, $scoreLesser: Int,
+       $yearGreater: Int, $yearLesser: Int, $seasonYear: Int, $season: MediaSeason,
+       $status: MediaStatus, $epGreater: Int, $epLesser: Int,
+       $format: MediaFormat, $search: String) {
   Page(page: $page, perPage: $perPage) {
     pageInfo { hasNextPage }
     media(type: ANIME, isAdult: false, sort: $sort, genre_in: $genreIn,
-          averageScore_greater: $scoreGreater, averageScore_lesser: $scoreLesser,
-          seasonYear_greater: $yearGreater, seasonYear_lesser: $yearLesser,
-          episodes_greater: $epGreater, episodes_lesser: $epLesser,
+          genre_not_in: $genreNotIn, averageScore_greater: $scoreGreater,
+          averageScore_lesser: $scoreLesser, seasonYear_greater: $yearGreater,
+          seasonYear_lesser: $yearLesser, seasonYear: $seasonYear, season: $season,
+          status: $status, episodes_greater: $epGreater, episodes_lesser: $epLesser,
           format: $format, search: $search) {
-      id idMal format episodes averageScore seasonYear
+      id idMal format episodes averageScore seasonYear status
       startDate { year }
       coverImage { large }
       title { romaji english native }
@@ -386,10 +400,14 @@ query ($page: Int, $perPage: Int, $sort: [MediaSort], $genreIn: [String],
       'sort': [sort ?? 'POPULARITY_DESC'],
       'search': query?.trim().isEmpty ?? true ? null : query!.trim(),
       'genreIn': genres,
+      'genreNotIn': genresExclude,
       'scoreGreater': scoreMin,
       'scoreLesser': scoreMax,
       'yearGreater': yearMin,
       'yearLesser': yearMax,
+      'seasonYear': seasonYear,
+      'season': season,
+      'status': status,
       'epGreater': epMin,
       'epLesser': epMax,
       'format': format,

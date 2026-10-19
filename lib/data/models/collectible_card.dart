@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
 import '../../core/i18n/lang.dart';
 
+/// درجه‌های کارت — تصمیم نهایی علی (2026-10-18).
+///
+/// پنج درجه + دو دسته‌ی ویژه‌ی هم‌سطح (وایفو/هازبندو). درجه‌ی هر شخصیت
+/// از روی محبوبیتش در AniList (favourites) تعیین می‌شود — هرچه معروف‌تر،
+/// درجه بالاتر و شانس دریافت کمتر:
+///
+/// عادی < ۶٬۰۰۰ | کمیاب ۶٬۰۰۰–۱۲٬۰۰۰ | فوق‌کمیاب ۱۲٬۰۰۰–۲۰٬۰۰۰ |
+/// حماسی ۲۰٬۰۰۰–۳۰٬۰۰۰ | افسانه‌ای ۳۰٬۰۰۰+ |
+/// وایفو: مؤنث با ۳۰٬۰۰۰+ | هازبندو: مذکر با ۳۰٬۰۰۰+
+///
+/// تاس، خروجی را با وزن‌های زیر (از ۱۰۰۰۰) انتخاب می‌کند و شخصیت از میان
+/// واجدین همان درجه برداشته می‌شود:
+/// عادی 4900 (49٪)، کمیاب 2646 (26.46٪)، فوق‌کمیاب 1470 (14.7٪)،
+/// حماسی 588 (5.88٪)، افسانه‌ای 196 (1.96٪)، وایفو 100 (1٪)، هازبندو 100 (1٪).
 enum CardRarity { common, rare, superRare, epic, legendary, waifu, husbando }
 
 extension CardRarityX on CardRarity {
+  /// مجموع وزن‌ها — مخرج توزیع احتمال.
   static const int totalWeight = 10000;
 
   String get labelFa {
@@ -44,6 +59,7 @@ extension CardRarityX on CardRarity {
     }
   }
 
+  /// درصد نمایشی (مثلاً 26.46 برای وزن 2646).
   double get percent => weight / 100.0;
 
   int get duplicateCoins {
@@ -84,15 +100,27 @@ extension CardRarityX on CardRarity {
     }
   }
 
+  /// نگاشت قطعی عدد تاس در [0, totalWeight) به خروجی — خالص و تست‌پذیر.
+  /// بازه‌ها تجمعی و بدون هم‌پوشانی‌اند:
+  /// [0,4900) عادی، [4900,7546) کمیاب، [7546,9016) فوق‌کمیاب،
+  /// [9016,9604) حماسی، [9604,9800) افسانه‌ای، [9800,9900) وایفو،
+  /// [9900,10000) هازبندو.
   static CardRarity rollOutcome(int roll) {
     var acc = 0;
     for (final r in CardRarity.values) {
       acc += r.weight;
       if (roll < acc) return r;
     }
-    return CardRarity.common;
+    return CardRarity.common; // برای roll خارج از بازه؛ در عمل رخ نمی‌دهد
   }
 
+  /// خواندن درجه از روی کلید ذخیره‌شده.
+  ///
+  /// نگاشت شناسه‌های قدیمی (سیستم قبلی با ۷ درجه‌ی محبوبیتی):
+  /// 'uncommon' (کمیابِ قدیم) → rare (کمیابِ جدید)، چون نام نمایشی یکی است.
+  /// توجه: 'rare' قدیم یعنی فوق‌کمیاب بود؛ کارت‌های قدیمیِ 'rare' با
+  /// مهاجرت یک‌باره‌ی [CardPool.migrateLegacyRarities] به 'superRare'
+  /// تبدیل می‌شوند تا با 'rare' جدید (کمیاب) قاطی نشوند.
   static CardRarity fromKey(String key) {
     if (key == 'uncommon') return CardRarity.rare;
     for (final r in CardRarity.values) {

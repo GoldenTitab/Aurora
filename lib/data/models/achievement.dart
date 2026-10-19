@@ -8,6 +8,12 @@ class AchievementDef {
 
   final bool Function(AchCtx) test;
 
+  /// اچیومنت مخفی: تا باز نشه اسم و شرطش معلوم نیست.
+  final bool hidden;
+
+  /// پیشرفت ۰ تا ۱ برای اچیومنت‌های مرحله‌ای؛ null یعنی قابل‌اندازه‌گیری نیست.
+  final double Function(AchCtx)? progress;
+
   const AchievementDef({
     required this.id,
     required this.titleFa,
@@ -16,7 +22,21 @@ class AchievementDef {
     required this.xp,
     required this.coins,
     required this.test,
+    this.hidden = false,
+    this.progress,
   });
+
+  /// پیشرفت فعلی (۰ تا ۱)؛ اگه قابل‌اندازه‌گیری نباشه، بازشده=۱ و قفل=۰.
+  double progressOf(AchCtx ctx, bool unlocked) {
+    if (unlocked) return 1.0;
+    final f = progress;
+    if (f == null) return 0.0;
+    try {
+      return f(ctx).clamp(0.0, 1.0);
+    } catch (_) {
+      return 0.0;
+    }
+  }
 }
 
 class AchCtx {

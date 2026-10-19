@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../../core/i18n/lang.dart';
 import '../gamification/achievements_catalog.dart';
 import '../gamification/card_pool.dart';
 import '../gamification/missions.dart';
@@ -62,7 +63,7 @@ class EconomyNotifier extends Notifier<EconomyState> {
   Future<void> onEpisodesWatched(int n) async {
     if (n <= 0) return;
     final e = _eco;
-    _leveled(await e.addXp(10 * n));
+    _leveled(await e.addXp(10 * n, reason: tr('xp_reason_episode')));
     await e.addCoins(5 * n);
     await e.bumpStat('ep_total', n);
     await e.bumpMissionCounter('ep_d', Economy.todayStr(), n);
@@ -77,7 +78,7 @@ class EconomyNotifier extends Notifier<EconomyState> {
 
   Future<void> onRatingGiven() async {
     final e = _eco;
-    _leveled(await e.addXp(5));
+    _leveled(await e.addXp(5, reason: tr('xp_reason_rating')));
     await e.bumpStat('rate_total');
     await e.bumpMissionCounter('rate_d', Economy.todayStr());
     refresh();
@@ -86,7 +87,7 @@ class EconomyNotifier extends Notifier<EconomyState> {
 
   Future<void> onNoteWritten() async {
     final e = _eco;
-    _leveled(await e.addXp(5));
+    _leveled(await e.addXp(5, reason: tr('xp_reason_note')));
     await e.bumpStat('note_total');
     refresh();
     unawaited(ref.read(achievementsProvider.notifier).evaluate());
@@ -95,7 +96,7 @@ class EconomyNotifier extends Notifier<EconomyState> {
   Future<void> onFranchiseRating(bool first) async {
     if (!first) return;
     final e = _eco;
-    _leveled(await e.addXp(5));
+    _leveled(await e.addXp(5, reason: tr('xp_reason_franchise_rating')));
     await e.bumpStat('frating_total');
     refresh();
     unawaited(ref.read(achievementsProvider.notifier).evaluate());
@@ -108,7 +109,7 @@ class EconomyNotifier extends Notifier<EconomyState> {
     _completing.add(franchiseId);
     try {
       await box.put('frdone:$franchiseId', '1');
-      _leveled(await _eco.addXp(50));
+      _leveled(await _eco.addXp(50, reason: tr('xp_reason_completed')));
       refresh();
       unawaited(ref.read(achievementsProvider.notifier).evaluate());
     } finally {
@@ -117,9 +118,25 @@ class EconomyNotifier extends Notifier<EconomyState> {
   }
 
   Future<void> markImported() async {
-    await Hive.box<String>(Boxes.meta).put('import_done', '1');
+    final box = Hive.box<String>(Boxes.meta);
+    await box.put('import_done', '1');
+    await box.put(
+      'import_last',
+      '${DateTime.now().millisecondsSinceEpoch}',
+    );
     refresh();
     unawaited(ref.read(achievementsProvider.notifier).evaluate());
+  }
+
+  /// زمان آخرین ایمپورت موفق (میلی‌ثانیه)؛ اگه نبوده null.
+  int? lastImportAt() {
+    try {
+      final box = Hive.box<String>(Boxes.meta);
+      if (box.get('import_done') != '1') return null;
+      return int.tryParse(box.get('import_last') ?? '');
+    } catch (_) {
+      return null;
+    }
   }
 }
 
@@ -169,6 +186,8 @@ final achievementsProvider =
     );
 
 class AchievementsNotifier extends Notifier<Set<String>> {
+  /// تعریف اچیومنت‌ها با متن زبان فعلی ساخته می‌شود؛ با تغییر زبان،
+  /// build دوباره اجرا و _defs از نو ساخته می‌شود.
   List<AchievementDef> _defs = const [];
 
   final Set<String> _inflight = {};
@@ -179,8 +198,13 @@ class AchievementsNotifier extends Notifier<Set<String>> {
   Set<String> build() {
     ref.watch(langProvider);
     _defs = buildAchievements();
-    return Economy(Hive.box<String>(Boxes.meta)).unlockedAchievements().toSet();
+    return Economy(
+      Hive.box<String>(Boxes.meta),
+    ).unlockedAchievements().toSet();
   }
+
+  /// کانتکست فعلی برای محاسبه‌ی پیشرفت اچیومنت‌ها در UI.
+  AchCtx get ctx => _buildCtx();
 
   AchCtx _buildCtx() {
     final eco = Economy(Hive.box<String>(Boxes.meta));
@@ -230,7 +254,7 @@ class AchievementsNotifier extends Notifier<Set<String>> {
       _inflight.add(d.id);
       try {
         await eco.unlockAchievement(d.id);
-        final leveled = await eco.addXp(d.xp);
+        final leveled = await eco.addXp(d.xp, reason: tr('xp_reason_achievement', [d.titleFa]));
         if (d.coins > 0) await eco.addCoins(d.coins);
         if (leveled != null) {
           ref.read(levelUpEventProvider.notifier).state = leveled;
@@ -266,12 +290,14 @@ class CardsState {
 
   final Map<CardRarity, int> poolBreakdown;
   final bool poolLoading;
+  final List<int> recentIds;
 
   const CardsState({
     required this.collection,
     required this.poolSize,
     this.poolBreakdown = const {},
     this.poolLoading = false,
+    this.recentIds = const [],
   });
 }
 
@@ -288,10 +314,12 @@ class CardsNotifier extends Notifier<CardsState> {
     poolSize: _pool.poolSize(),
     poolBreakdown: _pool.rarityBreakdown(),
     poolLoading: loading,
+    recentIds: _pool.recentCardIds(),
   );
 
   @override
   CardsState build() {
+    // مهاجرت یک‌باره‌ی درجه‌های قدیمی؛ بعدش state را تازه می‌کنیم.
     unawaited(_pool.migrateLegacyRarities().then((_) => state = _read()));
     return _read();
   }

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:hive_flutter/hive_flutter.dart';
+
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/persian_numbers.dart';
 import '../../core/widgets/section_title.dart';
+import '../../data/models/watch_status.dart';
 import '../../data/providers.dart';
+import '../../data/storage/migrations.dart';
 import '../../core/i18n/lang.dart';
 
 class ImportScreen extends ConsumerStatefulWidget {
@@ -72,6 +77,10 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             ],
           ),
           const SizedBox(height: 16),
+          SectionTitle(tr('status_mapping')),
+          const SizedBox(height: 10),
+          const _MappingTable(),
+          const SizedBox(height: 16),
           SectionTitle(tr('username')),
           const SizedBox(height: 10),
           TextField(
@@ -125,18 +134,32 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppColors.borderOf(context)),
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                  Row(
+                    children: [
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          state.status,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      state.status,
-                      style: const TextStyle(fontSize: 13),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () =>
+                          ref.read(importProvider.notifier).cancel(),
+                      icon: const Icon(Icons.cancel_outlined),
+                      label: Text(tr('cancel')),
                     ),
                   ),
                 ],
@@ -156,23 +179,59 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                       : AppColors.dropped.withValues(alpha: 0.5),
                 ),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    state.result!.ok
-                        ? Icons.check_circle_rounded
-                        : Icons.error_outline_rounded,
-                    color: state.result!.ok
-                        ? AppColors.completed
-                        : AppColors.dropped,
+                  Row(
+                    children: [
+                      Icon(
+                        state.result!.ok
+                            ? Icons.check_circle_rounded
+                            : Icons.error_outline_rounded,
+                        color: state.result!.ok
+                            ? AppColors.completed
+                            : AppColors.dropped,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          state.result!.message,
+                          style: const TextStyle(fontSize: 13, height: 1.7),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      state.result!.message,
-                      style: const TextStyle(fontSize: 13, height: 1.7),
+                  if (state.result!.ok) ...[
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _countChip(
+                          context,
+                          tr('added_count', [
+                            toFa(state.result!.imported),
+                          ]),
+                          AppColors.completed,
+                        ),
+                        _countChip(
+                          context,
+                          tr('already_had_count', [
+                            toFa(state.result!.alreadyHad),
+                          ]),
+                          AppColors.primaryTextOf(context),
+                        ),
+                        if (state.result!.failed > 0)
+                          _countChip(
+                            context,
+                            tr('failed_count', [
+                              toFa(state.result!.failed),
+                            ]),
+                            AppColors.dropped,
+                          ),
+                      ],
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -184,9 +243,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             ),
           ],
           const SizedBox(height: 16),
+          _LastImportLine(),
+          const SizedBox(height: 8),
           Text(
             tr('your_list_must_be_public') +
-                tr('statuses_map_as_follows_watching_completed_on_ho') +
+                tr('one_way_import') +
                 tr('watched_episode_counts_carry_over_too') +
                 tr('to_avoid_api_rate_limits_each_import_brings_in_a'),
             style: TextStyle(
@@ -198,6 +259,144 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
         ],
       ),
     );
+  }
+
+  Widget _countChip(BuildContext context, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+/// جدول نگاشت وضعیت‌ها.
+class _MappingTable extends StatelessWidget {
+  const _MappingTable();
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = [
+      ('AniList / MAL', tr('in_aurora')),
+      ('Watching', WatchStatus.watching.labelFa),
+      ('Completed', WatchStatus.completed.labelFa),
+      ('Paused / On-Hold', WatchStatus.onHold.labelFa),
+      ('Dropped', WatchStatus.dropped.labelFa),
+      ('Planning', WatchStatus.planToWatch.labelFa),
+    ];
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceOf(context),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.borderOf(context)),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 9,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      rows[i].$1,
+                      textDirection: TextDirection.ltr,
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: i == 0
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        color: i == 0
+                            ? AppColors.textSecondaryOf(context)
+                            : null,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      rows[i].$2,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: i == 0
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        color: i == 0
+                            ? AppColors.textSecondaryOf(context)
+                            : AppColors.primaryTextOf(context),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (i < rows.length - 1)
+              Divider(
+                height: 1,
+                indent: 14,
+                endIndent: 14,
+                color: AppColors.borderOf(context),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// آخرین ایمپورت.
+class _LastImportLine extends ConsumerWidget {
+  const _LastImportLine();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(economyProvider);
+    int? at;
+    try {
+      final box = Hive.box<String>(Boxes.meta);
+      if (box.get('import_done') == '1') {
+        at = int.tryParse(box.get('import_last') ?? '');
+      }
+    } catch (_) {}
+    final label = at == null
+        ? tr('never_imported')
+        : _dateFa(at);
+    return Row(
+      children: [
+        Icon(
+          Icons.history_rounded,
+          size: 16,
+          color: AppColors.textSecondaryOf(context),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          tr('last_import', [label]),
+          style: TextStyle(
+            fontSize: 12,
+            color: AppColors.textSecondaryOf(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _dateFa(int ms) {
+    final d = DateTime.fromMillisecondsSinceEpoch(ms);
+    return '${toFa(d.year)}/${toFa(d.month)}/${toFa(d.day)}';
   }
 }
 

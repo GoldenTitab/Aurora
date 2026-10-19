@@ -64,10 +64,41 @@ class _RecommendationsRow extends ConsumerWidget {
       error: (_, _) => const SizedBox.shrink(),
       data: (items) {
         if (items.isEmpty) return const SizedBox.shrink();
-        return _Row(
-          title: tr('if_you_liked_this'),
-          items: items,
-          rankDelta: const {},
+        return Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(child: SectionTitle(tr('for_you'))),
+                    TextButton(
+                      onPressed: () => context.push('/suggestions'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primaryTextOf(context),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            tr('more'),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(Icons.chevron_right_rounded, size: 20),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              _Row(title: '', items: items, rankDelta: const {}),
+            ],
+          ),
         );
       },
     );

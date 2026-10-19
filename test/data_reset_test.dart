@@ -5,6 +5,17 @@ import 'package:aurora/data/storage/migrations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
+/// تست‌های «حذف کامل داده‌های اپ» (Feature A).
+///
+/// روش: باکس‌های Hive روی پوشه‌ی موقت دیسک باز می‌شوند؛ داده‌ی کاربر
+/// در باکس‌های مختلف و کلیدهای meta گذاشته می‌شود، بعد [DataReset.resetAll]
+/// اجرا و بررسی می‌شود که:
+/// ۱. همه‌ی داده‌ی کاربر پاک شده.
+/// ۲. تنظیمات اپ (زبان، تم، ...) دست‌نخورده مانده.
+/// ۳. لغوِ دیالوگ (در سطح UI) چیزی را پاک نمی‌کند — این بخش منطق خالص
+///    است و در ویجت تست می‌شود؛ اینجا فقط قرارداد resetAll پین شده.
+///
+/// توجه: این تست‌ها بدون SDK اجرا نشده‌اند؛ با `flutter test` اجرا کن.
 void main() {
   const boxNames = [
     Boxes.watchStatus,
@@ -47,6 +58,7 @@ void main() {
       'card:123': '2',
       'cardinfo:123': '{"name":"X"}',
       'wo:f1': '["a","b"]',
+      // تنظیمات — باید بمانند:
       'app_lang': 'fa',
       'theme_mode': 'dark',
       'seed_color': '3',
@@ -118,7 +130,7 @@ void main() {
 
     test('روی دیتای خالی خطا نمی‌دهد', () async {
       await DataReset.resetAll();
-      await DataReset.resetAll();
+      await DataReset.resetAll(); // دوباره — باید امن باشد
     });
   });
 }

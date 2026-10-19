@@ -72,6 +72,7 @@ class JikanClient {
     String status,
     int page,
   ) async {
+    // null = کاربر پیدا نشد؛ خطای شبکه/سرور پرتاب می‌شود تا پیام واقعی برسد.
     final res = await _gw.get(
       ApiHost.jikan,
       Uri.parse(
@@ -83,9 +84,7 @@ class JikanClient {
     );
     if (res.statusCode == 404 || res.statusCode == 400) return null;
     if (res.statusCode == 429) {
-      throw ApiException(
-        tr('too_many_requests_to_jikan_try_again_in_a_few_mi'),
-      );
+      throw ApiException(tr('too_many_requests_to_jikan_try_again_in_a_few_mi'));
     }
     if (res.statusCode != 200) {
       throw ApiException(tr('anilist_error_code', [res.statusCode]));

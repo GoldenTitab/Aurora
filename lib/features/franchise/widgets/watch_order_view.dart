@@ -100,6 +100,15 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
         ? items
         : items.where((i) => i.isEssential).toList();
 
+    final epProgress = ref.watch(episodeProgressProvider);
+    // «اینجایی»: اولین ورودی‌ای که هنوز کامل دیده نشده
+    bool doneOf(WatchOrderItem it) {
+      final w = epProgress[it.entry.id] ?? {};
+      return it.entry.episodes > 0 && w.length >= it.entry.episodes;
+    }
+
+    final hereIndex = visible.indexWhere((it) => !doneOf(it));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -171,74 +180,118 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
             itemBuilder: (context, index) {
               final item = visible[index];
               final e = item.entry;
+              final isHere = index == hereIndex;
+              final done = doneOf(item);
+              final watched = epProgress[e.id] ?? {};
+              final pct = e.episodes > 0
+                  ? (watched.length / e.episodes).clamp(0.0, 1.0)
+                  : 0.0;
               return Card(
                 key: ValueKey(e.id),
                 margin: const EdgeInsets.only(bottom: 8),
-                color: AppColors.surfaceOf(context),
+                color: isHere
+                    ? AppColors.primary.withValues(alpha: 0.08)
+                    : AppColors.surfaceOf(context),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: AppColors.borderOf(context)),
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
+                  side: BorderSide(
+                    color: isHere
+                        ? AppColors.primary
+                        : AppColors.borderOf(context),
+                    width: isHere ? 1.5 : 1,
                   ),
-                  leading: CircleAvatar(
-                    radius: 16,
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.2),
-                    child: Text(
-                      toFa(index + 1),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 13,
-                        color: AppColors.primaryTextOf(context),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      leading: CircleAvatar(
+                        radius: 16,
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                        child: Text(
+                          toFa(index + 1),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
+                            color: AppColors.primaryTextOf(context),
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        e.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textDirection: dirFor(e.title),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            _chip(
+                              item.isEssential
+                                  ? tr('essential')
+                                  : tr('optional'),
+                              item.isEssential
+                                  ? const Color(0xFF22C55E)
+                                  : const Color(0xFFF59E0B),
+                            ),
+                            if (item.relationNote != null &&
+                                item.relationNote!.isNotEmpty)
+                              _chip(
+                                relationLabelFa(item.relationNote),
+                                AppColors.primaryTextOf(context),
+                              ),
+                            if (e.episodes > 0)
+                              _chip(
+                                tr('episodes', [toFa(e.episodes)]),
+                                AppColors.textSecondaryOf(context),
+                              ),
+                            if (isHere)
+                              _chip(tr('you_are_here'), AppColors.primary),
+                            if (done)
+                              _chip(
+                                tr('watched'),
+                                const Color(0xFF22C55E),
+                              ),
+                          ],
+                        ),
+                      ),
+                      trailing: ReorderableDragStartListener(
+                        index: index,
+                        child: Icon(
+                          Icons.drag_handle_rounded,
+                          color: AppColors.textSecondaryOf(context),
+                        ),
                       ),
                     ),
-                  ),
-                  title: Text(
-                    e.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textDirection: dirFor(e.title),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        _chip(
-                          item.isEssential ? tr('essential') : tr('optional'),
-                          item.isEssential
-                              ? const Color(0xFF22C55E)
-                              : const Color(0xFFF59E0B),
+                    if (e.episodes > 0 && pct > 0)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: pct,
+                            minHeight: 4,
+                            backgroundColor: AppColors.borderOf(
+                              context,
+                            ).withValues(alpha: 0.4),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.primary,
+                            ),
+                          ),
                         ),
-                        if (item.relationNote != null &&
-                            item.relationNote!.isNotEmpty)
-                          _chip(
-                            relationLabelFa(item.relationNote),
-                            AppColors.primaryTextOf(context),
-                          ),
-                        if (e.episodes > 0)
-                          _chip(
-                            tr('episodes', [toFa(e.episodes)]),
-                            AppColors.textSecondaryOf(context),
-                          ),
-                      ],
-                    ),
-                  ),
-                  trailing: ReorderableDragStartListener(
-                    index: index,
-                    child: Icon(
-                      Icons.drag_handle_rounded,
-                      color: AppColors.textSecondaryOf(context),
-                    ),
-                  ),
+                      ),
+                  ],
                 ),
               );
             },

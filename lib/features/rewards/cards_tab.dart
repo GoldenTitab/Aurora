@@ -12,17 +12,63 @@ import '../../data/models/collectible_card.dart';
 import '../../data/providers.dart';
 import '../../core/i18n/lang.dart';
 
-class CardsTab extends ConsumerWidget {
+class CardsTab extends ConsumerStatefulWidget {
   const CardsTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CardsTab> createState() => _CardsTabState();
+}
+
+class _CardsTabState extends ConsumerState<CardsTab> {
+  String _query = '';
+  CardRarity? _rarity; // null = همه
+  String _sort = 'rarest';
+  final _searchCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final cards = ref.watch(cardsProvider);
     final eco = ref.watch(economyProvider);
-    final total = cards.collection.values.fold<int>(
-      0,
-      (sum, list) => sum + list.length,
-    );
+    final all = [
+      for (final list in cards.collection.values) ...list,
+    ];
+    final total = all.fold<int>(0, (s, c) => s + c.count);
+
+    final filtered = all.where((c) {
+      if (_rarity != null && c.rarity != _rarity) return false;
+      final q = _query.trim().toLowerCase();
+      if (q.isNotEmpty && !c.name.toLowerCase().contains(q)) return false;
+      return true;
+    }).toList();
+    switch (_sort) {
+      case 'az':
+        filtered.sort((a, b) => a.name.compareTo(b.name));
+      case 'newest':
+        final order = {
+          for (var i = 0; i < cards.recentIds.length; i++)
+            cards.recentIds[i]: i,
+        };
+        filtered.sort(
+          (a, b) => (order[a.charId] ?? 9999).compareTo(order[b.charId] ?? 9999),
+        );
+      default:
+        filtered.sort(
+          (a, b) => b.rarity.index.compareTo(a.rarity.index),
+        );
+    }
+
+    // تازه‌ها
+    final byId = {for (final c in all) c.charId: c};
+    final recent = [
+      for (final id in cards.recentIds)
+        if (byId[id] != null) byId[id]!,
+    ].take(10).toList();
 
     return CustomScrollView(
       slivers: [
@@ -32,71 +78,328 @@ class CardsTab extends ConsumerWidget {
             child: _PackHeader(cards: cards, ecoCoins: eco.coins),
           ),
         ),
+        if (recent.isNotEmpty)
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SectionTitle(tr('new_cards'), count: toFa(recent.length)),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 168,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: recent.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 10),
+                      itemBuilder: (context, i) =>
+                          _RecentCard(card: recent[i]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           sliver: SliverToBoxAdapter(
-            child: SectionTitle(tr('my_collection'), count: toFa(total)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionTitle(tr('my_collection'), count: toFa(total)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _searchCtrl,
+                  onChanged: (v) => setState(() => _query = v),
+                  decoration: InputDecoration(
+                    hintText: tr('search_collection'),
+                    hintStyle: TextStyle(
+                      color: AppColors.textSecondaryOf(context),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.surfaceOf(context),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                        color: AppColors.borderOf(context),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: AppColors.primary),
+                    ),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: ChoiceChip(
+                          label: Text(tr('all')),
+                          selected: _rarity == null,
+                          visualDensity: VisualDensity.compact,
+                          onSelected: (_) => setState(() => _rarity = null),
+                        ),
+                      ),
+                      for (final r in CardRarity.values)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: ChoiceChip(
+                            label: Text(r.labelFa),
+                            selected: _rarity == r,
+                            visualDensity: VisualDensity.compact,
+                            onSelected: (_) => setState(() => _rarity = r),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text(
+                      '${tr('sort_by')}:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondaryOf(context),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    DropdownButton<String>(
+                      value: _sort,
+                      underline: const SizedBox.shrink(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primaryTextOf(context),
+                        fontWeight: FontWeight.w700,
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: 'newest',
+                          child: Text(tr('sort_newest')),
+                        ),
+                        DropdownMenuItem(
+                          value: 'rarest',
+                          child: Text(tr('sort_rarest')),
+                        ),
+                        DropdownMenuItem(
+                          value: 'az',
+                          child: Text(tr('sort_az')),
+                        ),
+                      ],
+                      onChanged: (v) => setState(() => _sort = v ?? 'rarest'),
+                    ),
+                    const Spacer(),
+                    if (_rarity != null)
+                      Text(
+                        '${toFa(filtered.length)} / ${toFa(all.length)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondaryOf(context),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-        if (total == 0)
+        if (filtered.isEmpty)
           SliverPadding(
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
             sliver: SliverToBoxAdapter(
               child: Center(
                 child: Text(
-                  tr('no_cards_yet_open_a_pack'),
-                  style: TextStyle(color: AppColors.textSecondaryOf(context)),
+                  total == 0
+                      ? tr('no_cards_yet_open_a_pack')
+                      : tr('no_cards_match'),
+                  style: TextStyle(
+                    color: AppColors.textSecondaryOf(context),
+                  ),
                 ),
               ),
             ),
           )
         else
-          for (final r in CardRarity.values)
-            if (cards.collection[r]!.isNotEmpty) ...[
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                sliver: SliverToBoxAdapter(
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: r.color,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${r.labelFa} (${toFa(cards.collection[r]!.length)})',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          color: r.color,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 0.72,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
               ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    childAspectRatio: 0.72,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) => _CardTile(card: cards.collection[r]![i]),
-                    childCount: cards.collection[r]!.length,
-                  ),
-                ),
+              delegate: SliverChildBuilderDelegate(
+                (context, i) => _CardTile(card: filtered[i]),
+                childCount: filtered.length,
               ),
-            ],
+            ),
+          ),
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
+    );
+  }
+}
+
+class _RecentCard extends StatelessWidget {
+  const _RecentCard({required this.card});
+  final CollectibleCard card;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => _showCardDetail(context, card),
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: 104,
+        child: Column(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: card.rarity.color.withValues(alpha: 0.7),
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: CoverImage(url: card.image, cacheWidth: 260),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              card.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textDirection: dirFor(card.name),
+              style: const TextStyle(fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void _showCardDetail(BuildContext context, CollectibleCard card) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (ctx) => _CardDetailSheet(card: card),
+  );
+}
+
+class _CardDetailSheet extends ConsumerWidget {
+  const _CardDetailSheet({required this.card});
+  final CollectibleCard card;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pool = ref.watch(cardPoolProvider);
+    final entry = pool.poolEntry(card.charId);
+    final favs = (entry?['favourites'] as num?)?.toInt();
+    final gender = entry?['gender'] as String?;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: card.rarity.color,
+                    width: 3,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: SizedBox(
+                  width: 200,
+                  height: 260,
+                  child: CoverImage(url: card.image, cacheWidth: 480),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              card.name,
+              textDirection: dirFor(card.name),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: card.rarity.color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                card.rarity.labelFa,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: card.rarity.color,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            if (favs != null)
+              Text(
+                tr('favourites_on_anilist', [toFa(favs)]),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondaryOf(context),
+                ),
+              ),
+            if (gender != null && gender.isNotEmpty)
+              Text(
+                gender,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondaryOf(context),
+                ),
+              ),
+            if (card.count > 1)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '×${toFa(card.count)}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primaryTextOf(context),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(tr('close')),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -250,75 +553,82 @@ class _CardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceOf(context),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: card.rarity.color.withValues(alpha: 0.6),
-          width: 1.5,
+    return InkWell(
+      onTap: () => _showCardDetail(context, card),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceOf(context),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: card.rarity.color.withValues(alpha: 0.6),
+            width: 1.5,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-              child: CoverImage(url: card.image, cacheWidth: 340),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
-            child: Text(
-              card.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textDirection: dirFor(card.name),
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: card.rarity.color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    card.rarity.labelFa,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: card.rarity.color,
-                    ),
-                  ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
                 ),
-                if (card.count > 1) ...[
-                  const SizedBox(width: 4),
-                  Text(
-                    '×${toFa(card.count)}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: AppColors.textSecondaryOf(context),
-                      fontWeight: FontWeight.w700,
+                child: CoverImage(url: card.image, cacheWidth: 340),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
+              child: Text(
+                card.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textDirection: dirFor(card.name),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: card.rarity.color.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      card.rarity.labelFa,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: card.rarity.color,
+                      ),
                     ),
                   ),
+                  if (card.count > 1) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      '×${toFa(card.count)}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textSecondaryOf(context),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

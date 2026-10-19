@@ -16,8 +16,9 @@ import 'watch_providers.dart';
 
 enum DiscoverSection {
   airing('currently_airing'),
-  underrated('underrated_anime'),
-  seasonal('seasonal_chart');
+  seasonal('seasonal_chart'),
+  soon('coming_soon'),
+  underrated('underrated_anime');
 
   const DiscoverSection(this.key);
   final String key;
@@ -50,6 +51,8 @@ String discoverArgs(DiscoverSection section) {
     case DiscoverSection.seasonal:
       final c = _currentSeason(DateTime.now());
       return 'season: ${c.season}, seasonYear: ${c.year}, sort: [POPULARITY_DESC]';
+    case DiscoverSection.soon:
+      return 'status: NOT_YET_RELEASED, sort: [POPULARITY_DESC]';
   }
 }
 
@@ -195,6 +198,9 @@ final discoverSectionProvider =
       DiscoverSection
     >(DiscoverSectionNotifier.new);
 
+/// همه‌ی انیمه‌های یک فصل — صفحه‌بندی کامل تا جایی که API ادامه دارد.
+/// نتایج با شناسه‌ی پایدار AniList یکتاسازی می‌شوند؛ سقف ۲۰ صفحه جلوی
+/// حلقه‌ی بی‌نهایت را می‌گیرد.
 Future<List<AnimeCardData>> _fetchSeasonAll(
   AniListClient client,
   String season,
@@ -219,10 +225,12 @@ Future<List<AnimeCardData>> _fetchSeasonAll(
   return out;
 }
 
-Future<Box<String>> _seasonCacheBox() async => Hive.isBoxOpen('discover_cache')
+Future<Box<String>> _seasonCacheBox() async =>
+    Hive.isBoxOpen('discover_cache')
     ? Hive.box<String>('discover_cache')
     : await Hive.openBox<String>('discover_cache');
 
+/// خواندن/نوشتن کش ۱۲ ساعته‌ی لیست کامل فصل.
 Future<List<AnimeCardData>?> _readSeasonCache(String key) async {
   try {
     final raw = (await _seasonCacheBox()).get(key);
@@ -246,6 +254,7 @@ Future<List<AnimeCardData>?> _readSeasonCache(String key) async {
         score: (x['score'] as num).toDouble(),
         countryOfOrigin: x['co'] as String?,
         status: x['st'] as String?,
+        format: x['fmt'] as String?,
       );
     }).toList();
   } catch (_) {
@@ -270,6 +279,7 @@ Future<void> _writeSeasonCache(String key, List<AnimeCardData> items) async {
               'score': c.score,
               'co': c.countryOfOrigin,
               'st': c.status,
+              'fmt': c.format,
             },
         ],
       }),
@@ -290,6 +300,7 @@ Future<List<AnimeCardData>> _seasonAll(
   return items;
 }
 
+/// لیست کامل فصل جاری (نه فقط ۲۴ تای اول).
 final seasonalAllProvider = FutureProvider<List<AnimeCardData>>((ref) async {
   final c = _currentSeason(DateTime.now());
   return _seasonAll(
@@ -300,6 +311,7 @@ final seasonalAllProvider = FutureProvider<List<AnimeCardData>>((ref) async {
   );
 });
 
+/// لیست کامل فصل بعد (نه فقط ۲۴ تای اول).
 final seasonalNextProvider = FutureProvider<List<AnimeCardData>>((ref) async {
   final n = _nextSeason(DateTime.now());
   return _seasonAll(
@@ -307,6 +319,17 @@ final seasonalNextProvider = FutureProvider<List<AnimeCardData>>((ref) async {
     'season_all_next',
     n.season,
     n.year,
+  );
+});
+
+/// لیست کامل فصل قبل (نه فقط ۲۴ تای اول).
+final seasonalPrevProvider = FutureProvider<List<AnimeCardData>>((ref) async {
+  final p = _prevSeason(DateTime.now());
+  return _seasonAll(
+    ref.read(anilistClientProvider),
+    'season_all_prev',
+    p.season,
+    p.year,
   );
 });
 
@@ -368,4 +391,24 @@ final recommendationsProvider = FutureProvider<List<AnimeCardData>>((
   if (m <= 6) return (season: 'SUMMER', year: now.year);
   if (m <= 9) return (season: 'FALL', year: now.year);
   return (season: 'WINTER', year: now.year + 1);
+}
+
+({String season, int year}) _prevSeason(DateTime now) {
+  final m = now.month;
+  if (m <= 3) return (season: 'FALL', year: now.year - 1);
+  if (m <= 6) return (season: 'WINTER', year: now.year);
+  if (m <= 9) return (season: 'SPRING', year: now.year);
+  return (season: 'SUMMER', year: now.year);
+}
+
+/// شروع فصل بعد (میلادی) برای شمارش معکوس.
+DateTime nextSeasonStart(DateTime now) {
+  final n = _nextSeason(now);
+  final month = switch (n.season) {
+    'WINTER' => 1,
+    'SPRING' => 4,
+    'SUMMER' => 7,
+    _ => 10,
+  };
+  return DateTime(n.year, month, 1);
 }

@@ -157,6 +157,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     try {
       await DataReset.resetAll();
+      // همه‌ی stateهای وابسته به دیتای کاربر را از نو می‌سازیم تا UI
+      // بلافاصله وضعیت خالی را نشان بدهد.
       ref.invalidate(watchStatusProvider);
       ref.invalidate(episodeProgressProvider);
       ref.invalidate(myListFranchisesProvider);
@@ -195,7 +197,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          _GroupTitle(tr('my_data')),
+          _GroupTitle(tr('appearance_language')),
+          const ThemeSettings(),
+          const SizedBox(height: 8),
+          const _LanguageSettings(),
+          const SizedBox(height: 8),
+          _GroupTitle(tr('notifications_playback')),
+          const _SpoilerFreeSwitch(),
+          const SizedBox(height: 8),
+          const NotificationSettings(),
+          const SizedBox(height: 8),
+          const _DataSaverSwitch(),
+          const SizedBox(height: 8),
+          _GroupTitle(tr('data_section')),
           _InfoCard(
             rows: [
               (tr('app_version'), toFa(kAppVersion)),
@@ -236,22 +250,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          _GroupTitle(tr('appearance')),
-          const ThemeSettings(),
-          const SizedBox(height: 8),
-          _GroupTitle(tr('language')),
-          const _LanguageSettings(),
-          const SizedBox(height: 8),
-          _GroupTitle(tr('spoiler_free')),
-          const _SpoilerFreeSwitch(),
-          const SizedBox(height: 8),
-          _GroupTitle(tr('notifications')),
-          const NotificationSettings(),
-          const SizedBox(height: 8),
           _GroupTitle(tr('cache')),
           const CacheSettings(),
           const SizedBox(height: 8),
-          _GroupTitle(tr('help_info')),
+          _GroupTitle(tr('about')),
           OutlinedButton.icon(
             onPressed: () => context.push('/onboarding'),
             icon: const Icon(Icons.school_rounded),
@@ -270,7 +272,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             label: Text(tr('privacy')),
           ),
           const SizedBox(height: 8),
-          _GroupTitle(tr('reset_all_data')),
+          _GroupTitle(tr('danger_zone')),
           Text(
             tr('reset_all_data_desc'),
             style: TextStyle(
@@ -366,6 +368,25 @@ class _SpoilerFreeSwitch extends ConsumerWidget {
         await extras.setSpoilerFree(v);
         ref.invalidate(userExtrasProvider);
       },
+    );
+  }
+}
+
+class _DataSaverSwitch extends ConsumerWidget {
+  const _DataSaverSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(dataSaverProvider);
+    return SwitchListTile(
+      title: Text(tr('data_saver')),
+      subtitle: Text(
+        tr('data_saver_desc'),
+        style: TextStyle(fontSize: 12, height: 1.7),
+      ),
+      value: enabled,
+      onChanged: (v) =>
+          ref.read(dataSaverProvider.notifier).set(v),
     );
   }
 }

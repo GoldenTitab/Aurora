@@ -123,8 +123,13 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/filter',
       parentNavigatorKey: _rootKey,
-      builder: (context, state) =>
-          FilterScreen(initialQuery: state.extra as String?),
+      builder: (context, state) {
+        final extra = state.extra;
+        return FilterScreen(
+          initialQuery: extra is String ? extra : null,
+          initialFilter: extra is FilterState ? extra : null,
+        );
+      },
     ),
     GoRoute(
       path: '/seasonal',

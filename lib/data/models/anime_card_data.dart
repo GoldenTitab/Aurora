@@ -34,6 +34,8 @@ class AnimeCardData {
 
   final String? status;
 
+  final String? format;
+
   const AnimeCardData({
     required this.anilistId,
     this.malId = 0,
@@ -45,6 +47,7 @@ class AnimeCardData {
     required this.score,
     this.countryOfOrigin,
     this.status,
+    this.format,
   });
 
   bool get resolvable => anilistId > 0;

@@ -11,8 +11,10 @@ List<AchievementDef> buildAchievements() {
     String cat,
     int xp,
     int coins,
-    bool Function(AchCtx) test,
-  ) {
+    bool Function(AchCtx) test, {
+    bool hidden = false,
+    double Function(AchCtx)? progress,
+  }) {
     list.add(
       AchievementDef(
         id: id,
@@ -22,9 +24,14 @@ List<AchievementDef> buildAchievements() {
         xp: xp,
         coins: coins,
         test: test,
+        hidden: hidden,
+        progress: progress,
       ),
     );
   }
+
+  double ratio(num cur, num target) =>
+      target <= 0 ? 0.0 : (cur / target).clamp(0.0, 1.0).toDouble();
 
   add(
     'first_ep',
@@ -94,6 +101,7 @@ List<AchievementDef> buildAchievements() {
       20 + i * 15,
       20 + i * 10,
       (c) => c.episodesWatched >= n,
+      progress: (c) => ratio(c.episodesWatched, n),
     );
   }
 
@@ -106,6 +114,7 @@ List<AchievementDef> buildAchievements() {
       30 + n,
       20 + n * 2,
       (c) => c.franchisesCompleted >= n,
+      progress: (c) => ratio(c.franchisesCompleted, n),
     );
   }
 
@@ -118,6 +127,7 @@ List<AchievementDef> buildAchievements() {
       15 + n,
       10 + n,
       (c) => c.franchisesStarted >= n,
+      progress: (c) => ratio(c.franchisesStarted, n),
     );
   }
 
@@ -130,6 +140,7 @@ List<AchievementDef> buildAchievements() {
       20 + n * 3,
       15 + n * 2,
       (c) => c.distinctGenres >= n,
+      progress: (c) => ratio(c.distinctGenres, n),
     );
   }
 
@@ -153,6 +164,7 @@ List<AchievementDef> buildAchievements() {
       25 + i * 20,
       20 + i * 15,
       (c) => c.streak >= n,
+      progress: (c) => ratio(c.streak, n),
     );
   }
 
@@ -165,6 +177,7 @@ List<AchievementDef> buildAchievements() {
       15 + n,
       10 + n,
       (c) => c.ratingsGiven >= n,
+      progress: (c) => ratio(c.ratingsGiven, n),
     );
   }
 
@@ -177,6 +190,7 @@ List<AchievementDef> buildAchievements() {
       15 + n * 2,
       10 + n,
       (c) => c.notesWritten >= n,
+      progress: (c) => ratio(c.notesWritten, n),
     );
   }
 
@@ -189,6 +203,7 @@ List<AchievementDef> buildAchievements() {
       20 + n * 2,
       15 + n,
       (c) => c.franchiseRatings >= n,
+      progress: (c) => ratio(c.franchiseRatings, n),
     );
   }
 
@@ -201,6 +216,7 @@ List<AchievementDef> buildAchievements() {
       20 + n,
       15 + n,
       (c) => c.cardsOwned >= n,
+      progress: (c) => ratio(c.cardsOwned, n),
     );
   }
   final rarities = [
@@ -222,6 +238,7 @@ List<AchievementDef> buildAchievements() {
         25 + n * 3,
         20 + n * 2,
         (c) => (c.cardsPerRarity[r.$1] ?? 0) >= n,
+        progress: (c) => ratio(c.cardsPerRarity[r.$1] ?? 0, n),
       );
     }
   }
@@ -235,6 +252,7 @@ List<AchievementDef> buildAchievements() {
       20 + n * 2,
       0,
       (c) => c.packsOpened >= n,
+      progress: (c) => ratio(c.packsOpened, n),
     );
   }
 
@@ -247,6 +265,7 @@ List<AchievementDef> buildAchievements() {
       15 + n ~/ 20,
       0,
       (c) => c.coinsEarned >= n,
+      progress: (c) => ratio(c.coinsEarned, n),
     );
   }
 
@@ -259,6 +278,7 @@ List<AchievementDef> buildAchievements() {
       20 + n * 2,
       n,
       (c) => c.missionsDone >= n,
+      progress: (c) => ratio(c.missionsDone, n),
     );
   }
 
@@ -277,6 +297,7 @@ List<AchievementDef> buildAchievements() {
       50 + l.$1 * 50,
       50 + l.$1 * 25,
       (c) => c.level >= l.$1,
+      progress: (c) => ratio(c.level, l.$1),
     );
   }
 
@@ -290,6 +311,7 @@ List<AchievementDef> buildAchievements() {
       30 + h ~/ 2,
       20 + h ~/ 5,
       (c) => c.watchMinutes >= h * 60,
+      progress: (c) => ratio(c.watchMinutes, h * 60),
     );
   }
 
@@ -312,6 +334,7 @@ List<AchievementDef> buildAchievements() {
       20 + n,
       15 + n ~/ 2,
       (c) => c.checkins >= n,
+      progress: (c) => ratio(c.checkins, n),
     );
   }
 
@@ -324,6 +347,7 @@ List<AchievementDef> buildAchievements() {
       0,
       n ~/ 20,
       (c) => c.xpTotal >= n,
+      progress: (c) => ratio(c.xpTotal, n),
     );
   }
 
@@ -362,6 +386,50 @@ List<AchievementDef> buildAchievements() {
     60,
     60,
     (c) => c.cardsPerRarity.keys.length >= 3,
+  );
+  // اچیومنت‌های مخفی — تا باز نشن، اسم و شرطشون معلوم نیست.
+  add(
+    'hd_ep_10000',
+    tr('marathoner'),
+    tr('episodes_watched', [10000]),
+    tr('special'),
+    300,
+    200,
+    (c) => c.episodesWatched >= 10000,
+    hidden: true,
+    progress: (c) => ratio(c.episodesWatched, 10000),
+  );
+  add(
+    'hd_streak_365',
+    tr('year_of_fire'),
+    tr('days_watched_in_a_row', [365]),
+    tr('special'),
+    400,
+    300,
+    (c) => c.streak >= 365,
+    hidden: true,
+    progress: (c) => ratio(c.streak, 365),
+  );
+  add(
+    'hd_genre_30',
+    tr('taste_explorer'),
+    tr('you_watched_anime_from_different_genres', [30]),
+    tr('special'),
+    250,
+    150,
+    (c) => c.distinctGenres >= 30,
+    hidden: true,
+    progress: (c) => ratio(c.distinctGenres, 30),
+  );
+  add(
+    'hd_all_rarity',
+    tr('full_spectrum'),
+    tr('own_cards_of_7_different_rarities'),
+    tr('special'),
+    350,
+    250,
+    (c) => c.cardsPerRarity.keys.length >= 7,
+    hidden: true,
   );
   add(
     'sp_alldaily',

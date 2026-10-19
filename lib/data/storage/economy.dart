@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:hive/hive.dart';
 
 class Economy {
@@ -31,14 +33,49 @@ class Economy {
 
   int xpTotal() => int.tryParse(_box.get('xp_total') ?? '') ?? 0;
 
-  Future<int?> addXp(int n) async {
+  Future<int?> addXp(int n, {String? reason}) async {
     if (n <= 0) return null;
     final before = xpTotal();
     final after = before + n;
     await _box.put('xp_total', '$after');
+    await _logXp(n, reason ?? '');
     final lb = levelForXp(before);
     final la = levelForXp(after);
     return la > lb ? la : null;
+  }
+
+  /// آخرین ۲۰ رویداد XP: [{t: timestampMs, n: amount, r: reason}].
+  List<({int time, int amount, String reason})> xpLog() {
+    final raw = _box.get('xp_log');
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final list = jsonDecode(raw) as List;
+      return [
+        for (final e in list)
+          (
+            time: (e['t'] as num?)?.toInt() ?? 0,
+            amount: (e['n'] as num?)?.toInt() ?? 0,
+            reason: (e['r'] as String?) ?? '',
+          ),
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> _logXp(int n, String reason) async {
+    try {
+      final log = [
+        {
+          't': DateTime.now().millisecondsSinceEpoch,
+          'n': n,
+          'r': reason,
+        },
+        for (final e in xpLog().take(19))
+          {'t': e.time, 'n': e.amount, 'r': e.reason},
+      ];
+      await _box.put('xp_log', jsonEncode(log));
+    } catch (_) {}
   }
 
   int level() => levelForXp(xpTotal());
@@ -80,13 +117,15 @@ class Economy {
     final today = todayStr();
     if (_box.get('last_checkin') == today) return false;
     await _box.put('last_checkin', today);
-    await addXp(5);
+    await addXp(5, reason: 'checkin');
     await addCoins(20);
     await bumpStat('checkin_total');
     return true;
   }
 
   int streak() => int.tryParse(_box.get('streak_count') ?? '') ?? 0;
+
+  int maxStreak() => int.tryParse(_box.get('streak_max') ?? '') ?? 0;
 
   Future<int> recordWatchDay() async {
     final today = todayStr();
@@ -95,6 +134,7 @@ class Economy {
     final next = last == yesterdayStr() ? streak() + 1 : 1;
     await _box.put('streak_last', today);
     await _box.put('streak_count', '$next');
+    if (next > maxStreak()) await _box.put('streak_max', '$next');
     return next;
   }
 
@@ -161,6 +201,10 @@ class Economy {
   }
 
   bool achievementUnlocked(String id) => _box.get('ach:$id') != null;
+
+  /// زمان باز شدن اچیومنت (میلی‌ثانیه)؛ اگه باز نشده باشه null.
+  int? achievementUnlockedAt(String id) =>
+      int.tryParse(_box.get('ach:$id') ?? '');
 
   Future<void> unlockAchievement(String id) =>
       _box.put('ach:$id', '${DateTime.now().millisecondsSinceEpoch}');

@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_colors.dart';
+import '../../data/providers/core_providers.dart';
 
-class CoverImage extends StatelessWidget {
+class CoverImage extends ConsumerWidget {
   const CoverImage({
     super.key,
     required this.url,
@@ -32,14 +34,16 @@ class CoverImage extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final u = url;
     if (u == null || u.isEmpty) return _fallback(context);
+    // حالت کم‌مصرف: نصف کیفیت
+    final w = ref.watch(dataSaverProvider) ? (cacheWidth / 2).round() : cacheWidth;
     return CachedNetworkImage(
       imageUrl: u,
       fit: fit,
-      memCacheWidth: cacheWidth,
-      maxWidthDiskCache: cacheWidth,
+      memCacheWidth: w,
+      maxWidthDiskCache: w,
       fadeInDuration: const Duration(milliseconds: 150),
       placeholder: (_, _) => _fallback(context),
       errorWidget: (_, _, _) => _fallback(context),

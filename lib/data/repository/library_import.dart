@@ -10,12 +10,18 @@ class LibraryImportResult {
   final String message;
   final int imported;
   final int skipped;
+  final int alreadyHad;
+  final int failed;
+  final bool cancelled;
 
   const LibraryImportResult({
     required this.ok,
     required this.message,
     this.imported = 0,
     this.skipped = 0,
+    this.alreadyHad = 0,
+    this.failed = 0,
+    this.cancelled = false,
   });
 }
 
@@ -56,8 +62,9 @@ WatchStatus? _jikanStatus(String? s) {
 Future<LibraryImportResult> importFromAniList(
   Ref ref,
   String username,
-  void Function(String) onProgress,
-) async {
+  void Function(String) onProgress, {
+  bool Function()? isCancelled,
+}) async {
   final client = ref.read(anilistClientProvider);
   final repo = ref.read(franchiseRepositoryProvider);
 
@@ -66,6 +73,7 @@ Future<LibraryImportResult> importFromAniList(
   try {
     entries = await client.fetchUserAnimeList(username.trim());
   } catch (e) {
+    // خطای واقعی شبکه/سرور — نه «کاربر پیدا نشد».
     return LibraryImportResult(ok: false, message: friendlyError(e));
   }
   if (entries == null) {
@@ -84,9 +92,16 @@ Future<LibraryImportResult> importFromAniList(
   const cap = 60;
   var imported = 0;
   var skipped = 0;
+  var alreadyHad = 0;
+  var failed = 0;
   final total = entries.length > cap ? cap : entries.length;
+  var cancelled = false;
 
   for (var i = 0; i < total; i++) {
+    if (isCancelled?.call() ?? false) {
+      cancelled = true;
+      break;
+    }
     final e = entries[i];
     onProgress(tr('importing_of', [i + 1, total]));
     final media = (e['media'] as Map?)?.cast<String, dynamic>();
@@ -102,6 +117,7 @@ Future<LibraryImportResult> importFromAniList(
         (x) => x.anilistId == anilistId,
         orElse: () => f.entries.first,
       );
+      final had = ref.read(watchStatusProvider)[entry.id] != null;
       await ref.read(watchStatusProvider.notifier).setStatus(entry.id, status);
       final progress = (e['progress'] as num?)?.toInt() ?? 0;
       if (progress > 0 && entry.episodes > 0) {
@@ -114,29 +130,41 @@ Future<LibraryImportResult> importFromAniList(
               reward: false,
             );
       }
-      imported++;
+      if (had) {
+        alreadyHad++;
+      } else {
+        imported++;
+      }
     } catch (_) {
-      skipped++;
+      failed++;
     }
   }
 
-  await ref.read(economyProvider.notifier).markImported();
+  if (!cancelled) {
+    await ref.read(economyProvider.notifier).markImported();
+  }
   return LibraryImportResult(
-    ok: true,
-    message: tr('titles_imported', [
-      imported,
-      skipped > 0 ? tr('skipped', [skipped]) : '',
-    ]),
+    ok: !cancelled,
+    message: cancelled
+        ? tr('import_cancelled')
+        : tr('titles_imported', [
+            imported,
+            skipped > 0 ? tr('skipped', [skipped]) : '',
+          ]),
     imported: imported,
     skipped: skipped,
+    alreadyHad: alreadyHad,
+    failed: failed,
+    cancelled: cancelled,
   );
 }
 
 Future<LibraryImportResult> importFromMal(
   Ref ref,
   String username,
-  void Function(String) onProgress,
-) async {
+  void Function(String) onProgress, {
+  bool Function()? isCancelled,
+}) async {
   final jikan = ref.read(jikanClientProvider);
   final ani = ref.read(anilistClientProvider);
   final repo = ref.read(franchiseRepositoryProvider);
@@ -169,6 +197,7 @@ Future<LibraryImportResult> importFromMal(
       }
     }
   } catch (e) {
+    // خطای واقعی شبکه/سرور — نه «کاربر پیدا نشد».
     return LibraryImportResult(ok: false, message: friendlyError(e));
   }
   if (all.isEmpty) {
@@ -181,9 +210,16 @@ Future<LibraryImportResult> importFromMal(
   const cap = 40;
   var imported = 0;
   var skipped = 0;
+  var alreadyHad = 0;
+  var failed = 0;
   final total = all.length > cap ? cap : all.length;
+  var cancelled = false;
 
   for (var i = 0; i < total; i++) {
+    if (isCancelled?.call() ?? false) {
+      cancelled = true;
+      break;
+    }
     final e = all[i];
     onProgress(tr('importing_of', [i + 1, total]));
     final malId = (e['mal_id'] as num?)?.toInt();
@@ -204,6 +240,7 @@ Future<LibraryImportResult> importFromMal(
         (x) => x.anilistId == anilistId,
         orElse: () => f.entries.first,
       );
+      final had = ref.read(watchStatusProvider)[entry.id] != null;
       await ref.read(watchStatusProvider.notifier).setStatus(entry.id, status);
       final watched = (e['episodes_watched'] as num?)?.toInt() ?? 0;
       if (watched > 0 && entry.episodes > 0) {
@@ -216,21 +253,32 @@ Future<LibraryImportResult> importFromMal(
               reward: false,
             );
       }
-      imported++;
+      if (had) {
+        alreadyHad++;
+      } else {
+        imported++;
+      }
       await Future.delayed(const Duration(milliseconds: 300));
     } catch (_) {
-      skipped++;
+      failed++;
     }
   }
 
-  await ref.read(economyProvider.notifier).markImported();
+  if (!cancelled) {
+    await ref.read(economyProvider.notifier).markImported();
+  }
   return LibraryImportResult(
-    ok: true,
-    message: tr('titles_imported', [
-      imported,
-      skipped > 0 ? tr('skipped', [skipped]) : '',
-    ]),
+    ok: !cancelled,
+    message: cancelled
+        ? tr('import_cancelled')
+        : tr('titles_imported', [
+            imported,
+            skipped > 0 ? tr('skipped', [skipped]) : '',
+          ]),
     imported: imported,
     skipped: skipped,
+    alreadyHad: alreadyHad,
+    failed: failed,
+    cancelled: cancelled,
   );
 }
