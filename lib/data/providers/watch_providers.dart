@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../core/constants/app_config.dart';
-import '../../core/i18n/lang.dart';
 import '../../core/utils/text_utils.dart';
+import '../../core/i18n/lang.dart';
 import '../models/anime_card_data.dart';
 import '../models/entry.dart';
 import '../models/franchise.dart';
@@ -102,7 +102,34 @@ final searchResultsProvider = StreamProvider.autoDispose
       final results = localFranchises.map(AnimeCardData.fromFranchise).toList();
 
       if (hasPersian(query)) {
-        yield results;
+        final seenRoots = <String>{for (final f in localFranchises) f.id};
+        void addHits(List<AnimeCardData> hits) {
+          for (final hit in hits) {
+            final root = hit.anilistId > 0
+                ? (repo.aliasOf(hit.anilistId) ?? 'al-${hit.anilistId}')
+                : 'mal-${hit.malId}';
+            if (seenRoots.add(root)) results.add(hit);
+          }
+        }
+
+        var ok = false;
+        try {
+          final p = await repo.searchPrimary(query);
+          if (p.ok) ok = true;
+          addHits(p.items);
+          yield List.of(results);
+
+          final s = await repo.searchSecondary(query, p.seenAni, p.seenMal);
+          if (s.ok) ok = true;
+          if (s.items.isNotEmpty) {
+            addHits(s.items);
+            yield List.of(results);
+          }
+        } catch (_) {}
+
+        if (!ok && results.isEmpty) {
+          throw StateError(tr('search_failed_check_your_internet_connection'));
+        }
         return;
       }
 

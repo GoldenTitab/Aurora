@@ -21,6 +21,10 @@ dart run flutter_native_splash:create                 # after editing assets/ico
 - `analysis_options.yaml` is stock `flutter_lints`; `build/**`, `android/**`, `ios/**` are excluded from analysis.
 - Release artifacts are **debug-signed** (see Android specifics) — `apksigner verify` will report `CN=Android Debug`.
 
+## Config
+- Kilo project config: `.kilo/command/*.md`, `.kilo/agent/*.md`, `kilo.json`, `AGENTS.md`. Put new commands/agents in `.kilo/`. **Do not** use `.kilocode/` or `.opencode/`.
+- Global: `C:\Users\APPLE DOOR\.config\kilo/` (same structure). If config questions arise, load skill `kilo-config`.
+
 ## Architecture
 
 `lib/main.dart` opens **all Hive boxes before** `runApp(ProviderScope(...))`. Several providers read Hive synchronously inside `build()` (`dataSaverProvider`, `searchHistoryProvider`, `watchStorageProvider`, `userExtrasProvider`, `franchiseRepositoryProvider`) — a new box must be added to the `_openBox` list in `main.dart` or those providers throw.
@@ -64,7 +68,8 @@ Values are stored as **strings**; objects are JSON-encoded manually. Box names l
 - AniList = GraphQL POST `https://graphql.anilist.co`; MAL = REST v2 with an `X-MAL-CLIENT-ID` header (client id hard-coded in `lib/core/constants/app_config.dart:13`); Jikan = REST v4.
 - Clients swallow errors and return empty results; user-facing failures go through `ApiException` + `friendlyError()`.
 - Log with `kDebugMode`-guarded `debugPrint` (API logs are prefixed `[API]`).
-- `dart:io` is used directly (`IOClient`/`HttpClient`) — the app is **not web-buildable**; don't reach for web targets.
+- `dart:io` is used directly (`IOClient`/`HttpClient`) — the app is **not web-buildable**; don't reach for web targets. 
+- **MAL client ID** lives in `lib/core/constants/app_config.dart:13` (hard-coded). Never commit a new client ID; if you change it locally, don't push.
 
 ## Android specifics
 
@@ -74,7 +79,6 @@ Values are stored as **strings**; objects are JSON-encoded manually. Box names l
 - `android/gradle.properties`: the Gradle daemon is **enabled** and `org.gradle.parallel=false` / `workers.max=2` are kept for the memory-constrained machine. Repeat release builds take ~30 s warm vs ~440 s clean; if the daemon is disabled you'll pay a JVM fork every time. `kotlin.jvm.target.validation.mode` is deliberately **left at Kotlin's default (`error`)** — the old `warning` override was a workaround for a `home_widget` Java 1.8 / Kotlin 17 mismatch that no longer applies.
 - `flutter build` picks its JDK from `flutter config --jdk-dir` → **Android Studio's bundled JBR** → `JAVA_HOME` → `java` on PATH (`packages/flutter_tools/lib/src/android/java.dart`). A bare `android\gradlew.bat` invocation instead uses `JAVA_HOME`. Both JDK 21 LTS work, but they spawn *separate* Gradle daemons.
 - **Do not re-add a `force("androidx.glance:...")` pin.** `home_widget` 0.10.0 compiles against Glance **1.2.0** (`setWidgetPreviews` only exists in 1.2.0+); pinning the app to 1.1.1 shipped a Glance 1.1.1 runtime under 1.2.0-compiled bytecode. Let the plugin declare its own version and check `META-INF/androidx.glance_glance.version` inside the APK/AAB.
-- **The home-screen widget is native Kotlin** (`android/.../AuroraWidgetProvider.kt` + `res/layout/aurora_widget_layout.xml` + `res/xml/aurora_widget_info.xml`). Dart writes the keys `cw_title`, `cw_sub`, `airing_today` in `lib/data/homewidget/home_widget_service.dart:41`. These names are **not** shared constants — renaming one in Dart requires the matching Kotlin edit.
 - Version is duplicated: `pubspec.yaml` `version:` and `kAppVersion` in `lib/core/constants/app_config.dart:15` — bump both.
 
 ## Windows network / proxy

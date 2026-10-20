@@ -324,7 +324,9 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             scoreMax: (_score.end * 10).round() >= 100
                 ? null
                 : (_score.end * 10).round(),
-            yearMin: useSeason ? null : _year.start.round(),
+            yearMin: useSeason || _year.start.round() <= 1970
+                ? null
+                : _year.start.round(),
             yearMax: useSeason || _year.end.round() >= DateTime.now().year
                 ? null
                 : _year.end.round(),
