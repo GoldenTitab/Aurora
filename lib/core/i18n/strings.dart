@@ -663,7 +663,7 @@ const kEn = <String, String>{
       '• To avoid API rate limits, each import brings in at most 60 titles (AniList) or 40 titles (MAL).',
   'watched_episode_counts_carry_over_too':
       '• Watched episode counts carry over too.\n',
-  'completing_a_franchise_50_xp': '• Completing a franchise: 50 XP\n',
+  'completing_a_franchise_100_xp': '• Completing a franchise: 100 XP\n',
   'daily_check_in_5_xp_and_20_shafaq': '• Daily check-in: 5 XP and 20 Shafaq',
   'your_list_must_be_public': '• Your list must be public.\n',
   'writing_a_note_5_xp': '• Writing a note: 5 XP\n',
@@ -1508,7 +1508,7 @@ const kEn = <String, String>{
       '• برای جلوگیری از محدودیت API، حداکثر ۶۰ اثر (AniList) یا ۴۰ اثر (MAL) تو هر ایمپورت وارد می‌شه.',
   'watched_episode_counts_carry_over_too':
       '• تعداد قسمت‌های دیده‌شده هم منتقل می‌شه.\n',
-  'completing_a_franchise_50_xp': '• تکمیل فرنچایز: ۵۰ XP\n',
+  'completing_a_franchise_100_xp': '• تکمیل فرنچایز: ۱۰۰ XP\n',
   'daily_check_in_5_xp_and_20_shafaq': '• سر زدن روزانه: ۵ XP و ۲۰ شفق',
   'your_list_must_be_public': '• لیست باید عمومی باشه.\n',
   'writing_a_note_5_xp': '• نوشتن یادداشت: ۵ XP\n',

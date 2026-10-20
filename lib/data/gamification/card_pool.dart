@@ -8,7 +8,7 @@ import '../remote/anilist_client.dart';
 import '../repository/franchise_repository.dart';
 import '../storage/economy.dart';
 
-const int packPriceCoins = 100;
+const int packPriceCoins = 300;
 const int packSize = 3;
 
 /// مدیریت استخر کارت‌ها (شخصیت‌های انیمه‌های کتابخانه) و باز کردن بسته.

@@ -109,7 +109,7 @@ class EconomyNotifier extends Notifier<EconomyState> {
     _completing.add(franchiseId);
     try {
       await box.put('frdone:$franchiseId', '1');
-      _leveled(await _eco.addXp(50, reason: tr('xp_reason_completed')));
+      _leveled(await _eco.addXp(100, reason: tr('xp_reason_completed')));
       refresh();
       unawaited(ref.read(achievementsProvider.notifier).evaluate());
     } finally {

@@ -222,7 +222,7 @@ class _LevelTab extends ConsumerWidget {
           tr('each_watched_episode_10_xp_and_5_shafaq') +
               tr('rating_5_xp') +
               tr('writing_a_note_5_xp') +
-              tr('completing_a_franchise_50_xp') +
+              tr('completing_a_franchise_100_xp') +
               tr('daily_check_in_5_xp_and_20_shafaq'),
           style: TextStyle(
             color: AppColors.textSecondaryOf(context),

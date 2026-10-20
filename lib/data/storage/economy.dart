@@ -14,7 +14,7 @@ class Economy {
     'Expert',
   ];
 
-  static const List<int> levelThresholds = [0, 1000, 3000, 5000, 7000];
+  static const List<int> levelThresholds = [0, 5000, 50000, 150000, 400000];
 
   static int levelForXp(int xp) {
     var level = 0;
@@ -44,6 +44,7 @@ class Economy {
     return la > lb ? la : null;
   }
 
+  /// آخرین ۲۰ رویداد XP: [{t: timestampMs, n: amount, r: reason}].
   List<({int time, int amount, String reason})> xpLog() {
     final raw = _box.get('xp_log');
     if (raw == null || raw.isEmpty) return const [];
@@ -65,7 +66,11 @@ class Economy {
   Future<void> _logXp(int n, String reason) async {
     try {
       final log = [
-        {'t': DateTime.now().millisecondsSinceEpoch, 'n': n, 'r': reason},
+        {
+          't': DateTime.now().millisecondsSinceEpoch,
+          'n': n,
+          'r': reason,
+        },
         for (final e in xpLog().take(19))
           {'t': e.time, 'n': e.amount, 'r': e.reason},
       ];
@@ -197,6 +202,7 @@ class Economy {
 
   bool achievementUnlocked(String id) => _box.get('ach:$id') != null;
 
+  /// زمان باز شدن اچیومنت (میلی‌ثانیه)؛ اگه باز نشده باشه null.
   int? achievementUnlockedAt(String id) =>
       int.tryParse(_box.get('ach:$id') ?? '');
 

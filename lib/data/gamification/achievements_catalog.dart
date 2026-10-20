@@ -79,7 +79,7 @@ List<AchievementDef> buildAchievements() {
     (c) => c.packsOpened >= 1,
   );
 
-  const epMiles = [10, 50, 100, 250, 500, 1000, 2500, 5000, 7500];
+  const epMiles = [10, 50, 100, 250, 500, 1000, 2500, 5000, 7500, 10000, 15000, 25000];
   final epTitles = [
     tr('10_club'),
     tr('50_club'),
@@ -105,7 +105,7 @@ List<AchievementDef> buildAchievements() {
     );
   }
 
-  for (final n in [1, 5, 10, 25, 50]) {
+  for (final n in [1, 5, 10, 25, 50, 100, 250, 500]) {
     add(
       'frdone_$n',
       tr('finisher', [n]),
@@ -118,7 +118,7 @@ List<AchievementDef> buildAchievements() {
     );
   }
 
-  for (final n in [1, 10, 25, 50, 100]) {
+  for (final n in [1, 10, 25, 50, 100, 250, 500]) {
     add(
       'frstart_$n',
       tr('adventurer', [n]),
@@ -256,7 +256,7 @@ List<AchievementDef> buildAchievements() {
     );
   }
 
-  for (final n in [100, 500, 1000, 2500, 5000]) {
+  for (final n in [100, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000]) {
     add(
       'coins_$n',
       tr('tycoon', [n]),
@@ -301,7 +301,7 @@ List<AchievementDef> buildAchievements() {
     );
   }
 
-  const hourMiles = [10, 50, 100, 250, 500];
+  const hourMiles = [10, 50, 100, 250, 500, 1000, 2500, 5000];
   for (final h in hourMiles) {
     add(
       'hours_$h',
@@ -338,7 +338,7 @@ List<AchievementDef> buildAchievements() {
     );
   }
 
-  for (final n in [100, 500, 1000, 2500, 5000, 10000]) {
+  for (final n in [100, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 400000]) {
     add(
       'xp_$n',
       '$n XP',
