@@ -82,6 +82,11 @@ class ApiGateway {
 
   final http.Client _http;
   final Box<String>? _cache;
+
+  void close() {
+    _http.close();
+  }
+
   final Map<ApiHost, Future<void>> _tails = {};
   final Map<ApiHost, DateTime> _last = {};
   final Random _rng = Random();
@@ -212,7 +217,6 @@ class ApiGateway {
         if (res.statusCode == 429) {
           final retryAfter =
               int.tryParse(res.headers['retry-after'] ?? '') ?? 20;
-          // Capped at 12s so the UI never hangs for a minute on a 429.
           delay = Duration(seconds: retryAfter.clamp(1, 12).toInt());
         } else {
           delay = _backoff(attempt);

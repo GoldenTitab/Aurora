@@ -31,7 +31,6 @@ final malClientProvider = Provider<MalClient>(
 
 final franchiseCacheVersionProvider = StateProvider<int>((ref) => 0);
 
-/// حالت کم‌مصرف اینترنت: کاورها با کیفیت پایین‌تر لود می‌شن.
 class DataSaverNotifier extends Notifier<bool> {
   static const _key = 'data_saver';
 
@@ -48,7 +47,6 @@ final dataSaverProvider = NotifierProvider<DataSaverNotifier, bool>(
   DataSaverNotifier.new,
 );
 
-/// تاریخچه‌ی جست‌وجوهای اخیر (لوکال، سقف ۱۰).
 class SearchHistoryNotifier extends Notifier<List<String>> {
   static const _key = 'search_history';
   static const _max = 10;
@@ -74,7 +72,7 @@ class SearchHistoryNotifier extends Notifier<List<String>> {
     }
     state = next.take(_max).toList();
     try {
-      await Hive.box<String>(Boxes.meta).put(_key, jsonEncode(next));
+      await Hive.box<String>(Boxes.meta).put(_key, jsonEncode(state));
     } catch (_) {}
   }
 

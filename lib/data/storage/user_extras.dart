@@ -17,11 +17,18 @@ class UserExtras {
 
   double? scoreOf(String entryId) {
     final raw = _box.get('uscore:$entryId');
-    return raw == null ? null : double.tryParse(raw);
+    if (raw == null) {
+      return null;
+    }
+    final v = double.tryParse(raw);
+    if (v == null || !v.isFinite) {
+      return null;
+    }
+    return v;
   }
 
   Future<void> saveScore(String entryId, double? score) async {
-    if (score == null || score <= 0) {
+    if (score == null || score <= 0 || !score.isFinite) {
       await _box.delete('uscore:$entryId');
     } else {
       await _box.put('uscore:$entryId', score.toString());

@@ -10,6 +10,7 @@ import '../../../core/widgets/cover_image.dart';
 import '../../../data/models/entry.dart';
 import '../../../data/models/watch_status.dart';
 import '../../../data/providers.dart';
+import '../../../data/remote/api_exception.dart';
 import 'status_dropdown.dart';
 import 'user_score_picker.dart';
 import '../../../core/i18n/lang.dart';
@@ -34,6 +35,14 @@ class EntryTile extends ConsumerStatefulWidget {
 class _EntryTileState extends ConsumerState<EntryTile> {
   bool _open = false;
 
+  @override
+  void didUpdateWidget(EntryTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.entry.id != widget.entry.id) {
+      _open = false;
+    }
+  }
+
   Future<void> _confirmDeleteManual() async {
     final fid = widget.franchiseId;
     if (fid == null) return;
@@ -57,10 +66,24 @@ class _EntryTileState extends ConsumerState<EntryTile> {
         ],
       ),
     );
-    if (ok != true || !mounted) return;
-    await ref
-        .read(franchiseRepositoryProvider)
-        .removeManualEntry(fid, widget.entry.id);
+    if (ok != true || !mounted) {
+      return;
+    }
+    try {
+      await ref
+          .read(franchiseRepositoryProvider)
+          .removeManualEntry(fid, widget.entry.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(friendlyError(e))));
+      }
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
     widget.onManualRemoved?.call();
   }
 

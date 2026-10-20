@@ -40,7 +40,6 @@ class FranchiseRepository {
   final MalClient _mal;
   final Box<String> _box;
 
-  /// Called (asynchronously) after the franchise cache changed.
   final void Function()? onChanged;
 
   List<Franchise>? _all;
@@ -108,16 +107,21 @@ class FranchiseRepository {
     for (final f in allCachedFranchises()) {
       if (f.malId == malId || f.entries.any((e) => e.malId == malId)) {
         await _box.put(aliasKey, f.id);
+        if (f.anilistId > 0) {
+          return await getFranchise(f.anilistId, forceRefresh: forceRefresh);
+        }
         return f;
       }
     }
 
     final media = await _ani.fetchMediaByMal(malId);
     if (media != null) {
-      final id = media['id'] as int;
-      final f = await getFranchise(id, forceRefresh: forceRefresh);
-      await _box.put(aliasKey, f.id);
-      return f;
+      final id = (media['id'] as num?)?.toInt();
+      if (id != null) {
+        final f = await getFranchise(id, forceRefresh: forceRefresh);
+        await _box.put(aliasKey, f.id);
+        return f;
+      }
     }
 
     final detail = await _jikan.fetchAnime(malId);
@@ -130,7 +134,7 @@ class FranchiseRepository {
     final images = detail['images'] as Map?;
     final jpg = images?['jpg'] as Map?;
     final genres = ((detail['genres'] as List?) ?? const [])
-        .map((g) => ((g as Map)['name'] ?? '') as String)
+        .map((g) => ((g as Map)['name'] ?? '').toString())
         .where((g) => g.isNotEmpty)
         .toList();
     final f = Franchise(
@@ -304,18 +308,32 @@ class FranchiseRepository {
       for (final it in items.values)
         if (it.media['idMal'] is int) it.media['idMal'] as int,
     };
-    var added = 0;
+    var attempts = 0;
+    final attempted = <int>{};
     for (final e in extra) {
-      if (added >= _maxCrossResolves) break;
-      if (knownMal.contains(e.malId)) continue;
+      if (attempts >= _maxCrossResolves) {
+        break;
+      }
+      if (knownMal.contains(e.malId)) {
+        continue;
+      }
+      if (!attempted.add(e.malId)) {
+        continue;
+      }
+      attempts++;
       Map<String, dynamic>? media;
       try {
         media = await _ani.fetchMediaByMal(e.malId);
       } catch (_) {
         media = null;
       }
-      if (media == null) continue;
-      final nid = media['id'] as int;
+      if (media == null) {
+        continue;
+      }
+      final nid = (media['id'] as num?)?.toInt();
+      if (nid == null) {
+        continue;
+      }
       if (items.containsKey(nid)) {
         knownMal.add(e.malId);
         continue;
@@ -327,7 +345,6 @@ class FranchiseRepository {
       } else {
         edgeOf.putIfAbsent(nid, () => (parent: rootAniId, rel: e.rel));
       }
-      added++;
     }
   }
 
@@ -493,9 +510,13 @@ class FranchiseRepository {
           ((jsonDecode(raw) as Map).cast<String, dynamic>()['items']
               as List?) ??
           const [];
-      return items
-          .map((e) => Entry.fromJson((e as Map).cast<String, dynamic>()))
-          .toList();
+      final out = <Entry>[];
+      for (final e in items) {
+        try {
+          out.add(Entry.fromJson((e as Map).cast<String, dynamic>()));
+        } catch (_) {}
+      }
+      return out;
     } catch (_) {
       return [];
     }
@@ -516,7 +537,6 @@ class FranchiseRepository {
       'manual_entries:$franchiseId',
       jsonEncode({'items': list.map((e) => e.toJson()).toList()}),
     );
-    // جایگاه دلخواه: بعد از ورودی X
     if (insertAfterId != null && insertAfterId.isNotEmpty) {
       try {
         final box = Hive.box<String>(Boxes.meta);
@@ -529,13 +549,11 @@ class FranchiseRepository {
         await box.put('manual_pos:$franchiseId', jsonEncode(map));
       } catch (_) {}
     }
-    // یادداشت «چرا»
     if (note != null && note.trim().isNotEmpty) {
       try {
-        await Hive.box<String>(Boxes.meta).put(
-          'manual_note:$franchiseId:${entry.id}',
-          note.trim(),
-        );
+        await Hive.box<String>(
+          Boxes.meta,
+        ).put('manual_note:$franchiseId:${entry.id}', note.trim());
       } catch (_) {}
     }
     _invalidate();
@@ -568,11 +586,8 @@ class FranchiseRepository {
     final extra = manual.where((e) => !ids.contains(e.id)).toList();
     if (extra.isEmpty) return f;
     final merged = [...f.entries, ...extra];
-    // جایگاه‌های دلخواه دستی: انتقال بعد از ورودی لنگر
     try {
-      final raw = Hive.box<String>(
-        Boxes.meta,
-      ).get('manual_pos:${f.id}');
+      final raw = Hive.box<String>(Boxes.meta).get('manual_pos:${f.id}');
       if (raw != null && raw.isNotEmpty) {
         final pos = (jsonDecode(raw) as Map).cast<String, String>();
         for (final e in extra) {

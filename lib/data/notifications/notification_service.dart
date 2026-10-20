@@ -7,10 +7,10 @@ import 'notification_content.dart';
 class NotificationService {
   NotificationService();
 
-  final FlutterLocalNotificationsPlugin _plugin =
+  static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  bool _initialized = false;
+  static bool _initialized = false;
 
   Future<void> init() async {
     if (_initialized) return;

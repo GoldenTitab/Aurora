@@ -7,10 +7,8 @@ class Suggestion {
   final AnimeCardData data;
   final int score;
 
-  /// مسیر موتور (حالت سلیقه‌ای): کلید منبع — دلیل تنبل ساخته می‌شود.
   final String sourceKey;
 
-  /// حالت‌های دیگر پیکر: کلید دلیل + کلیدهای آرگومان.
   final String reasonKey;
   final List<String> reasonArgKeys;
 
@@ -22,7 +20,6 @@ class Suggestion {
     this.reasonArgKeys = const [],
   });
 
-  /// تنبل محاسبه می‌شود تا همیشه زبان فعلی اپ را دنبال کند.
   String get reasonFa {
     if (reasonKey.isNotEmpty) {
       return tr(reasonKey, [for (final k in reasonArgKeys) tr(k)]);
@@ -53,6 +50,9 @@ class SuggestionEngine {
     final pool = <({AnimeCardData data, String sourceFa})>[];
     for (final c in candidates) {
       final d = c.data;
+      if (d.anilistId <= 0 && d.malId <= 0) {
+        continue;
+      }
       final key = d.anilistId > 0 ? 'al-${d.anilistId}' : 'mal-${d.malId}';
       if (!seen.add(key)) continue;
       if (excludedEntryIds.contains(key)) continue;

@@ -39,9 +39,18 @@ class MalClient {
       if (res.statusCode != 200) return const [];
       final json = jsonDecode(res.body) as Map<String, dynamic>;
       final list = (json['data'] as List?) ?? const [];
-      return list
-          .map((e) => ((e as Map)['node'] as Map).cast<String, dynamic>())
-          .toList();
+      final out = <Map<String, dynamic>>[];
+      for (final e in list) {
+        if (e is! Map) {
+          continue;
+        }
+        final node = e['node'];
+        if (node is! Map) {
+          continue;
+        }
+        out.add(node.cast<String, dynamic>());
+      }
+      return out;
     } catch (e) {
       if (kDebugMode) debugPrint('MAL search error: $e');
       return const [];
@@ -63,13 +72,22 @@ class MalClient {
       if (res.statusCode != 200) return const [];
       final json = jsonDecode(res.body) as Map<String, dynamic>;
       final list = (json['related_anime'] as List?) ?? const [];
-      return list.map((e) {
-        final m = (e as Map).cast<String, dynamic>();
-        return (
+      final out = <({String relation, Map<String, dynamic> node})>[];
+      for (final e in list) {
+        if (e is! Map) {
+          continue;
+        }
+        final node = e['node'];
+        if (node is! Map) {
+          continue;
+        }
+        final m = e.cast<String, dynamic>();
+        out.add((
           relation: (m['relation_type'] as String?) ?? 'other',
-          node: (m['node'] as Map).cast<String, dynamic>(),
-        );
-      }).toList();
+          node: node.cast<String, dynamic>(),
+        ));
+      }
+      return out;
     } catch (e) {
       if (kDebugMode) debugPrint('MAL related error: $e');
       return const [];

@@ -6,10 +6,10 @@ String stripHtml(String? input) {
       .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
       .replaceAll(RegExp(r'<[^>]*>'), '')
       .replaceAll('&quot;', '"')
-      .replaceAll('&amp;', '&')
       .replaceAll('&#039;', "'")
       .replaceAll('&lt;', '<')
       .replaceAll('&gt;', '>')
+      .replaceAll('&amp;', '&')
       .replaceAll(RegExp(r'\n{3,}'), '\n\n')
       .trim();
 }
@@ -33,7 +33,7 @@ String normalizeTitle(String s) {
   t = t.replaceAll(RegExp(r'[^a-z0-9\u0600-\u06FF ]'), ' ');
   t = t
       .replaceAll(
-        RegExp(r'\b(season|s|part| cour|movie|ova|ona|special)\b'),
+        RegExp(r'\b(season|s|part|cour|movie|ova|ona|special)\b'),
         ' ',
       )
       .replaceAll(RegExp(r'\b\d+(st|nd|rd|th)?\b'), ' ');

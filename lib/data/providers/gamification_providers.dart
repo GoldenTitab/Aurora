@@ -120,15 +120,11 @@ class EconomyNotifier extends Notifier<EconomyState> {
   Future<void> markImported() async {
     final box = Hive.box<String>(Boxes.meta);
     await box.put('import_done', '1');
-    await box.put(
-      'import_last',
-      '${DateTime.now().millisecondsSinceEpoch}',
-    );
+    await box.put('import_last', '${DateTime.now().millisecondsSinceEpoch}');
     refresh();
     unawaited(ref.read(achievementsProvider.notifier).evaluate());
   }
 
-  /// زمان آخرین ایمپورت موفق (میلی‌ثانیه)؛ اگه نبوده null.
   int? lastImportAt() {
     try {
       final box = Hive.box<String>(Boxes.meta);
@@ -161,6 +157,8 @@ class MissionsNotifier extends Notifier<List<MissionState>> {
   MissionEngine get _engine =>
       MissionEngine(Economy(Hive.box<String>(Boxes.meta)));
 
+  final Set<String> _claiming = {};
+
   @override
   List<MissionState> build() {
     ref.watch(langProvider);
@@ -168,15 +166,24 @@ class MissionsNotifier extends Notifier<List<MissionState>> {
   }
 
   Future<bool> claim(MissionDef def) async {
-    final r = await _engine.claim(def);
-    if (!r.ok) return false;
-    state = _engine.states();
-    ref.read(economyProvider.notifier).refresh();
-    if (r.leveledTo != null) {
-      ref.read(levelUpEventProvider.notifier).state = r.leveledTo;
+    if (!_claiming.add(def.id)) {
+      return false;
     }
-    unawaited(ref.read(achievementsProvider.notifier).evaluate());
-    return true;
+    try {
+      final r = await _engine.claim(def);
+      if (!r.ok) {
+        return false;
+      }
+      state = _engine.states();
+      ref.read(economyProvider.notifier).refresh();
+      if (r.leveledTo != null) {
+        ref.read(levelUpEventProvider.notifier).state = r.leveledTo;
+      }
+      unawaited(ref.read(achievementsProvider.notifier).evaluate());
+      return true;
+    } finally {
+      _claiming.remove(def.id);
+    }
   }
 }
 
@@ -186,8 +193,6 @@ final achievementsProvider =
     );
 
 class AchievementsNotifier extends Notifier<Set<String>> {
-  /// تعریف اچیومنت‌ها با متن زبان فعلی ساخته می‌شود؛ با تغییر زبان،
-  /// build دوباره اجرا و _defs از نو ساخته می‌شود.
   List<AchievementDef> _defs = const [];
 
   final Set<String> _inflight = {};
@@ -198,12 +203,9 @@ class AchievementsNotifier extends Notifier<Set<String>> {
   Set<String> build() {
     ref.watch(langProvider);
     _defs = buildAchievements();
-    return Economy(
-      Hive.box<String>(Boxes.meta),
-    ).unlockedAchievements().toSet();
+    return Economy(Hive.box<String>(Boxes.meta)).unlockedAchievements().toSet();
   }
 
-  /// کانتکست فعلی برای محاسبه‌ی پیشرفت اچیومنت‌ها در UI.
   AchCtx get ctx => _buildCtx();
 
   AchCtx _buildCtx() {
@@ -254,7 +256,10 @@ class AchievementsNotifier extends Notifier<Set<String>> {
       _inflight.add(d.id);
       try {
         await eco.unlockAchievement(d.id);
-        final leveled = await eco.addXp(d.xp, reason: tr('xp_reason_achievement', [d.titleFa]));
+        final leveled = await eco.addXp(
+          d.xp,
+          reason: tr('xp_reason_achievement', [d.titleFa]),
+        );
         if (d.coins > 0) await eco.addCoins(d.coins);
         if (leveled != null) {
           ref.read(levelUpEventProvider.notifier).state = leveled;
@@ -309,6 +314,8 @@ class CardsNotifier extends Notifier<CardsState> {
   CardPool get _pool => ref.read(cardPoolProvider);
   Economy get _eco => Economy(Hive.box<String>(Boxes.meta));
 
+  bool _opening = false;
+
   CardsState _read({bool loading = false}) => CardsState(
     collection: _pool.collection(),
     poolSize: _pool.poolSize(),
@@ -319,8 +326,13 @@ class CardsNotifier extends Notifier<CardsState> {
 
   @override
   CardsState build() {
-    // مهاجرت یک‌باره‌ی درجه‌های قدیمی؛ بعدش state را تازه می‌کنیم.
-    unawaited(_pool.migrateLegacyRarities().then((_) => state = _read()));
+    unawaited(
+      _pool.migrateLegacyRarities().then((_) {
+        try {
+          state = _read();
+        } catch (_) {}
+      }, onError: (_) {}),
+    );
     return _read();
   }
 
@@ -337,13 +349,23 @@ class CardsNotifier extends Notifier<CardsState> {
   }
 
   Future<PackResult?> openPack() async {
-    final r = await _pool.openPack(_eco);
-    if (r == null) return null;
-    state = _read();
-    ref.read(economyProvider.notifier).refresh();
-    ref.invalidate(missionsProvider);
-    unawaited(ref.read(achievementsProvider.notifier).evaluate());
-    return r;
+    if (_opening) {
+      return null;
+    }
+    _opening = true;
+    try {
+      final r = await _pool.openPack(_eco);
+      if (r == null) {
+        return null;
+      }
+      state = _read();
+      ref.read(economyProvider.notifier).refresh();
+      ref.invalidate(missionsProvider);
+      unawaited(ref.read(achievementsProvider.notifier).evaluate());
+      return r;
+    } finally {
+      _opening = false;
+    }
   }
 }
 

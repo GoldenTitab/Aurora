@@ -9,5 +9,8 @@ String toFa(Object value) {
   for (var i = 0; i < en.length; i++) {
     out = out.replaceAll(en[i], fa[i]);
   }
-  return out.replaceAll('.', '٫');
+  if (RegExp(r'^-?\d+\.\d+$').hasMatch(s)) {
+    return out.replaceAll('.', '٫');
+  }
+  return out;
 }

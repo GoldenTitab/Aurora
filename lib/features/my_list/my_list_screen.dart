@@ -29,7 +29,7 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
   static const _typeKey = 'mylist_type';
   static const _hideDoneKey = 'mylist_hide_done';
 
-  static final _sortLabels = <String, String>{
+  static Map<String, String> get _sortLabels => <String, String>{
     'status': tr('default_group_by_status'),
     'rating': tr('my_score'),
     'progress': tr('progress'),
@@ -44,7 +44,6 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
   bool _selecting = false;
   final _selected = <String>{};
 
-  /// گروه‌های جمع‌شده (نام WatchStatus)؛ watching باز، بقیه پیش‌فرض بسته.
   final _collapsed = <String>{};
   static const _collapsedKey = 'mylist_collapsed';
 
@@ -64,11 +63,7 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
     _hideDone = _meta.get(_hideDoneKey) == '1';
     final rawCollapsed = _meta.get(_collapsedKey);
     if (rawCollapsed == null) {
-      // پیش‌فرض: completed و dropped بسته
-      _collapsed.addAll([
-        WatchStatus.completed.name,
-        WatchStatus.dropped.name,
-      ]);
+      _collapsed.addAll([WatchStatus.completed.name, WatchStatus.dropped.name]);
     } else if (rawCollapsed.isNotEmpty) {
       _collapsed.addAll(rawCollapsed.split(','));
     }
@@ -213,9 +208,12 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
     final epN = ref.read(episodeProgressProvider.notifier);
     final extras = ref.read(userExtrasProvider);
     final eco = Economy(_meta);
+    var removed = 0;
     for (final fid in ids) {
       final item = byId[fid];
-      if (item == null) continue;
+      if (item == null) {
+        continue;
+      }
       final entryIds = item.franchise.entries.map((e) => e.id).toList();
       for (final e in item.franchise.entries) {
         await statusN.setStatus(e.id, null);
@@ -223,14 +221,17 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
       }
       await extras.clearFranchise(fid, entryIds);
       await eco.deleteFranchiseRating(fid);
+      removed++;
     }
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     setState(() {
       _selected.clear();
       _selecting = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(tr('franchises_removed', [toFa(ids.length)]))),
+      SnackBar(content: Text(tr('franchises_removed', [toFa(removed)]))),
     );
   }
 
@@ -251,7 +252,6 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
 
     final visible = items.where(_passes).toList();
 
-    // نزدیک‌ترین قسمت آینده برای هر فرنچایز (فقط watching)
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     final nextAir = <int, AiringEntry>{};
     final days = ref.watch(weeklyAiringProvider).valueOrNull ?? const [];
@@ -337,9 +337,7 @@ class _MyListScreenState extends ConsumerState<MyListScreen> {
               onChanged: (v) => setState(() => _textQuery = v),
               decoration: InputDecoration(
                 hintText: tr('search_2'),
-                hintStyle: TextStyle(
-                  color: AppColors.textSecondaryOf(context),
-                ),
+                hintStyle: TextStyle(color: AppColors.textSecondaryOf(context)),
                 filled: true,
                 fillColor: AppColors.surfaceOf(context),
                 contentPadding: const EdgeInsets.symmetric(
@@ -467,7 +465,6 @@ class _GroupHeader extends StatelessWidget {
   }
 }
 
-/// نوار آمار یک‌خطی بالای لیست.
 class _StatsStrip extends ConsumerWidget {
   const _StatsStrip({required this.items});
   final List<MyListFranchise> items;
@@ -522,7 +519,6 @@ class _FranchiseTile extends StatelessWidget {
   final bool selected;
   final VoidCallback? onToggle;
 
-  /// نزدیک‌ترین قسمت آینده (فقط برای watching نمایش داده می‌شود).
   final AiringEntry? nextAiring;
 
   @override

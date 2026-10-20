@@ -32,6 +32,7 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
   bool _loading = false;
   String? _error;
   bool _offline = false;
+  int _pickSeq = 0;
 
   static const _moods = [
     'Action',
@@ -52,6 +53,7 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
   String _moodKey(String m) => 'mood_${m.toLowerCase()}';
 
   Future<void> _pick() async {
+    final seq = ++_pickSeq;
     setState(() {
       _loading = true;
       _error = null;
@@ -65,14 +67,13 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
         _PickMode.tonight => await svc.pickTonight(_minutes),
         _PickMode.mood => await svc.pickMood(_mood),
       };
-      if (!mounted) return;
+      if (!mounted || seq != _pickSeq) return;
       setState(() {
         _current = s;
         _loading = false;
       });
     } catch (e) {
-      if (!mounted) return;
-      // آفلاین: آخرین پیشنهاد کش‌شده
+      if (!mounted || seq != _pickSeq) return;
       final cached = SuggestionService.lastCached();
       setState(() {
         _loading = false;
@@ -91,7 +92,9 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
     final s = _current;
     if (s == null || s.data.anilistId <= 0) return;
     final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(tr('fetching_full_details'))));
+    messenger.showSnackBar(
+      SnackBar(content: Text(tr('fetching_full_details'))),
+    );
     try {
       final f = await ref
           .read(franchiseRepositoryProvider)
@@ -237,10 +240,7 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
 
   Widget _body() {
     if (_loading) {
-      return SizedBox(
-        height: 420,
-        child: LoadingView(message: tr('picking')),
-      );
+      return SizedBox(height: 420, child: LoadingView(message: tr('picking')));
     }
     if (_error != null) {
       return SizedBox(
@@ -286,11 +286,7 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.wifi_off_rounded,
-                  size: 16,
-                  color: AppColors.onHold,
-                ),
+                Icon(Icons.wifi_off_rounded, size: 16, color: AppColors.onHold),
                 const SizedBox(width: 6),
                 Text(
                   tr('cached_suggestion'),

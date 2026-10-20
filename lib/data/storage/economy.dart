@@ -44,7 +44,6 @@ class Economy {
     return la > lb ? la : null;
   }
 
-  /// آخرین ۲۰ رویداد XP: [{t: timestampMs, n: amount, r: reason}].
   List<({int time, int amount, String reason})> xpLog() {
     final raw = _box.get('xp_log');
     if (raw == null || raw.isEmpty) return const [];
@@ -52,11 +51,12 @@ class Economy {
       final list = jsonDecode(raw) as List;
       return [
         for (final e in list)
-          (
-            time: (e['t'] as num?)?.toInt() ?? 0,
-            amount: (e['n'] as num?)?.toInt() ?? 0,
-            reason: (e['r'] as String?) ?? '',
-          ),
+          if (e is Map)
+            (
+              time: (e['t'] as num?)?.toInt() ?? 0,
+              amount: (e['n'] as num?)?.toInt() ?? 0,
+              reason: e['r']?.toString() ?? '',
+            ),
       ];
     } catch (_) {
       return const [];
@@ -66,11 +66,7 @@ class Economy {
   Future<void> _logXp(int n, String reason) async {
     try {
       final log = [
-        {
-          't': DateTime.now().millisecondsSinceEpoch,
-          'n': n,
-          'r': reason,
-        },
+        {'t': DateTime.now().millisecondsSinceEpoch, 'n': n, 'r': reason},
         for (final e in xpLog().take(19))
           {'t': e.time, 'n': e.amount, 'r': e.reason},
       ];
@@ -202,12 +198,15 @@ class Economy {
 
   bool achievementUnlocked(String id) => _box.get('ach:$id') != null;
 
-  /// زمان باز شدن اچیومنت (میلی‌ثانیه)؛ اگه باز نشده باشه null.
   int? achievementUnlockedAt(String id) =>
       int.tryParse(_box.get('ach:$id') ?? '');
 
-  Future<void> unlockAchievement(String id) =>
-      _box.put('ach:$id', '${DateTime.now().millisecondsSinceEpoch}');
+  Future<void> unlockAchievement(String id) async {
+    if (achievementUnlocked(id)) {
+      return;
+    }
+    await _box.put('ach:$id', '${DateTime.now().millisecondsSinceEpoch}');
+  }
 
   List<String> unlockedAchievements() => _box.keys
       .map((k) => k.toString())
@@ -223,12 +222,12 @@ class Economy {
   }
 
   Future<bool> saveFranchiseRating(String franchiseId, int v) async {
-    final first = fratingOf(franchiseId) == null;
     if (v < 1 || v > 10) {
       await _box.delete('frating:$franchiseId');
-    } else {
-      await _box.put('frating:$franchiseId', '$v');
+      return false;
     }
+    final first = fratingOf(franchiseId) == null;
+    await _box.put('frating:$franchiseId', '$v');
     return first;
   }
 

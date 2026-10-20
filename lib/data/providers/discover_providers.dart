@@ -87,20 +87,25 @@ class DiscoverSectionNotifier
     } else {
       data = await _fetchAndSave();
     }
-    if (arg == DiscoverSection.underrated) {
-      final filtered = data.items
-          .where((c) => c.countryOfOrigin != 'CN')
-          .toList();
-      if (filtered.length != data.items.length) {
-        return DiscoverSectionData(items: filtered, rankDelta: data.rankDelta);
-      }
+    return _applyFilter(data);
+  }
+
+  DiscoverSectionData _applyFilter(DiscoverSectionData data) {
+    if (arg != DiscoverSection.underrated) {
+      return data;
     }
-    return data;
+    final filtered = data.items
+        .where((c) => c.countryOfOrigin != 'CN')
+        .toList();
+    if (filtered.length == data.items.length) {
+      return data;
+    }
+    return DiscoverSectionData(items: filtered, rankDelta: data.rankDelta);
   }
 
   Future<void> refresh() async {
     final fresh = await _fetchAndSave();
-    state = AsyncData(fresh);
+    state = AsyncData(_applyFilter(fresh));
   }
 
   Future<DiscoverSectionData> _fetchAndSave() async {
@@ -132,6 +137,7 @@ class DiscoverSectionNotifier
       final raw = (await _box()).get(arg.name);
       if (raw == null) return null;
       final m = jsonDecode(raw) as Map<String, dynamic>;
+      if (m['args'] != discoverArgs(arg)) return null;
       final items = (m['items'] as List).map((e) {
         final x = (e as Map).cast<String, dynamic>();
         return AnimeCardData(
@@ -143,6 +149,7 @@ class DiscoverSectionNotifier
           score: (x['score'] as num).toDouble(),
           countryOfOrigin: x['co'] as String?,
           status: x['st'] as String?,
+          format: x['fmt'] as String?,
         );
       }).toList();
       if (items.isEmpty) return null;
@@ -169,6 +176,7 @@ class DiscoverSectionNotifier
         arg.name,
         jsonEncode({
           't': DateTime.now().millisecondsSinceEpoch,
+          'args': discoverArgs(arg),
           'items': [
             for (final c in data.items)
               {
@@ -180,6 +188,7 @@ class DiscoverSectionNotifier
                 'score': c.score,
                 'co': c.countryOfOrigin,
                 'st': c.status,
+                'fmt': c.format,
               },
           ],
           'delta': {
@@ -198,9 +207,6 @@ final discoverSectionProvider =
       DiscoverSection
     >(DiscoverSectionNotifier.new);
 
-/// همه‌ی انیمه‌های یک فصل — صفحه‌بندی کامل تا جایی که API ادامه دارد.
-/// نتایج با شناسه‌ی پایدار AniList یکتاسازی می‌شوند؛ سقف ۲۰ صفحه جلوی
-/// حلقه‌ی بی‌نهایت را می‌گیرد.
 Future<List<AnimeCardData>> _fetchSeasonAll(
   AniListClient client,
   String season,
@@ -225,12 +231,10 @@ Future<List<AnimeCardData>> _fetchSeasonAll(
   return out;
 }
 
-Future<Box<String>> _seasonCacheBox() async =>
-    Hive.isBoxOpen('discover_cache')
+Future<Box<String>> _seasonCacheBox() async => Hive.isBoxOpen('discover_cache')
     ? Hive.box<String>('discover_cache')
     : await Hive.openBox<String>('discover_cache');
 
-/// خواندن/نوشتن کش ۱۲ ساعته‌ی لیست کامل فصل.
 Future<List<AnimeCardData>?> _readSeasonCache(String key) async {
   try {
     final raw = (await _seasonCacheBox()).get(key);
@@ -300,34 +304,31 @@ Future<List<AnimeCardData>> _seasonAll(
   return items;
 }
 
-/// لیست کامل فصل جاری (نه فقط ۲۴ تای اول).
 final seasonalAllProvider = FutureProvider<List<AnimeCardData>>((ref) async {
   final c = _currentSeason(DateTime.now());
   return _seasonAll(
     ref.read(anilistClientProvider),
-    'season_all_current',
+    'season_all_${c.season}_${c.year}',
     c.season,
     c.year,
   );
 });
 
-/// لیست کامل فصل بعد (نه فقط ۲۴ تای اول).
 final seasonalNextProvider = FutureProvider<List<AnimeCardData>>((ref) async {
   final n = _nextSeason(DateTime.now());
   return _seasonAll(
     ref.read(anilistClientProvider),
-    'season_all_next',
+    'season_all_${n.season}_${n.year}',
     n.season,
     n.year,
   );
 });
 
-/// لیست کامل فصل قبل (نه فقط ۲۴ تای اول).
 final seasonalPrevProvider = FutureProvider<List<AnimeCardData>>((ref) async {
   final p = _prevSeason(DateTime.now());
   return _seasonAll(
     ref.read(anilistClientProvider),
-    'season_all_prev',
+    'season_all_${p.season}_${p.year}',
     p.season,
     p.year,
   );
@@ -336,6 +337,9 @@ final seasonalPrevProvider = FutureProvider<List<AnimeCardData>>((ref) async {
 final recommendationsProvider = FutureProvider<List<AnimeCardData>>((
   ref,
 ) async {
+  ref.watch(franchiseCacheVersionProvider);
+  final statuses = ref.watch(watchStatusProvider);
+  final episodes = ref.watch(episodeProgressProvider);
   final eco = Economy(Hive.box<String>(Boxes.meta));
   final repo = ref.read(franchiseRepositoryProvider);
   final client = ref.read(anilistClientProvider);
@@ -347,8 +351,6 @@ final recommendationsProvider = FutureProvider<List<AnimeCardData>>((
     if (r != null && r >= 8) candidates.add(f);
   }
   if (candidates.length < 3) {
-    final statuses = ref.read(watchStatusProvider);
-    final episodes = ref.read(episodeProgressProvider);
     for (final f in repo.allCachedFranchises()) {
       if (candidates.length >= 5) break;
       if (candidates.contains(f)) continue;
@@ -401,7 +403,6 @@ final recommendationsProvider = FutureProvider<List<AnimeCardData>>((
   return (season: 'SUMMER', year: now.year);
 }
 
-/// شروع فصل بعد (میلادی) برای شمارش معکوس.
 DateTime nextSeasonStart(DateTime now) {
   final n = _nextSeason(now);
   final month = switch (n.season) {

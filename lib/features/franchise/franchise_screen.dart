@@ -172,6 +172,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
       ),
       for (final e in list)
         Padding(
+          key: ValueKey(e.id),
           padding: const EdgeInsets.only(bottom: 10),
           child: EntryTile(
             entry: e,
@@ -529,6 +530,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, i) => Padding(
+                      key: ValueKey(main[i].id),
                       padding: const EdgeInsets.only(bottom: 10),
                       child: EntryTile(
                         entry: main[i],
@@ -556,6 +558,7 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, i) => Padding(
+                      key: ValueKey(related[i].id),
                       padding: const EdgeInsets.only(bottom: 10),
                       child: EntryTile(
                         entry: related[i],
@@ -588,7 +591,6 @@ class _FranchiseBodyState extends ConsumerState<_FranchiseBody> {
   }
 }
 
-/// نوار برجسته افزودن فرنچایز به لیست من.
 class _AddToListBar extends ConsumerWidget {
   const _AddToListBar({required this.franchise});
   final Franchise franchise;
@@ -616,9 +618,7 @@ class _AddToListBar extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -641,8 +641,10 @@ class _AddToListBar extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  inList && current != null
-                      ? tr('in_your_list_status', [current.labelFa])
+                  inList
+                      ? (current != null
+                            ? tr('in_your_list_status', [current.labelFa])
+                            : tr('in_your_list'))
                       : tr('not_in_your_list'),
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
@@ -662,9 +664,7 @@ class _AddToListBar extends ConsumerWidget {
           const SizedBox(width: 8),
           FilledButton.tonal(
             onPressed: () => _pickStatus(context, ref),
-            child: Text(
-              inList ? tr('change_status') : tr('add_to_my_list'),
-            ),
+            child: Text(inList ? tr('change_status') : tr('add_to_my_list')),
           ),
         ],
       ),
@@ -844,6 +844,14 @@ class _SpoilerSynopsisState extends State<_SpoilerSynopsis> {
   bool _revealed = false;
 
   @override
+  void didUpdateWidget(_SpoilerSynopsis oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.synopsis != widget.synopsis) {
+      _revealed = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (!widget.blurred || _revealed) {
       return _ExpandableText(text: widget.synopsis);
@@ -901,6 +909,14 @@ class _SpoilerSynopsisState extends State<_SpoilerSynopsis> {
 
 class _ExpandableTextState extends State<_ExpandableText> {
   bool _expanded = false;
+
+  @override
+  void didUpdateWidget(_ExpandableText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text) {
+      _expanded = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

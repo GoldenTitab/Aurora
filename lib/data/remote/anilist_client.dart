@@ -209,7 +209,10 @@ query ($id: Int, $perPage: Int) {
         const [];
     final out = <Map<String, dynamic>>[];
     for (final e in edges) {
-      final m = (e as Map).cast<String, dynamic>();
+      if (e is! Map) {
+        continue;
+      }
+      final m = e.cast<String, dynamic>();
       final node = (m['node'] as Map?)?.cast<String, dynamic>();
       if (node == null) continue;
       out.add({
@@ -312,13 +315,6 @@ query ($id: Int, $perPage: Int) {
     }
   }
 
-  /// لیست انیمه‌ی کاربر.
-  ///
-  /// * برمی‌گرداند null فقط وقتی کاربر وجود ندارد یا لیستش خصوصی است
-  ///   (AniList در این حالت MediaListCollection را null می‌دهد).
-  /// * خطاهای شبکه/سرور به‌صورت [ApiException] پرتاب می‌شوند تا پیام
-  ///   واقعی («عدم اتصال» و...) به کاربر برسد، نه پیام گمراه‌کننده‌ی
-  ///   «کاربر پیدا نشد».
   Future<List<Map<String, dynamic>>?> fetchUserAnimeList(
     String username,
   ) async {
@@ -447,6 +443,12 @@ query ($page: Int, $perPage: Int, $sort: [MediaSort], $genreIn: [String],
 
     if (res.statusCode == 404) {
       throw ApiException(tr('this_anime_wasn_t_found_on_anilist'));
+    }
+    final partialData = body?['data'];
+    if (res.statusCode == 200 &&
+        partialData is Map &&
+        partialData.values.any((v) => v != null)) {
+      return partialData.cast<String, dynamic>();
     }
     if (res.statusCode != 200 || body == null || body['errors'] != null) {
       if (kDebugMode) {

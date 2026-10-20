@@ -21,8 +21,12 @@ class ContinueWatchItem {
     required this.updatedAtMs,
   });
 
-  double get progressRatio =>
-      totalEpisodes <= 0 ? 0 : lastEpisode / totalEpisodes;
+  double get progressRatio {
+    if (totalEpisodes <= 0) {
+      return 0;
+    }
+    return (lastEpisode / totalEpisodes).clamp(0.0, 1.0);
+  }
 }
 
 class NewEpisodeItem {

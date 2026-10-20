@@ -79,7 +79,20 @@ List<AchievementDef> buildAchievements() {
     (c) => c.packsOpened >= 1,
   );
 
-  const epMiles = [10, 50, 100, 250, 500, 1000, 2500, 5000, 7500, 10000, 15000, 25000];
+  const epMiles = [
+    10,
+    50,
+    100,
+    250,
+    500,
+    1000,
+    2500,
+    5000,
+    7500,
+    10000,
+    15000,
+    25000,
+  ];
   final epTitles = [
     tr('10_club'),
     tr('50_club'),
@@ -93,9 +106,15 @@ List<AchievementDef> buildAchievements() {
   ];
   for (var i = 0; i < epMiles.length; i++) {
     final n = epMiles[i];
+    final String epTitle;
+    if (i < epTitles.length) {
+      epTitle = epTitles[i];
+    } else {
+      epTitle = tr('episodes_watched', [n]);
+    }
     add(
       'ep_$n',
-      epTitles[i],
+      epTitle,
       tr('episodes_watched', [n]),
       tr('watch'),
       20 + i * 15,
@@ -338,7 +357,19 @@ List<AchievementDef> buildAchievements() {
     );
   }
 
-  for (final n in [100, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 400000]) {
+  for (final n in [
+    100,
+    500,
+    1000,
+    2500,
+    5000,
+    10000,
+    25000,
+    50000,
+    100000,
+    250000,
+    400000,
+  ]) {
     add(
       'xp_$n',
       '$n XP',

@@ -29,6 +29,8 @@ WatchStatus? _anilistStatus(String? s) {
   switch (s) {
     case 'CURRENT':
       return WatchStatus.watching;
+    case 'REPEATING':
+      return WatchStatus.watching;
     case 'COMPLETED':
       return WatchStatus.completed;
     case 'PAUSED':
@@ -40,6 +42,28 @@ WatchStatus? _anilistStatus(String? s) {
     default:
       return null;
   }
+}
+
+int _malWatchedEpisodes(Map<String, dynamic> e) {
+  final direct =
+      e['episodes_watched'] ??
+      e['watched_episodes'] ??
+      e['num_episodes_watched'] ??
+      e['progress'];
+  if (direct is num) {
+    return direct.toInt();
+  }
+  final listStatus = e['list_status'];
+  if (listStatus is Map) {
+    final nested =
+        listStatus['num_episodes_watched'] ??
+        listStatus['episodes_watched'] ??
+        listStatus['watched_episodes'];
+    if (nested is num) {
+      return nested.toInt();
+    }
+  }
+  return 0;
 }
 
 WatchStatus? _jikanStatus(String? s) {
@@ -73,7 +97,6 @@ Future<LibraryImportResult> importFromAniList(
   try {
     entries = await client.fetchUserAnimeList(username.trim());
   } catch (e) {
-    // خطای واقعی شبکه/سرور — نه «کاربر پیدا نشد».
     return LibraryImportResult(ok: false, message: friendlyError(e));
   }
   if (entries == null) {
@@ -197,7 +220,6 @@ Future<LibraryImportResult> importFromMal(
       }
     }
   } catch (e) {
-    // خطای واقعی شبکه/سرور — نه «کاربر پیدا نشد».
     return LibraryImportResult(ok: false, message: friendlyError(e));
   }
   if (all.isEmpty) {
@@ -242,7 +264,7 @@ Future<LibraryImportResult> importFromMal(
       );
       final had = ref.read(watchStatusProvider)[entry.id] != null;
       await ref.read(watchStatusProvider.notifier).setStatus(entry.id, status);
-      final watched = (e['episodes_watched'] as num?)?.toInt() ?? 0;
+      final watched = _malWatchedEpisodes(e);
       if (watched > 0 && entry.episodes > 0) {
         await ref
             .read(episodeProgressProvider.notifier)

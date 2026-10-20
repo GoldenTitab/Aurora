@@ -27,6 +27,7 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
   bool _loading = false;
   bool _hasNext = true;
   String? _error;
+  int _generation = 0;
 
   String get _args => discoverArgs(widget.section);
   int get _perPage => discoverPerPage(widget.section);
@@ -51,7 +52,10 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
   }
 
   Future<void> _load() async {
-    if (_loading || !_hasNext) return;
+    if (_loading || !_hasNext) {
+      return;
+    }
+    final generation = _generation;
     setState(() {
       _loading = true;
       _error = null;
@@ -65,30 +69,40 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
             page: _page + 1,
             perPage: _perPage,
           );
-      if (!mounted) return;
+      if (!mounted || generation != _generation) {
+        return;
+      }
       final cards = cardsFromRaw(r.items);
       setState(() {
         _page += 1;
         _hasNext = r.hasNext;
         for (final c in cards) {
-          if (_seen.add(c.anilistId)) _items.add(c);
+          if (_seen.add(c.anilistId)) {
+            _items.add(c);
+          }
         }
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || generation != _generation) {
+        return;
+      }
       setState(() => _error = friendlyError(e));
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && generation == _generation) {
+        setState(() => _loading = false);
+      }
     }
   }
 
   Future<void> _refresh() async {
+    _generation++;
     setState(() {
       _items.clear();
       _seen.clear();
       _page = 0;
       _hasNext = true;
       _error = null;
+      _loading = false;
     });
     await _load();
   }
@@ -105,6 +119,14 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
     if (_items.isEmpty) {
       if (_error != null) {
         return ErrorView(message: _error!, onRetry: _load);
+      }
+      if (!_loading && !_hasNext) {
+        return Center(
+          child: Text(
+            tr('no_results_found'),
+            style: TextStyle(color: AppColors.textSecondaryOf(context)),
+          ),
+        );
       }
       return GridView.builder(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),

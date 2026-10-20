@@ -15,8 +15,14 @@ String tr(String key, [List<Object?> args = const []]) {
   } else {
     s = kFa[key] ?? kEn[key] ?? key;
   }
-  for (var i = 0; i < args.length; i++) {
-    s = s.replaceFirst('{$i}', '${args[i]}');
+  if (args.isEmpty) {
+    return s;
   }
-  return s;
+  return s.replaceAllMapped(RegExp(r'\{(\d+)\}'), (m) {
+    final i = int.parse(m.group(1)!);
+    if (i >= args.length) {
+      return m.group(0)!;
+    }
+    return '${args[i]}';
+  });
 }

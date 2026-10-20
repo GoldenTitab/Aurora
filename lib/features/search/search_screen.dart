@@ -233,10 +233,17 @@ class _FilterButton extends ConsumerWidget {
             tooltip: tr('advanced_filters'),
             onPressed: () {
               final saved = ref.read(activeFilterProvider);
-              context.push(
-                '/filter',
-                extra: saved ?? (query.isEmpty ? null : query),
-              );
+              final Object? extra;
+              if (saved != null) {
+                if (query.isNotEmpty && query != saved.query) {
+                  extra = saved.copyWith(query: query);
+                } else {
+                  extra = saved;
+                }
+              } else {
+                extra = query.isEmpty ? null : query;
+              }
+              context.push('/filter', extra: extra);
             },
             icon: Icon(
               Icons.tune_rounded,
@@ -248,10 +255,7 @@ class _FilterButton extends ConsumerWidget {
               top: 6,
               left: 6,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(10),

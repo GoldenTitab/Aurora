@@ -29,6 +29,14 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
     _load();
   }
 
+  @override
+  void didUpdateWidget(WatchOrderView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.franchise.id != widget.franchise.id) {
+      _load();
+    }
+  }
+
   void _load() {
     final storage = ref.read(watchOrderStorageProvider);
     final custom = storage.customOrderOf(widget.franchise.id);
@@ -78,6 +86,9 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
     await ref
         .read(watchOrderStorageProvider)
         .clearCustomOrder(widget.franchise.id);
+    if (!mounted) {
+      return;
+    }
     _load();
   }
 
@@ -101,7 +112,6 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
         : items.where((i) => i.isEssential).toList();
 
     final epProgress = ref.watch(episodeProgressProvider);
-    // «اینجایی»: اولین ورودی‌ای که هنوز کامل دیده نشده
     bool doneOf(WatchOrderItem it) {
       final w = epProgress[it.entry.id] ?? {};
       return it.entry.episodes > 0 && w.length >= it.entry.episodes;
@@ -211,7 +221,9 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
                       ),
                       leading: CircleAvatar(
                         radius: 16,
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                        backgroundColor: AppColors.primary.withValues(
+                          alpha: 0.2,
+                        ),
                         child: Text(
                           toFa(index + 1),
                           style: TextStyle(
@@ -259,10 +271,7 @@ class _WatchOrderViewState extends ConsumerState<WatchOrderView> {
                             if (isHere)
                               _chip(tr('you_are_here'), AppColors.primary),
                             if (done)
-                              _chip(
-                                tr('watched'),
-                                const Color(0xFF22C55E),
-                              ),
+                              _chip(tr('watched'), const Color(0xFF22C55E)),
                           ],
                         ),
                       ),

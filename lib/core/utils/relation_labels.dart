@@ -21,6 +21,12 @@ String relationLabelFa(String? relation) {
       return tr('parent_story');
     case 'ADAPTATION':
       return tr('adaptation');
+    case 'COMPILATION':
+      return tr('compilation');
+    case 'CONTAINS':
+      return tr('contains');
+    case 'CHILD':
+      return tr('child_story');
     default:
       return relation ?? '';
   }

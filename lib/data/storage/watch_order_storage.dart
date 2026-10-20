@@ -14,7 +14,7 @@ class WatchOrderStorage {
     final raw = _box.get('$_orderPrefix$franchiseId');
     if (raw == null || raw.isEmpty) return null;
     try {
-      return (jsonDecode(raw) as List).cast<String>();
+      return List<String>.from(jsonDecode(raw) as List);
     } catch (_) {
       return null;
     }
@@ -32,7 +32,7 @@ class WatchOrderStorage {
     final raw = _box.get(_recentKey);
     if (raw == null || raw.isEmpty) return const [];
     try {
-      return (jsonDecode(raw) as List).cast<String>();
+      return List<String>.from(jsonDecode(raw) as List);
     } catch (_) {
       return const [];
     }
@@ -43,7 +43,13 @@ class WatchOrderStorage {
     if (raw == null || raw.isEmpty) return const {};
     try {
       final m = jsonDecode(raw) as Map;
-      return m.map((k, v) => MapEntry(k.toString(), (v as num).toInt()));
+      final out = <String, int>{};
+      for (final e in m.entries) {
+        if (e.value is num) {
+          out[e.key.toString()] = (e.value as num).toInt();
+        }
+      }
+      return out;
     } catch (_) {
       return const {};
     }
@@ -59,15 +65,16 @@ class WatchOrderStorage {
     }
     await _box.put(_recentKey, jsonEncode(list));
 
-    final counts = Map<String, int>.from(recentGenreCounts());
+    final counts = <String, int>{};
+    recentGenreCounts().forEach((k, v) {
+      if (v > 1) {
+        counts[k] = v - 1;
+      }
+    });
     for (final g in genres) {
       counts[g] = (counts[g] ?? 0) + 1;
     }
-    final decayed = <String, int>{};
-    counts.forEach((k, v) {
-      if (v > 1) decayed[k] = v - 1;
-    });
-    await _box.put(_genreKey, jsonEncode(decayed));
+    await _box.put(_genreKey, jsonEncode(counts));
   }
 
   Future<void> clearHistory() async {

@@ -216,28 +216,43 @@ Future<void> _refreshFromNetwork(List<_Candidate> candidates) async {
             (c.status == null ||
                 c.status == 'RELEASING' ||
                 c.status == 'HIATUS' ||
-                c.status == 'NOT_YET_RELEASED'),
+                c.status == 'NOT_YET_RELEASED' ||
+                ((c.status == 'FINISHED' || c.status == 'CANCELLED') &&
+                    c.episodes <= 0)),
       )
       .take(_maxFreshFetches)
       .toList();
-  if (targets.isEmpty) return;
+  if (targets.isEmpty) {
+    return;
+  }
 
-  final client = AniListClient(ApiGateway());
-  var failures = 0;
-  for (final c in targets) {
-    try {
-      final media = await client.fetchMedia(c.anilistId);
-      c.status = media['status'] as String? ?? c.status;
-      final eps = media['episodes'] as int?;
-      if (eps != null && eps > 0) c.episodes = eps;
-      final next = media['nextAiringEpisode'] as Map?;
-      c.nextEpisode = next?['episode'] as int?;
-      c.nextAiringAt = next?['airingAt'] as int?;
-      failures = 0;
-    } catch (_) {
-      failures++;
-      if (failures >= 2) break;
+  final gateway = ApiGateway();
+  final client = AniListClient(gateway);
+  try {
+    var failures = 0;
+    for (final c in targets) {
+      try {
+        final media = await client.fetchMedia(c.anilistId);
+        c.status = media['status'] as String? ?? c.status;
+        final eps = (media['episodes'] as num?)?.toInt();
+        if (eps != null && eps > 0) {
+          c.episodes = eps;
+        }
+        final next = media['nextAiringEpisode'] as Map?;
+        if (next != null) {
+          c.nextEpisode = (next['episode'] as num?)?.toInt();
+          c.nextAiringAt = (next['airingAt'] as num?)?.toInt();
+        }
+        failures = 0;
+      } catch (_) {
+        failures++;
+        if (failures >= 2) {
+          break;
+        }
+      }
     }
+  } finally {
+    gateway.close();
   }
 }
 

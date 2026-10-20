@@ -29,8 +29,9 @@ class _PageData {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _controller = PageController();
   int _page = 0;
+  bool _finishing = false;
 
-  static final _pages = <_PageData>[
+  static List<_PageData> get _pages => <_PageData>[
     _PageData(
       icon: Icons.auto_awesome_rounded,
       title: tr('welcome_to_aurora'),
@@ -73,6 +74,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
+    if (_finishing) {
+      return;
+    }
+    _finishing = true;
     await Hive.box<String>(Boxes.meta).put('onboarding_done', '1');
     if (!mounted) return;
     final showWhatsNew = await WhatsNew.consume();

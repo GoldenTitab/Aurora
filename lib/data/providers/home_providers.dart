@@ -152,6 +152,7 @@ class HomeSectionNotifier
           score: (x['score'] as num).toDouble(),
           countryOfOrigin: x['co'] as String?,
           status: x['st'] as String?,
+          format: x['fmt'] as String?,
         );
       }).toList();
       if (items.isEmpty) return null;
@@ -182,6 +183,7 @@ class HomeSectionNotifier
                 'score': c.score,
                 'co': c.countryOfOrigin,
                 'st': c.status,
+                'fmt': c.format,
               },
           ],
         }),

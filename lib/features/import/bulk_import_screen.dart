@@ -75,6 +75,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
       withData: true,
     );
     if (res == null || res.files.isEmpty) return;
+    if (!mounted) return;
     final f = res.files.first;
     try {
       final bytes = f.bytes;
@@ -82,7 +83,8 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
       var content = utf8.decode(bytes, allowMalformed: true);
       if (content.startsWith('\uFEFF')) content = content.substring(1);
       final titles = BulkImportParser.parse(content, f.extension ?? 'txt');
-      if (titles.isEmpty && mounted) {
+      if (!mounted) return;
+      if (titles.isEmpty) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(tr('bulk_no_titles'))));
@@ -314,18 +316,27 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
     for (final item in list) {
       if (_cancel) break;
       final fr = item.franchise!;
-      try {
-        for (final e in fr.entries) {
+      var failed = false;
+      for (final e in fr.entries) {
+        try {
           await statusN.setStatus(e.id, WatchStatus.completed);
-          if (e.episodes > 0) await epN.markAll(e.id, e.episodes);
+          if (e.episodes > 0) {
+            await epN.markAll(e.id, e.episodes);
+          }
+        } catch (_) {
+          failed = true;
         }
-        _addedCount++;
-      } catch (_) {
+      }
+      if (failed) {
         _skippedCount++;
+      } else {
+        _addedCount++;
+        try {
+          await ref.read(economyProvider.notifier).onFranchiseCompleted(fr.id);
+        } catch (_) {}
       }
       if (mounted) setState(() => _applied++);
     }
-    // ارزیابی اچیومنت‌ها یک‌بار در انتها
     try {
       await ref.read(achievementsProvider.notifier).evaluate();
     } catch (_) {}

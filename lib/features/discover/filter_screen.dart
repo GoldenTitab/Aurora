@@ -101,8 +101,8 @@ class FilterState {
     this.format = '',
     this.studio = '',
     this.sort = 'POPULARITY_DESC',
-  })  : yearMax = yearMax ?? 0,
-        seasonYear = seasonYear ?? 0;
+  }) : yearMax = yearMax ?? 0,
+       seasonYear = seasonYear ?? 0;
 
   int get activeCount {
     var n = 0;
@@ -111,7 +111,8 @@ class FilterState {
     if (scoreMin > 0 || scoreMax < 10) n++;
     if (season.isNotEmpty) {
       n++;
-    } else if (yearMin > 1970 || (yearMax > 0 && yearMax < DateTime.now().year)) {
+    } else if (yearMin > 1970 ||
+        (yearMax > 0 && yearMax < DateTime.now().year)) {
       n++;
     }
     if (status.isNotEmpty) n++;
@@ -197,6 +198,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
   final _items = <AnimeCardData>[];
   final _seen = <int>{};
   final _scroll = ScrollController();
+  int _searchGen = 0;
 
   @override
   void initState() {
@@ -269,15 +271,19 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
       _status = '';
       _sort = 'POPULARITY_DESC';
       _studioCtrl.clear();
+      _queryCtrl.clear();
     });
     ref.read(activeFilterProvider.notifier).state = null;
   }
 
   Future<void> _search() async {
     ref.read(activeFilterProvider.notifier).state = _currentState();
+    _searchGen++;
+    final gen = _searchGen;
     setState(() {
       _searched = true;
       _loading = true;
+      _loadingMore = false;
       _error = null;
       _items.clear();
       _seen.clear();
@@ -285,11 +291,16 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
       _hasNext = true;
     });
     await _loadMore();
-    if (mounted) setState(() => _loading = false);
+    if (mounted && gen == _searchGen) {
+      setState(() => _loading = false);
+    }
   }
 
   Future<void> _loadMore() async {
-    if (!_searched || _loadingMore || !_hasNext) return;
+    if (!_searched || _loadingMore || !_hasNext) {
+      return;
+    }
+    final gen = _searchGen;
     setState(() {
       _loadingMore = true;
       _error = null;
@@ -307,10 +318,12 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             genresExclude: _genresExclude.isEmpty
                 ? null
                 : _genresExclude.toList(),
-            scoreMin: _score.start.round() <= 0
+            scoreMin: (_score.start * 10).round() <= 0
                 ? null
-                : _score.start.round() * 10,
-            scoreMax: _score.end.round() >= 10 ? null : _score.end.round() * 10,
+                : (_score.start * 10).round(),
+            scoreMax: (_score.end * 10).round() >= 100
+                ? null
+                : (_score.end * 10).round(),
             yearMin: useSeason ? null : _year.start.round(),
             yearMax: useSeason || _year.end.round() >= DateTime.now().year
                 ? null
@@ -325,33 +338,45 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             format: _format.isEmpty ? null : _format,
             sort: _sort,
           );
-      if (!mounted) return;
+      if (!mounted || gen != _searchGen) {
+        return;
+      }
       final studio = _studioCtrl.text.trim().toLowerCase();
-      final rawCards = cardsFromRaw(r.items);
       final filtered = <AnimeCardData>[];
-      for (var i = 0; i < rawCards.length; i++) {
-        final raw = r.items[i];
+      for (final raw in r.items) {
+        final converted = cardsFromRaw([raw]);
+        if (converted.isEmpty) {
+          continue;
+        }
         if (studio.isNotEmpty) {
           final nodes =
               ((raw['studios'] as Map?)?['nodes'] as List?) ?? const [];
           final names = nodes.map(
             (e) => ((e as Map)['name'] as String? ?? '').toLowerCase(),
           );
-          if (!names.any((n) => n.contains(studio))) continue;
+          if (!names.any((n) => n.contains(studio))) {
+            continue;
+          }
         }
-        filtered.add(rawCards[i]);
+        filtered.add(converted.first);
       }
       setState(() {
         _page += 1;
         _hasNext = r.hasNext;
         for (final c in filtered) {
-          if (_seen.add(c.anilistId)) _items.add(c);
+          if (_seen.add(c.anilistId)) {
+            _items.add(c);
+          }
         }
       });
     } catch (e) {
-      if (mounted) setState(() => _error = friendlyError(e));
+      if (mounted && gen == _searchGen) {
+        setState(() => _error = friendlyError(e));
+      }
     } finally {
-      if (mounted) setState(() => _loadingMore = false);
+      if (mounted && gen == _searchGen) {
+        setState(() => _loadingMore = false);
+      }
     }
   }
 
@@ -361,10 +386,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
       appBar: AppBar(
         title: Text(tr('advanced_filters')),
         actions: [
-          TextButton(
-            onPressed: _clearAll,
-            child: Text(tr('clear_all')),
-          ),
+          TextButton(onPressed: _clearAll, child: Text(tr('clear_all'))),
         ],
       ),
       body: CustomScrollView(
@@ -509,10 +531,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                         value: _seasonYear,
                         items: [
                           for (var y = DateTime.now().year; y >= 1970; y--)
-                            DropdownMenuItem(
-                              value: y,
-                              child: Text(toFa(y)),
-                            ),
+                            DropdownMenuItem(value: y, child: Text(toFa(y))),
                         ],
                         onChanged: (v) =>
                             setState(() => _seasonYear = v ?? _seasonYear),
@@ -631,9 +650,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
               textDirection: TextDirection.ltr,
               decoration: InputDecoration(
                 hintText: tr('e_g_mappa'),
-                hintStyle: TextStyle(
-                  color: AppColors.textSecondaryOf(context),
-                ),
+                hintStyle: TextStyle(color: AppColors.textSecondaryOf(context)),
                 filled: true,
                 fillColor: AppColors.surfaceOf(context),
                 contentPadding: const EdgeInsets.symmetric(
@@ -692,10 +709,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
         ),
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: child,
-          ),
+          Padding(padding: const EdgeInsets.only(bottom: 12), child: child),
         ],
       ),
     );

@@ -35,7 +35,9 @@ class WatchOrderService {
         );
       }
       for (final e in f.entries) {
-        if (seen.contains(e.id)) continue;
+        if (!seen.add(e.id)) {
+          continue;
+        }
         result.add(
           WatchOrderItem(
             entry: e,

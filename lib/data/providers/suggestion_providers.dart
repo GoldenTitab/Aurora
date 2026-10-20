@@ -19,63 +19,16 @@ class SuggestionService {
   final Ref _ref;
 
   Future<Suggestion?> pick() async {
-    final repo = _ref.read(franchiseRepositoryProvider);
-    final statuses = _ref.read(watchStatusProvider);
-    final storage = _ref.read(watchOrderStorageProvider);
-    final recent = storage.recentSuggestions().toSet();
-
-    final excluded = <String>{...statuses.keys};
-    for (final f in repo.allCachedFranchises()) {
-      for (final e in f.entries) {
-        excluded.add(e.id);
-      }
+    final candidates = await _baseCandidates();
+    if (candidates.isEmpty) {
+      return null;
     }
-
-    final sectionWeight = {
-      DiscoverSection.airing: 'airing',
-      DiscoverSection.seasonal: 'seasonal',
-      DiscoverSection.underrated: 'underrated',
-    };
-    final candidates = <({AnimeCardData data, String sourceFa})>[];
-    for (final entry in sectionWeight.entries) {
-      try {
-        final data = await _ref.read(discoverSectionProvider(entry.key).future);
-        for (final d in data.items) {
-          // فقط انیمه‌ی تمام‌شده؛ وضعیت نامشخص = غیرمجاز (تصمیم علی).
-          if (d.status != 'FINISHED') continue;
-          candidates.add((data: d, sourceFa: entry.value));
-        }
-      } catch (_) {}
-    }
-    // منبع اختصاصی پیشنهاددهنده: برترین‌های تاریخ (غالباً تمام‌شده).
-    // چون بخش‌های Discovery حالا بیشتر در حال پخش‌اند، این منبع تضمین
-    // می‌کند استخر نامزدهای تمام‌شده خالی نماند.
-    try {
-      final client = _ref.read(anilistClientProvider);
-      final seenTop = <int>{};
-      for (var p = 1; p <= 2; p++) {
-        final r = await client.browsePage(
-          'suggest_top',
-          'sort: [SCORE_DESC]',
-          page: p,
-          perPage: 50,
-        );
-        for (final d in cardsFromRaw(r.items)) {
-          if (d.status != 'FINISHED') continue;
-          if (seenTop.add(d.anilistId)) {
-            candidates.add((data: d, sourceFa: 'top'));
-          }
-        }
-        if (!r.hasNext) break;
-      }
-    } catch (_) {}
-    if (candidates.isEmpty) return null;
 
     final engine = SuggestionEngine();
     final result = engine.pickExternal(
       candidates: candidates,
-      excludedEntryIds: excluded,
-      recentIds: recent,
+      excludedEntryIds: _excludedIds(),
+      recentIds: _recentIds(),
     );
     if (result != null) {
       await _remember(result);
@@ -98,7 +51,8 @@ class SuggestionService {
   Set<String> _recentIds() =>
       _ref.read(watchOrderStorageProvider).recentSuggestions().toSet();
 
-  Future<List<({AnimeCardData data, String sourceFa})>> _baseCandidates() async {
+  Future<List<({AnimeCardData data, String sourceFa})>>
+  _baseCandidates() async {
     final sectionWeight = {
       DiscoverSection.airing: 'airing',
       DiscoverSection.seasonal: 'seasonal',
@@ -136,7 +90,6 @@ class SuggestionService {
     return candidates;
   }
 
-  /// فیلتر نامزدها: حذف لیست من + پیشنهادهای اخیر.
   List<AnimeCardData> _eligible(
     List<({AnimeCardData data, String sourceFa})> candidates,
   ) {
@@ -149,7 +102,6 @@ class SuggestionService {
       final key = d.anilistId > 0 ? 'al-${d.anilistId}' : 'mal-${d.malId}';
       if (!seen.add(key)) continue;
       if (recent.contains(key)) continue;
-      // excluded entry ids are 'al-..' style franchise/entry ids; match loosely
       if (excluded.any((e) => e == key || key.startsWith('$e-'))) continue;
       out.add(d);
     }
@@ -160,7 +112,6 @@ class SuggestionService {
     await _ref
         .read(watchOrderStorageProvider)
         .pushSuggestion(franchiseId: s.historyId, genres: const []);
-    // کش کارت برای تاریخچه و حالت آفلاین
     try {
       final box = Hive.box<String>(Boxes.meta);
       final raw = box.get('suggestion_cards');
@@ -183,7 +134,6 @@ class SuggestionService {
     } catch (_) {}
   }
 
-  /// خواندن کارت‌های کش‌شده‌ی پیشنهادها (برای تاریخچه و آفلاین).
   static Map<String, Map<String, dynamic>> cachedCards() {
     try {
       final raw = Hive.box<String>(Boxes.meta).get('suggestion_cards');
@@ -196,7 +146,6 @@ class SuggestionService {
     }
   }
 
-  /// آخرین پیشنهاد (برای حالت آفلاین).
   static Suggestion? lastCached() {
     try {
       final box = Hive.box<String>(Boxes.meta);
@@ -220,32 +169,27 @@ class SuggestionService {
     }
   }
 
-  /// حالت شانسی: انتخاب یکنواخت تصادفی از همان استخر.
   Future<Suggestion?> pickRandom() async {
     final pool = _eligible(await _baseCandidates());
     if (pool.isEmpty) return null;
     final d = pool[Random().nextInt(pool.length)];
-    final s = Suggestion(
-      data: d,
-      score: 0,
-      reasonKey: 'picked_purely_by_luck',
-    );
+    final s = Suggestion(data: d, score: 0, reasonKey: 'picked_purely_by_luck');
     await _remember(s);
     return s;
   }
 
-  /// حالت «امشب چی ببینم؟»: وقت کم → سینمایی، وقت زیاد → سریال.
   Future<Suggestion?> pickTonight(int minutes) async {
     final format = minutes <= 90 ? 'MOVIE' : 'TV';
     final client = _ref.read(anilistClientProvider);
     final r = await client.advancedBrowse(
       perPage: 50,
       format: format,
+      status: 'FINISHED',
       sort: 'POPULARITY_DESC',
     );
     final pool = _eligible([
       for (final d in cardsFromRaw(r.items))
-        if (d.status == 'FINISHED' || d.status == null) (data: d, sourceFa: 'tonight'),
+        if (d.status == 'FINISHED') (data: d, sourceFa: 'tonight'),
     ]);
     if (pool.isEmpty) return null;
     final d = pool[Random().nextInt(pool.length)];
@@ -259,17 +203,17 @@ class SuggestionService {
     return s;
   }
 
-  /// حالت حال‌وهوا: جست‌وجوی ژانری + انتخاب تصادفی.
   Future<Suggestion?> pickMood(String genreEn) async {
     final client = _ref.read(anilistClientProvider);
     final r = await client.advancedBrowse(
       perPage: 50,
       genres: [genreEn],
+      status: 'FINISHED',
       sort: 'POPULARITY_DESC',
     );
     final pool = _eligible([
       for (final d in cardsFromRaw(r.items))
-        if (d.status == 'FINISHED' || d.status == null) (data: d, sourceFa: 'mood'),
+        if (d.status == 'FINISHED') (data: d, sourceFa: 'mood'),
     ]);
     if (pool.isEmpty) return null;
     final d = pool[Random().nextInt(pool.length)];

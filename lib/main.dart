@@ -60,6 +60,9 @@ Future<void> main() async {
 
   try {
     await NotificationService().init();
+  } catch (_) {}
+
+  try {
     await Workmanager().initialize(callbackDispatcher);
     final metaBox = Hive.box<String>(Boxes.meta);
     if (NotificationPrefs.isEnabled(metaBox)) {

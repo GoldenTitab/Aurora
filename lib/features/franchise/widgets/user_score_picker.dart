@@ -24,6 +24,14 @@ class _UserScorePickerState extends ConsumerState<UserScorePicker> {
     _score = ref.read(userExtrasProvider).scoreOf(widget.entryId);
   }
 
+  @override
+  void didUpdateWidget(UserScorePicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.entryId != widget.entryId) {
+      _score = ref.read(userExtrasProvider).scoreOf(widget.entryId);
+    }
+  }
+
   double get _stars => (_score ?? 0) / 2;
 
   Future<void> _onTap(int index) async {

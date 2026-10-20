@@ -8,6 +8,7 @@ import '../../core/widgets/cover_image.dart';
 import '../../data/gamification/card_pool.dart';
 import '../../data/models/collectible_card.dart';
 import '../../data/providers.dart';
+import '../../data/remote/api_exception.dart';
 import '../../core/i18n/lang.dart';
 
 class PackOpeningScreen extends ConsumerStatefulWidget {
@@ -30,7 +31,17 @@ class _PackOpeningScreenState extends ConsumerState<PackOpeningScreen> {
       _result = null;
       _revealed = 0;
     });
-    final r = await ref.read(cardsProvider.notifier).openPack();
+    PackResult? r;
+    try {
+      r = await ref.read(cardsProvider.notifier).openPack();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _opening = false;
+        _error = friendlyError(e);
+      });
+      return;
+    }
     if (!mounted) return;
     setState(() => _opening = false);
     if (r == null) {

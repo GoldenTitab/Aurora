@@ -200,14 +200,22 @@ class Migrations {
   static int backupCount() => _backups.length;
 
   static Map<String, dynamic>? latestBackup() {
-    if (_backups.isEmpty) return null;
-    final keys = _backups.keys.map((e) => e.toString()).toList()..sort();
-    try {
-      return (jsonDecode(_backups.get(keys.last)!) as Map)
-          .cast<String, dynamic>();
-    } catch (_) {
+    if (_backups.isEmpty) {
       return null;
     }
+    final keys = _backups.keys.map((e) => e.toString()).toList()..sort();
+    for (final key in keys.reversed) {
+      try {
+        final raw = _backups.get(key);
+        if (raw == null) {
+          continue;
+        }
+        return (jsonDecode(raw) as Map).cast<String, dynamic>();
+      } catch (_) {
+        continue;
+      }
+    }
+    return null;
   }
 
   static Future<bool> restoreLatestBackup() async {

@@ -10,6 +10,7 @@ import '../../core/widgets/section_title.dart';
 import '../../data/gamification/card_pool.dart';
 import '../../data/models/collectible_card.dart';
 import '../../data/providers.dart';
+import '../../data/remote/api_exception.dart';
 import '../../core/i18n/lang.dart';
 
 class CardsTab extends ConsumerStatefulWidget {
@@ -469,23 +470,31 @@ class _PackHeader extends ConsumerWidget {
                     ? null
                     : () async {
                         final messenger = ScaffoldMessenger.of(context);
-                        final n = await ref
-                            .read(cardsProvider.notifier)
-                            .rebuildPool(force: true);
-                        if (context.mounted) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                n > 0
-                                    ? tr('pool_refreshed_with_characters', [
-                                        toFa(n),
-                                      ])
-                                    : tr(
-                                        'no_characters_found_add_a_few_anime_to_your_list',
-                                      ),
+                        try {
+                          final n = await ref
+                              .read(cardsProvider.notifier)
+                              .rebuildPool(force: true);
+                          if (context.mounted) {
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  n > 0
+                                      ? tr('pool_refreshed_with_characters', [
+                                          toFa(n),
+                                        ])
+                                      : tr(
+                                          'no_characters_found_add_a_few_anime_to_your_list',
+                                        ),
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            messenger.showSnackBar(
+                              SnackBar(content: Text(friendlyError(e))),
+                            );
+                          }
                         }
                       },
                 icon: cards.poolLoading
@@ -525,11 +534,21 @@ class _PackHeader extends ConsumerWidget {
                   ? null
                   : () async {
                       final messenger = ScaffoldMessenger.of(context);
-                      await ref.read(cardsProvider.notifier).clearPoolCache();
-                      if (context.mounted) {
-                        messenger.showSnackBar(
-                          SnackBar(content: Text(tr('pool_cache_cleared'))),
-                        );
+                      try {
+                        await ref
+                            .read(cardsProvider.notifier)
+                            .clearPoolCache();
+                        if (context.mounted) {
+                          messenger.showSnackBar(
+                            SnackBar(content: Text(tr('pool_cache_cleared'))),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          messenger.showSnackBar(
+                            SnackBar(content: Text(friendlyError(e))),
+                          );
+                        }
                       }
                     },
               icon: const Icon(Icons.cleaning_services_rounded, size: 16),

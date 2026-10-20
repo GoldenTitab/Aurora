@@ -269,10 +269,7 @@ class _XpHistory extends ConsumerWidget {
         children: [
           for (var i = 0; i < log.length; i++) ...[
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               child: Row(
                 children: [
                   Container(
@@ -336,7 +333,8 @@ class _XpHistory extends ConsumerWidget {
       DateTime.fromMillisecondsSinceEpoch(ms),
     );
     if (diff.inMinutes < 1) return tr('just_now');
-    if (diff.inMinutes < 60) return tr('in_minutes_ago', [toFa(diff.inMinutes)]);
+    if (diff.inMinutes < 60)
+      return tr('in_minutes_ago', [toFa(diff.inMinutes)]);
     if (diff.inHours < 24) return tr('in_hours_ago', [toFa(diff.inHours)]);
     return tr('in_days_ago', [toFa(diff.inDays)]);
   }
@@ -356,8 +354,7 @@ class _MissionsTab extends ConsumerWidget {
         .toList();
 
     final allDailyDone = daily.isNotEmpty && daily.every((m) => m.claimed);
-    final allWeeklyDone =
-        weekly.isNotEmpty && weekly.every((m) => m.claimed);
+    final allWeeklyDone = weekly.isNotEmpty && weekly.every((m) => m.claimed);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -393,14 +390,14 @@ class _ResetCountdowns extends StatelessWidget {
     final now = DateTime.now();
     final tomorrow = DateTime(now.year, now.month, now.day + 1);
     final dailyLeft = tomorrow.difference(now);
-    // شروع هفته‌ی بعد (دوشنبه)
-    final daysToMonday = (8 - now.weekday) % 7 == 0 ? 7 : (8 - now.weekday) % 7;
-    final nextMonday = DateTime(
+    final rawDaysToSaturday = (DateTime.saturday - now.weekday) % 7;
+    final daysToSaturday = rawDaysToSaturday == 0 ? 7 : rawDaysToSaturday;
+    final nextSaturday = DateTime(
       now.year,
       now.month,
-      now.day + daysToMonday,
+      now.day + daysToSaturday,
     );
-    final weeklyLeft = nextMonday.difference(now);
+    final weeklyLeft = nextSaturday.difference(now);
     final weeklyStr = weeklyLeft.inDays > 0
         ? tr('d_h', [toFa(weeklyLeft.inDays), toFa(weeklyLeft.inHours % 24)])
         : _fmt(weeklyLeft);
@@ -423,10 +420,7 @@ class _ResetCountdowns extends StatelessWidget {
           Expanded(
             child: Text(
               tr('daily_reset_in', [_fmt(dailyLeft)]),
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
             ),
           ),
           Text(
@@ -461,9 +455,7 @@ class _AllDoneBanner extends StatelessWidget {
           end: Alignment.bottomLeft,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.completed.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: AppColors.completed.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -652,14 +644,14 @@ class _AchievementsTab extends ConsumerWidget {
     ];
 
     // نزدیک‌ترین‌ها: قفل ولی پیشرفت > ۰، مرتب بر اساس پیشرفت
-    final almost = [
-      for (final d in all)
-        if (!unlocked.contains(d.id)) d,
-    ]..sort(
-        (a, b) => b
-            .progressOf(ctx, false)
-            .compareTo(a.progressOf(ctx, false)),
-      );
+    final almost =
+        [
+          for (final d in all)
+            if (!unlocked.contains(d.id)) d,
+        ]..sort(
+          (a, b) =>
+              b.progressOf(ctx, false).compareTo(a.progressOf(ctx, false)),
+        );
     final almostTop = almost
         .where((d) => d.progressOf(ctx, false) > 0)
         .take(5)
@@ -730,11 +722,7 @@ class _AchievementsTab extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           for (final a in entry.value)
-            _AchievementRow(
-              a: a,
-              unlocked: unlocked.contains(a.id),
-              ctx: ctx,
-            ),
+            _AchievementRow(a: a, unlocked: unlocked.contains(a.id), ctx: ctx),
           const SizedBox(height: 12),
         ],
       ],
@@ -890,9 +878,7 @@ class _AchievementRow extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          hidden
-                              ? tr('hidden_achievement')
-                              : a.titleFa,
+                          hidden ? tr('hidden_achievement') : a.titleFa,
                           style: const TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 17,

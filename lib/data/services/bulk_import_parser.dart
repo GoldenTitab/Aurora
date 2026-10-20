@@ -1,19 +1,22 @@
 import 'dart:convert';
 
-/// پارسر فایل ایمپورت گروهی: txt / csv / json / متن چسبانده‌شده.
-/// خروجی همیشه لیست تمیز عنوان‌هاست.
 class BulkImportParser {
-  /// [ext] پسوند بدون نقطه: txt، csv، json. برای متن خام 'txt' بده.
   static List<String> parse(String content, String ext) {
+    var c = content;
+    if (c.startsWith('\uFEFF')) {
+      c = c.substring(1);
+    }
     final e = ext.toLowerCase().trim();
-    if (e == 'json') return _parseJson(content);
-    if (e == 'csv') return _parseCsv(content);
-    return _parseLines(content);
+    if (e == 'json') return _parseJson(c);
+    if (e == 'csv') return _parseCsv(c);
+    return _parseLines(c);
   }
 
   static String cleanTitle(String raw) {
     var t = raw.trim();
     if (t.isEmpty || t.startsWith('#')) return '';
+    t = t.replaceAll(RegExp(r'^\d{1,4}\s*[.)]\s+'), '').trim();
+    t = t.replaceAll(RegExp(r'^[-•*]\s+'), '').trim();
     t = t.replaceAll(RegExp(r'\s*[\(\[]\s*\d{4}\s*[\)\]]\s*$'), '').trim();
     t = t.replaceAll(RegExp(r'\s+'), ' ');
     return t;
@@ -32,14 +35,21 @@ class BulkImportParser {
     if (lines.isEmpty) return const [];
     final header = _splitCsv(lines.first).map((h) => h.toLowerCase()).toList();
     var titleIdx = 0;
+    var hasHeader = false;
     const keys = ['title', 'name', 'anime', 'english', 'romaji'];
-    for (var i = 0; i < header.length; i++) {
-      if (keys.any((k) => header[i].contains(k))) {
-        titleIdx = i;
-        break;
+    for (var pass = 0; pass < 2 && !hasHeader; pass++) {
+      for (var i = 0; i < header.length; i++) {
+        final cell = header[i].trim();
+        final hit = pass == 0
+            ? keys.any((k) => cell == k)
+            : keys.any((k) => cell.contains(k));
+        if (hit) {
+          titleIdx = i;
+          hasHeader = true;
+          break;
+        }
       }
     }
-    final hasHeader = keys.any((k) => header.any((h) => h.contains(k)));
     final rows = hasHeader ? lines.skip(1) : lines;
     final out = <String>[];
     for (final row in rows) {
@@ -89,8 +99,26 @@ class BulkImportParser {
         } else if (v is Map) {
           for (final k in ['title', 'name', 'english', 'romaji', 'anime']) {
             final val = v[k];
-            if (val is String && val.trim().isNotEmpty) {
-              final t = cleanTitle(val);
+            String? text;
+            if (val is String) {
+              text = val;
+            } else if (val is Map) {
+              for (final nk in [
+                'english',
+                'romaji',
+                'native',
+                'title',
+                'name',
+              ]) {
+                final nested = val[nk];
+                if (nested is String && nested.trim().isNotEmpty) {
+                  text = nested;
+                  break;
+                }
+              }
+            }
+            if (text != null && text.trim().isNotEmpty) {
+              final t = cleanTitle(text);
               if (t.isNotEmpty) {
                 out.add(t);
               }
@@ -108,10 +136,13 @@ class BulkImportParser {
         for (final k in ['anime', 'titles', 'list', 'data', 'items']) {
           final v = d[k];
           if (v is List) {
+            final before = out.length;
             for (final e in v) {
               add(e);
             }
-            return out;
+            if (out.length > before) {
+              return out;
+            }
           }
         }
         add(d);
@@ -133,8 +164,18 @@ class BulkImportParser {
     final b = norm(titleB);
     if (q == a || (b.isNotEmpty && q == b)) return true;
     if (q.length >= 4) {
-      if (a.isNotEmpty && (a.contains(q) || q.contains(a))) return true;
-      if (b.isNotEmpty && (b.contains(q) || q.contains(b))) return true;
+      if (a.isNotEmpty && a.contains(q)) {
+        return true;
+      }
+      if (a.length >= 4 && q.contains(a)) {
+        return true;
+      }
+      if (b.isNotEmpty && b.contains(q)) {
+        return true;
+      }
+      if (b.length >= 4 && q.contains(b)) {
+        return true;
+      }
     }
     return false;
   }

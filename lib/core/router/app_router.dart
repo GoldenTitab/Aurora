@@ -36,7 +36,9 @@ final GoRouter appRouter = GoRouter(
     final done = Hive.box<String>(Boxes.meta).get('onboarding_done') == '1';
     final loc = state.matchedLocation;
     final onOnboarding = loc == '/onboarding';
-    if (!done && !onOnboarding && loc != '/import') return '/onboarding';
+    if (!done && !onOnboarding && loc != '/import' && loc != '/bulk-import') {
+      return '/onboarding';
+    }
     return null;
   },
   routes: [

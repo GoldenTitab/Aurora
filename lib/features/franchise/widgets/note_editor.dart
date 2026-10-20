@@ -30,6 +30,17 @@ class _NoteEditorState extends ConsumerState<NoteEditor> {
   }
 
   @override
+  void didUpdateWidget(NoteEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.franchiseId != widget.franchiseId) {
+      final note = ref.read(userExtrasProvider).noteOf(widget.franchiseId);
+      _controller.text = note ?? '';
+      _hasNote = note != null && note.trim().isNotEmpty;
+      _editing = !_hasNote;
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();

@@ -37,12 +37,13 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
   final _adding = <String>{};
   final _added = <String>{};
 
-  /// نتیجه‌ی انتخاب‌شده برای پیکربندی (قدم دوم).
   AnimeCardData? _picked;
   Entry? _pickedEntry;
   bool _resolving = false;
-  String? _afterId; // null = آخر لیست
-  String? _relation; // SEQUEL / PREQUEL / SIDE_STORY ...
+  String? _afterId;
+  String? _relation;
+  int _searchGen = 0;
+  int _pickGen = 0;
 
   @override
   void dispose() {
@@ -55,7 +56,10 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
 
   Future<void> _search() async {
     final q = _ctrl.text.trim();
-    if (q.isEmpty) return;
+    if (q.isEmpty) {
+      return;
+    }
+    final gen = ++_searchGen;
     setState(() {
       _searching = true;
       _error = null;
@@ -69,21 +73,30 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
           .map((e) => '${e.anilistId}:${e.malId ?? 0}')
           .toSet();
       final filtered = res.where((d) {
-        if (inFranchise.contains(_keyOf(d))) return false;
+        if (inFranchise.contains(_keyOf(d))) {
+          return false;
+        }
         if (d.anilistId > 0 && inFranchise.contains('${d.anilistId}:0')) {
           return false;
         }
         return true;
       }).toList();
-      if (mounted) setState(() => _results = filtered);
+      if (mounted && gen == _searchGen) {
+        setState(() => _results = filtered);
+      }
     } catch (e) {
-      if (mounted) setState(() => _error = friendlyError(e));
+      if (mounted && gen == _searchGen) {
+        setState(() => _error = friendlyError(e));
+      }
     } finally {
-      if (mounted) setState(() => _searching = false);
+      if (mounted && gen == _searchGen) {
+        setState(() => _searching = false);
+      }
     }
   }
 
   Future<void> _pick(AnimeCardData d) async {
+    final gen = ++_pickGen;
     setState(() {
       _picked = d;
       _pickedEntry = null;
@@ -96,7 +109,7 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
       final entry = await ref
           .read(franchiseRepositoryProvider)
           .resolveManualEntry(d);
-      if (mounted) {
+      if (mounted && gen == _pickGen) {
         setState(() {
           _pickedEntry = entry;
           _resolving = false;
@@ -112,7 +125,7 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
         }
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && gen == _pickGen) {
         setState(() => _resolving = false);
         ScaffoldMessenger.of(
           context,
@@ -130,9 +143,9 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
       (e) => e.anilistId == entry!.anilistId && entry.anilistId > 0,
     );
     if (dup && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr('already_in_franchise'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('already_in_franchise'))));
       return;
     }
     setState(() => _adding.add(key));
@@ -266,8 +279,7 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
                     : ListView.separated(
                         shrinkWrap: true,
                         itemCount: _results!.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: 8),
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
                         itemBuilder: (context, i) {
                           final d = _results![i];
                           return _ResultRow(
@@ -291,8 +303,10 @@ class _ManualAddSheetState extends ConsumerState<ManualAddSheet> {
                 noteCtrl: _noteCtrl,
                 entries: widget.franchise.entries,
                 onBack: () => setState(() {
+                  _pickGen++;
                   _picked = null;
                   _pickedEntry = null;
+                  _resolving = false;
                 }),
                 onConfirm: _confirmAdd,
                 confirming: _adding.contains(_keyOf(_picked!)),

@@ -81,16 +81,16 @@ class Franchise {
 
   factory Franchise.fromJson(Map<String, dynamic> j) => Franchise(
     id: j['id'] as String,
-    anilistId: j['anilistId'] as int,
-    malId: j['malId'] as int?,
+    anilistId: (j['anilistId'] as num).toInt(),
+    malId: (j['malId'] as num?)?.toInt(),
     titleFa: j['titleFa'] as String,
     titleEn: j['titleEn'] as String,
     cover: j['cover'] as String,
     banner: j['banner'] as String?,
     score: (j['score'] as num).toDouble(),
     malScore: (j['malScore'] as num?)?.toDouble(),
-    year: j['year'] as int,
-    genres: (j['genres'] as List).cast<String>(),
+    year: (j['year'] as num).toInt(),
+    genres: List<String>.from(j['genres'] as List),
     synopsis: j['synopsis'] as String,
     entries: (j['entries'] as List)
         .map((e) => Entry.fromJson((e as Map).cast<String, dynamic>()))

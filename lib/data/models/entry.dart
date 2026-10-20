@@ -167,17 +167,29 @@ class Entry {
     final titles = (m['titles'] as List?) ?? const [];
     String title = '—';
     for (final t in titles) {
-      final tm = (t as Map).cast<String, dynamic>();
-      if (tm['type'] == 'English' && (tm['title'] as String).isNotEmpty) {
-        title = tm['title'] as String;
+      if (t is! Map) {
+        continue;
+      }
+      final tm = t.cast<String, dynamic>();
+      final candidate = tm['title'];
+      if (tm['type'] == 'English' &&
+          candidate is String &&
+          candidate.isNotEmpty) {
+        title = candidate;
         break;
       }
     }
     if (title == '—') {
       for (final t in titles) {
-        final tm = (t as Map).cast<String, dynamic>();
-        if (tm['type'] == 'Default' && (tm['title'] as String).isNotEmpty) {
-          title = tm['title'] as String;
+        if (t is! Map) {
+          continue;
+        }
+        final tm = t.cast<String, dynamic>();
+        final candidate = tm['title'];
+        if (tm['type'] == 'Default' &&
+            candidate is String &&
+            candidate.isNotEmpty) {
+          title = candidate;
           break;
         }
       }
@@ -338,8 +350,8 @@ class Entry {
       orElse: () => EntryType.special,
     ),
     title: j['title'] as String,
-    episodes: (j['episodes'] as num).toInt(),
-    score: (j['score'] as num).toDouble(),
+    episodes: (j['episodes'] as num?)?.toInt() ?? 0,
+    score: (j['score'] as num?)?.toDouble() ?? 0.0,
     isMainStory: j['isMainStory'] as bool,
     year: (j['year'] as num?)?.toInt(),
     cover: j['cover'] as String?,

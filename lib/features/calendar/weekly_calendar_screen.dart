@@ -58,10 +58,7 @@ class _WeeklyCalendarScreenState extends ConsumerState<WeeklyCalendarScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                tr('only_my_list'),
-                style: const TextStyle(fontSize: 12),
-              ),
+              Text(tr('only_my_list'), style: const TextStyle(fontSize: 12)),
               Switch(
                 value: _onlyMine,
                 onChanged: (v) => setState(() => _onlyMine = v),
@@ -115,24 +112,19 @@ class _WeeklyCalendarScreenState extends ConsumerState<WeeklyCalendarScreen> {
           }
           return Column(
             children: [
-              _DayStrip(
-                days: shown,
-                onTap: _jumpToDay,
-              ),
+              _DayStrip(days: shown, onTap: _jumpToDay),
               Expanded(
-                child: ListView.builder(
+                child: ListView(
                   controller: _scroll,
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  itemCount: shown.length,
-                  itemBuilder: (context, i) {
-                    final d = shown[i];
-                    if (d.items.isEmpty) return const SizedBox.shrink();
-                    _dayKeys[d.weekday] ??= GlobalKey();
-                    return _DaySection(
-                      key: _dayKeys[d.weekday],
-                      day: d,
-                    );
-                  },
+                  children: [
+                    for (final d in shown)
+                      if (d.items.isNotEmpty)
+                        _DaySection(
+                          key: _dayKeys[d.weekday] ??= GlobalKey(),
+                          day: d,
+                        ),
+                  ],
                 ),
               ),
             ],
@@ -143,7 +135,6 @@ class _WeeklyCalendarScreenState extends ConsumerState<WeeklyCalendarScreen> {
   }
 }
 
-/// نوار روزها با تعداد قسمت هر روز.
 class _DayStrip extends StatelessWidget {
   const _DayStrip({required this.days, required this.onTap});
   final List<AiringDay> days;
@@ -156,9 +147,7 @@ class _DayStrip extends StatelessWidget {
       height: 76,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.borderOf(context)),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.borderOf(context))),
       ),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
@@ -244,10 +233,7 @@ class _DaySection extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: _isToday
                       ? AppColors.primary.withValues(alpha: 0.18)

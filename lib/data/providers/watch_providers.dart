@@ -232,8 +232,12 @@ class EpisodeProgressNotifier extends Notifier<Map<String, Set<int>>> {
     return _save(entryId, eps, total, reward: reward);
   }
 
-  Future<void> markAll(String entryId, int total) =>
-      _save(entryId, {for (var i = 1; i <= total; i++) i}, total);
+  Future<void> markAll(String entryId, int total) {
+    if (total <= 0) {
+      return Future.value();
+    }
+    return _save(entryId, {for (var i = 1; i <= total; i++) i}, total);
+  }
 
   Future<void> clear(String entryId, int total) =>
       _save(entryId, <int>{}, total);
