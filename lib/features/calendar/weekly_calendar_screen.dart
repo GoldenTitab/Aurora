@@ -93,7 +93,7 @@ class _WeeklyCalendarScreenState extends ConsumerState<WeeklyCalendarScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('🎉', style: TextStyle(fontSize: 48)),
+                    Icon(Icons.celebration, size: 48, color: AppColors.textSecondaryOf(context)),
                     const SizedBox(height: 12),
                     Text(
                       _onlyMine
