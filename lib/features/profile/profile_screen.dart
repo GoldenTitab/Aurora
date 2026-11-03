@@ -136,7 +136,7 @@ class _ProfileHeader extends ConsumerWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('🌙', style: TextStyle(fontSize: 16)),
+                    Icon(Icons.dark_mode, size: 16, color: AppColors.primaryTextOf(context)),
                     const SizedBox(width: 6),
                     Text(
                       toFa(eco.coins),
@@ -167,7 +167,7 @@ class _ProfileHeader extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('🔥', style: TextStyle(fontSize: 14)),
+              Icon(Icons.local_fire_department, size: 14, color: AppColors.textSecondaryOf(context)),
               const SizedBox(width: 6),
               Text(
                 eco.streak > 0
