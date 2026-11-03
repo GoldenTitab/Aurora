@@ -459,7 +459,7 @@ class _AllDoneBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Text('🎉', style: TextStyle(fontSize: 28)),
+          const Icon(Icons.celebration, size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
